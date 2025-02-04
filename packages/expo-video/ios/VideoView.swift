@@ -2,14 +2,27 @@
 
 import AVKit
 import ExpoModulesCore
+import GoogleInteractiveMediaAds
 
-public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
+public final class VideoView: ExpoView, AVPlayerViewControllerDelegate, VideoPlayerObserverDelegate {
   lazy var playerViewController = AVPlayerViewController()
 
+  var adsManager = VideoAdsManager()
+  
+  var observer: VideoPlayerObserver?
+
+
   weak var player: VideoPlayer? {
-    didSet {
-      playerViewController.player = player?.ref
-    }
+      didSet {
+        playerViewController.player = player?.ref
+          
+        // Add Video delegate
+        observer = VideoPlayerObserver(owner: self.player!)
+        observer?.registerDelegate(delegate: self)
+          
+        // Pass the VideoPlayer instance to the Ad manager
+        adsManager.player = player
+      }
   }
 
   #if os(tvOS)
@@ -65,6 +78,13 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
 
     addFirstFrameObserver()
     addSubview(playerViewController.view)
+  }
+    
+  func onStatusChanged(player: AVPlayer, oldStatus: PlayerStatus?, newStatus: PlayerStatus, error: Exception?){
+      if (newStatus == .readyToPlay){
+          let adDisplayContainer = IMAAdDisplayContainer(adContainer: playerViewController.view, viewController: playerViewController)
+          adsManager.requestAds(adDisplayContainer: adDisplayContainer)
+      }
   }
 
   deinit {

@@ -597,6 +597,7 @@ PODS:
     - ExpoModulesCore
   - ExpoVideo (2.0.1):
     - ExpoModulesCore
+    - GoogleAds-IMA-iOS-SDK (~> 3.24.0)
   - ExpoVideoThumbnails (9.0.2):
     - ExpoModulesCore
   - ExpoWebBrowser (14.0.1):
@@ -673,6 +674,7 @@ PODS:
   - FBLazyVector (0.79.0-rc.3)
   - fmt (11.0.2)
   - glog (0.3.5)
+  - GoogleAds-IMA-iOS-SDK (3.24.0)
   - hermes-engine (0.79.0-rc.3):
     - hermes-engine/Pre-built (= 0.79.0-rc.3)
   - hermes-engine/Pre-built (0.79.0-rc.3)
@@ -3176,6 +3178,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - GoogleAds-IMA-iOS-SDK
     - libavif
     - libdav1d
     - libwebp
@@ -3664,8 +3667,8 @@ SPEC CHECKSUMS:
   ExpoSymbols: 81d7f433d7a7b20658029eae524a4fa93627159e
   ExpoSystemUI: 50e8cc9cd38bfbbca20d250f76f8548c0a8ba24c
   ExpoTrackingTransparency: 10b0304d6d2b95ea41391bf92684c1078f633e39
-  ExpoUI: c1b456de61acbd18c030498acc0821a087e75d64
-  ExpoVideo: 85750319df61d76237b5952fca5a9f39504c6b9b
+  ExpoUI: 8d94ff1e65f431682aa4f036305d4237b154ca08
+  ExpoVideo: b5e39d6e4f4e91862a156c72ca34fb1efd99c84f
   ExpoVideoThumbnails: 8b6bbe3cb76dd2225910667b896b27855bbda694
   ExpoWebBrowser: f08aaf1c8a02af8a768d83793186cb6d2c69f529
   EXStructuredHeaders: 09c70347b282e3d2507e25fb4c747b1b885f87f6
@@ -3676,6 +3679,7 @@ SPEC CHECKSUMS:
   FBLazyVector: a13cdda7bbe886d533908636117037b198014387
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
+  GoogleAds-IMA-iOS-SDK: bf4dc86b31a1d1b27021008200bbeb6faa689901
   hermes-engine: 222573b97e0c0023ee02f5a8480d6aa3080ceb3f
   libavif: 84bbb62fb232c3018d6f1bab79beea87e35de7b7
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
@@ -3775,4 +3779,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: a753510e36243a886a2a518ddc4e25451e51625a
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.15.2
