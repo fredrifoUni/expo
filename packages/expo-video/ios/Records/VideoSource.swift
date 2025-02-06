@@ -6,6 +6,9 @@ import ExpoModulesCore
 internal struct VideoSource: Record {
   @Field
   var uri: URL? = nil
+    
+  @Field
+  var advertisement: Advertisement? = nil
 
   @Field
   var drm: DRMOptions? = nil
