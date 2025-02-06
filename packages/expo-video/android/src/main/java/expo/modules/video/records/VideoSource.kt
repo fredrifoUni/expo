@@ -11,11 +11,14 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.RawResourceDataSource
+import androidx.media3.exoplayer.ima.ImaAdsLoader
 import androidx.media3.exoplayer.source.MediaSource
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.video.UnsupportedDRMTypeException
 import expo.modules.video.buildExpoVideoMediaSource
+import expo.modules.video.buildMediaSourceWithHeaders
+import expo.modules.video.player.PlayerView
 import java.io.Serializable
 
 @OptIn(UnstableApi::class)
@@ -39,15 +42,19 @@ class VideoSource(
       "NotificationDataArtwork:${this.metadata?.artwork?.path}"
   }
 
-  fun toMediaSource(context: Context): MediaSource? {
+  fun toMediaSource(context: Context, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource? {
     this.uri ?: return null
-    return buildExpoVideoMediaSource(context, this)
+    return buildExpoVideoMediaSource(context, this, adsLoader, playerView)
   }
 
   fun toMediaItem(context: Context) = MediaItem
     .Builder()
     .apply {
       setUri(parseLocalAssetId(uri, context))
+      setMediaId(toMediaId())
+
+      val adTagUri: Uri = Uri.parse("https://pubads.g.doubleclick.net/gampad/ads?iu=/21775744923/external/single_ad_samples&sz=640x480&cust_params=sample_ct%3Dlinear&ciu_szs=300x250%2C728x90&gdfp_req=1&output=vast&unviewed_position_start=1&env=vp&impl=s&correlator=")
+      setAdsConfiguration(MediaItem.AdsConfiguration.Builder(adTagUri).build())
       drm?.let {
         if (it.type.isSupported()) {
           setDrmConfiguration(it.toDRMConfiguration())
