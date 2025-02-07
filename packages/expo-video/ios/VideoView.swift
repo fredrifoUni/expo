@@ -4,14 +4,12 @@ import AVKit
 import ExpoModulesCore
 import GoogleInteractiveMediaAds
 
-public final class VideoView: ExpoView, AVPlayerViewControllerDelegate, VideoPlayerObserverDelegate {
+public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
+  lazy var adsManager = VideoAdsManager()
   lazy var playerViewController = AVPlayerViewController()
 
-  var adsManager = VideoAdsManager()
-  var observer: VideoPlayerObserver?
-
-
   weak var player: VideoPlayer? {
+      // Pass class instances to the VideoPlayer
       didSet {
         playerViewController.player = player?.ref
           
@@ -21,6 +19,8 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate, VideoPla
           
         // Pass the VideoPlayer instance to the Ad manager
         adsManager.player = player
+        player?.adsManager = adsManager
+        player?.videoView = self
       }
   }
 
@@ -77,25 +77,6 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate, VideoPla
 
     addFirstFrameObserver()
     addSubview(playerViewController.view)
-  }
-    
-    func prepareAds(player: AVPlayer, videoPlayerItem: VideoPlayerItem?){
-        let advertisement = videoPlayerItem?.videoSource.advertisement?.googleIMA?.adTagUri
-        
-        if let adTagUri = advertisement {
-            // TODO: Set loading ads (waitForPreroll config?)
-            let adDisplayContainer = IMAAdDisplayContainer( adContainer: playerViewController.view,  viewController: playerViewController)
-            
-            adsManager.requestAds(
-                adDisplayContainer: adDisplayContainer,
-                adTagUri: adTagUri
-            )
-        }
-    }
-
-  func onLoadedPlayerItem(player: AVPlayer, playerItem: AVPlayerItem?) {
-      // Initial preparations of the new play item ads
-      prepareAds(player: player, videoPlayerItem: playerItem as? VideoPlayerItem)
   }
 
   deinit {
