@@ -5,7 +5,7 @@ import MediaPlayer
 import ExpoModulesCore
 import GoogleInteractiveMediaAds
 
-internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObserverDelegate {
+internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManagerDelegate, VideoPlayerObserverDelegate {
   lazy var contentKeyManager = ContentKeyManager()
   var observer: VideoPlayerObserver?
   lazy var subtitles: VideoPlayerSubtitles = VideoPlayerSubtitles(owner: self)
@@ -13,6 +13,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
   var adsManager: VideoAdsManager? {
     didSet {
       adsManager?.player = self
+      adsManager?.delegate = self
     }
   }
   
@@ -277,14 +278,24 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
   }
 
   func onPlayedToEnd(player: AVPlayer) {
-    safeEmit(event: "playToEnd")
+    // Checking for queued Ads
+    let shouldShowPostRoll: Bool = adsManager?.hasMoreAds ?? false
       
-    // TODO: This should be starting post roll
-    if loop {
-      self.pointer.seek(to: .zero)
-      self.pointer.play()
-    }
+    // Let the Ad manager know the video has finished
+    adsManager?.contentDidFinishPlaying()
+      
+    // Handle video end logic or wait for ads to complete
+    if !shouldShowPostRoll { onVideoAndAdsCompleted() }
   }
+    
+  func onVideoAndAdsCompleted() {
+      safeEmit(event: "playToEnd")
+    
+      if loop {
+        self.pointer.seek(to: .zero)
+        self.pointer.play()
+      }
+    }
 
   func onItemChanged(player: AVPlayer, oldVideoPlayerItem: VideoPlayerItem?, newVideoPlayerItem: VideoPlayerItem?) {
     let payload = SourceChangedEventPayload(
@@ -324,6 +335,11 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
     if self.appContext != nil {
       self.emit(event: event, arguments: payload?.toDictionary(appContext: appContext))
     }
+  }
+    
+  // MARK: - VideoAdsManagerDelegate
+  func postrollAdFinished(_ manager: VideoAdsManager) {
+      onVideoAndAdsCompleted()
   }
 
   // MARK: - Hashable

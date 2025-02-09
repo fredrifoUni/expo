@@ -3,10 +3,20 @@
 import Foundation
 import GoogleInteractiveMediaAds
 
+protocol VideoAdsManagerDelegate: AnyObject {
+    func postrollAdFinished(_ manager: VideoAdsManager)
+}
+
 class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
     private var adsLoader: IMAAdsLoader = IMAAdsLoader(settings: nil)
     var adsManager: IMAAdsManager!
     var contentPlayhead: IMAAVPlayerContentPlayhead?
+    weak var delegate: VideoAdsManagerDelegate?
+    
+    // Tracked values
+    var hasMoreAds: Bool = false
+    var isContentCompleteCalled = true
+    
     var isPlayingAd: Bool = false {
         didSet {
             // Ensures the content and Ad player are syncronized
@@ -21,14 +31,20 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
         }
     }
     
+    func reset() {
+        hasMoreAds = false
+        isContentCompleteCalled = false
+        isPlayingAd = false
+    }
+    
     override init() {
         super.init()
-        
         self.adsLoader.delegate = self
     }
     
     // Create an ad request with our ad tag,
     public func requestAds(adDisplayContainer: IMAAdDisplayContainer, adTagUri: String){
+        reset()
         let request = IMAAdsRequest(
             adTagUrl: adTagUri,
             adDisplayContainer: adDisplayContainer,
@@ -37,6 +53,13 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
         )
 
         adsLoader.requestAds(with: request)
+    }
+        
+    // Triggered when normal video has finished
+    func contentDidFinishPlaying() {
+      // Show post-roll if requested.
+      isContentCompleteCalled = true
+      adsLoader.contentComplete()
     }
     
     // MARK: - IMAAdsLoaderDelegate
@@ -57,16 +80,31 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
 
     public func adsManager(_ adsManager: IMAAdsManager, didReceive event: IMAAdEvent) {
         print("AdsManager Event: " + event.typeString)
-      // Play each ad once it has been loaded
-      if event.type == IMAAdEventType.LOADED {
-        adsManager.start()
-      }
+        
+        switch event.type {
+          case IMAAdEventType.LOADED:
+            // Queue ads when they are ready
+            hasMoreAds = true
+            adsManager.start()
+            break
+          case IMAAdEventType.ALL_ADS_COMPLETED:
+            hasMoreAds = false
+            
+            // Trigger video complete if video has finished
+            if(isContentCompleteCalled) {
+              self.delegate?.postrollAdFinished(self)
+            }
+            break
+          default:
+            break
+        }
     }
     
     public func adsManager(_ adsManager: IMAAdsManager, didReceive error: IMAAdError) {
       // Fall back to playing content
         print("AdsManager error: " + (error.message ?? "NONE"))
         self.isPlayingAd = false
+        self.hasMoreAds = false
     }
     
     public func adsManagerDidRequestContentPause(_ adsManager: IMAAdsManager) {
