@@ -1,22 +1,31 @@
-import { useVideoPlayer, VideoView } from 'expo-video';
+import { useVideoPlayer, VideoSource, VideoView } from 'expo-video';
 import React, { useCallback, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { SAMPLE_ADS } from './VideoAdvertisementSources';
 import { bigBuckBunnySource } from './videoSources';
 import { styles } from './videoStyles';
 import Button from '../../components/Button';
-import TitledSwitch from '../../components/TitledSwitch';
 
-export default function VideoFullscreenScreen() {
+export default function VideoAdvertisementScreen() {
   const ref = useRef<VideoView>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [allowFullscreen, setAllowFullscreen] = useState(true);
 
-  const player = useVideoPlayer(bigBuckBunnySource, (player) => {
-    player.loop = true;
-    player.showNowPlayingNotification = false;
-    player.play();
-  });
+  const player = useVideoPlayer(
+    {
+      ...bigBuckBunnySource,
+      advertisement: {
+        googleIMA: {
+          adTagUri: SAMPLE_ADS.postRoll,
+        },
+      },
+    } as VideoSource,
+    (player) => {
+      player.loop = false;
+      player.showNowPlayingNotification = false;
+      player.play();
+    }
+  );
 
   const toggleFullscreen = useCallback(() => {
     if (!isFullscreen) {
@@ -39,20 +48,10 @@ export default function VideoFullscreenScreen() {
           console.log('Exited Fullscreen');
           setIsFullscreen(false);
         }}
-        allowsFullscreen={allowFullscreen}
         style={styles.video}
       />
       <ScrollView style={styles.controlsContainer}>
         <Button style={styles.button} title="Enter Fullscreen" onPress={toggleFullscreen} />
-        <View style={styles.row}>
-          <TitledSwitch
-            title="Allow Fullscreen"
-            value={allowFullscreen}
-            setValue={setAllowFullscreen}
-            style={styles.switch}
-            titleStyle={styles.switchTitle}
-          />
-        </View>
       </ScrollView>
     </View>
   );
