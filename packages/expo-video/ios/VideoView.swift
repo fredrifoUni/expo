@@ -118,6 +118,19 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
       playerViewController.perform(selectorToExitFullScreenMode, with: true, with: nil)
     }
   }
+    
+  // Ensures the player properly reappears after exiting fullscreen after an Ad was shown
+  func refreshPlayerViewLayout() {
+    // Detatch player view
+    playerViewController.view.removeFromSuperview()
+          
+    // Update bounds and trigger relayout
+    playerViewController.view.frame = bounds
+    playerViewController.endAppearanceTransition()
+          
+    // Add player back to the sub view
+    addSubview(playerViewController.view)
+  }
 
   func startPictureInPicture() throws {
     if !AVPictureInPictureController.isPictureInPictureSupported() {
@@ -173,6 +186,12 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     _ playerViewController: AVPlayerViewController,
     willBeginFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator
   ) {
+
+    coordinator.animate(alongsideTransition: nil) { _ in
+      // The ad player needs to be opened in fullscreen seperately from the AVPlayer.
+      self.adsManager.isContentFullscreen = true
+    }
+    
     onFullscreenEnter()
     isFullscreen = true
   }
@@ -181,6 +200,9 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     _ playerViewController: AVPlayerViewController,
     willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator
   ) {
+    // Immediately exit the fullscreen Ad view
+    self.adsManager.isContentFullscreen = false
+      
     // Platform's behavior is to pause the player when exiting the fullscreen mode.
     // It seems better to continue playing, so we resume the player once the dismissing animation finishes.
     let wasPlaying = player?.ref.timeControlStatus == .playing
@@ -192,6 +214,9 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
         }
         self.onFullscreenExit()
         self.isFullscreen = false
+          
+        // Ensure player view reappears when exiting fullscreen after an Ad was shown
+        self.refreshPlayerViewLayout()
       }
     }
   }

@@ -10,8 +10,10 @@ protocol VideoAdsManagerDelegate: AnyObject {
 class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
     private var adsLoader: IMAAdsLoader = IMAAdsLoader(settings: nil)
     var adsManager: IMAAdsManager!
+    var adDisplayContainer: IMAAdDisplayContainer?
     var contentPlayhead: IMAAVPlayerContentPlayhead?
     weak var delegate: VideoAdsManagerDelegate?
+    var fullscreenController: UIViewController?
     
     // Tracked values
     var hasMoreAds: Bool = false
@@ -23,6 +25,20 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
             if isPlayingAd { player?.ref.pause() }
             else { player?.ref.play() }
         }
+    }
+    
+    // Keeps track of if the AVPlayer is in fullscreen
+    var isContentFullscreen: Bool = false {
+      
+      // Set the Ad view to fullscreen if content is playing
+      didSet {
+        if isPlayingAd && isContentFullscreen { 
+          enterFullscreen() 
+        }
+        else { 
+          exitFullscreen() 
+        }
+      }
     }
     
     weak var player: VideoPlayer? {
@@ -42,8 +58,41 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
         self.adsLoader.delegate = self
     }
     
+    private func getTopViewController() -> UIViewController? {
+      guard let keyWindow = UIApplication.shared.connectedScenes
+        .compactMap({ ($0 as? UIWindowScene)?.windows.first(where: { $0.isKeyWindow }) })
+        .first else { return nil }
+
+      var topController = keyWindow.rootViewController
+      while let presentedController = topController?.presentedViewController {
+        topController = presentedController
+      }
+      return topController
+    }
+    
+    // Sets the ad overlay to fullscreen mode (on top of content video fullscreen)
+    public func enterFullscreen() {
+      // The player is already in fullscreen
+      if fullscreenController != nil { return }
+        
+        fullscreenController = getTopViewController()
+        if let fullscreenController = fullscreenController, let adVideoView = self.adDisplayContainer?.adContainerViewController {
+        fullscreenController.modalPresentationStyle = .fullScreen
+        fullscreenController.present(adVideoView, animated: false, completion: nil)
+      }
+    }
+    
+    // Exit fullscreen mode
+    public func exitFullscreen() {
+      fullscreenController?.dismiss(animated: false) {
+        self.fullscreenController = nil
+      }
+    }
+     
     // Create an ad request with our ad tag,
     public func requestAds(adDisplayContainer: IMAAdDisplayContainer, adTagUri: String){
+        self.adDisplayContainer = adDisplayContainer
+        
         reset()
         let request = IMAAdsRequest(
             adTagUrl: adTagUri,
@@ -87,6 +136,12 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
             hasMoreAds = true
             adsManager.start()
             break
+          case IMAAdEventType.STARTED:
+            // Set Ads to fullscreen if the AVPlayer is in fullscreen
+            if isContentFullscreen { 
+              enterFullscreen() 
+            }
+            break
           case IMAAdEventType.ALL_ADS_COMPLETED:
             hasMoreAds = false
             
@@ -102,18 +157,21 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
     
     public func adsManager(_ adsManager: IMAAdsManager, didReceive error: IMAAdError) {
       // Fall back to playing content
-        print("AdsManager error: " + (error.message ?? "NONE"))
-        self.isPlayingAd = false
-        self.hasMoreAds = false
+      print("AdsManager error: " + (error.message ?? "NONE"))
+      self.isPlayingAd = false
+      self.hasMoreAds = false
     }
     
     public func adsManagerDidRequestContentPause(_ adsManager: IMAAdsManager) {
       // Pause the content for the SDK to play ads.
-        self.isPlayingAd = true
+      self.isPlayingAd = true
     }
 
     public func adsManagerDidRequestContentResume(_ adsManager: IMAAdsManager) {
       // Resume the content since the SDK is done playing ads (at least for now).
-        self.isPlayingAd = false
+      self.isPlayingAd = false
+
+      // Exit fullscreen when the Ad is not playing.
+      exitFullscreen()
     }
 }

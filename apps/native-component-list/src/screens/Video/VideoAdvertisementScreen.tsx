@@ -16,7 +16,7 @@ export default function VideoAdvertisementScreen() {
       ...bigBuckBunnySource,
       advertisement: {
         googleIMA: {
-          adTagUri: SAMPLE_ADS.postRoll,
+          adTagUri: SAMPLE_ADS.preMidPost,
         },
       },
     } as VideoSource,
