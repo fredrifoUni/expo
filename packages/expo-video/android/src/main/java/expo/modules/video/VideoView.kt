@@ -29,7 +29,7 @@ import java.util.UUID
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class VideoView(context: Context, appContext: AppContext) : ExpoView(context, appContext), VideoPlayerListener {
   val id: String = UUID.randomUUID().toString()
-  val playerView: PlayerView = PlayerView(context.applicationContext)
+  var playerView: PlayerView = PlayerView(context.applicationContext)
   val onPictureInPictureStart by EventDispatcher<Unit>()
   val onPictureInPictureStop by EventDispatcher<Unit>()
   val onFullscreenEnter by EventDispatcher<Unit>()
@@ -70,7 +70,7 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
       }
       videoPlayer?.removeListener(this)
       newPlayer?.addListener(this)
-      newPlayer?.playerView = playerView
+      newPlayer?.videoView = this
       playerView.player = newPlayer?.player
       field = newPlayer
       attachPlayer()
