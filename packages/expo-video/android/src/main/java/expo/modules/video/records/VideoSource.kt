@@ -13,12 +13,12 @@ import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.RawResourceDataSource
 import androidx.media3.exoplayer.ima.ImaAdsLoader
 import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.ui.PlayerView
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.video.UnsupportedDRMTypeException
 import expo.modules.video.buildExpoVideoMediaSource
 import expo.modules.video.buildMediaSourceWithHeaders
-import expo.modules.video.player.PlayerView
 import java.io.Serializable
 
 @OptIn(UnstableApi::class)
