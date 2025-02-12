@@ -11,7 +11,7 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ima.ImaAdsLoader
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
-import expo.modules.video.player.PlayerView
+import androidx.media3.ui.PlayerView
 import expo.modules.video.records.VideoSource
 import okhttp3.OkHttpClient
 
