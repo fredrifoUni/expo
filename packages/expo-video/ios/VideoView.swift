@@ -119,17 +119,19 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     }
   }
     
-  // Ensures the player properly reappears after exiting fullscreen after an Ad was shown
+  // Ensures the player properly reappears after exiting fullscreen (and an Ad was shown)
   func refreshPlayerViewLayout() {
-    // Detatch player view
-    playerViewController.view.removeFromSuperview()
-          
-    // Update bounds and trigger relayout
-    playerViewController.view.frame = bounds
-    playerViewController.endAppearanceTransition()
-          
-    // Add player back to the sub view
-    addSubview(playerViewController.view)
+      // Temporarily remove the view from the UI to ensure proper re-render
+      playerViewController.view.removeFromSuperview()
+
+      // Set the frame bounds (that were lost during the fullscreen transition)
+      playerViewController.view.frame = bounds
+
+      // Ensure the player controls are re-rendered with the correct bounds
+      playerViewController.endAppearanceTransition()
+       
+      // Re-attach the view to the UI
+      addSubview(playerViewController.view)
   }
 
   func startPictureInPicture() throws {
