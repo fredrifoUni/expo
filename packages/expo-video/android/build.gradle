@@ -9,6 +9,7 @@ version = '2.0.1'
 android {
   namespace "expo.modules.video"
   defaultConfig {
+    multiDexEnabled true
     versionCode 1
     versionName '2.0.1'
   }
@@ -16,6 +17,10 @@ android {
 
 dependencies {
   implementation 'com.facebook.react:react-android'
+
+  // The ExoPlayer IMA extension requires multidex for older Android versions due to its size
+  def multidex_version = "2.0.1"
+  implementation "androidx.multidex:multidex:$multidex_version"
 
   // Remember to keep this in sync with the version in `expo-audio`
   def androidxMedia3Version = "1.4.0"
