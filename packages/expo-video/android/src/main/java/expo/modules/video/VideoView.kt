@@ -69,7 +69,7 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
       }
       videoPlayer?.removeListener(this)
       newPlayer?.addListener(this)
-      newPlayer?.videoView = this
+      newPlayer?.changePlayerView(this.playerView)
       playerView.player = newPlayer?.player
       field = newPlayer
       newPlayer?.let {
