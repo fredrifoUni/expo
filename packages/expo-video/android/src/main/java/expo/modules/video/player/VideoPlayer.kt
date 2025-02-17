@@ -66,13 +66,13 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   val subtitles: VideoPlayerSubtitles = VideoPlayerSubtitles(this)
   val trackSelector = DefaultTrackSelector(context)
 
-  var player = ExoPlayer
+  val player = ExoPlayer
     .Builder(context, renderersFactory)
     .setLooper(context.mainLooper)
     .setLoadControl(loadControl)
     .build()
 
-  private val adsLoader: ImaAdsLoader = ImaAdsLoader.Builder(context)
+  private val adsLoader = ImaAdsLoader.Builder(context)
     .setAdEventListener(buildAdEventListener())
     .setAdErrorListener(buildAdErrorListener())
     .setVideoAdPlayerCallback(buildAdPlayerCallback())
@@ -184,7 +184,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
 
   fun buildAdErrorListener(): AdErrorListener {
     return AdErrorListener { event: AdErrorEvent ->
-      val eventType = event.error.errorType
+      val eventType = event.error.message
       Log.e("IMA", "Received AD Error: $eventType")
     }
   }
