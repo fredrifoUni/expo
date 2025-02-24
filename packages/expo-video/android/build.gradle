@@ -44,9 +44,11 @@ dependencies {
   implementation "androidx.media3:media3-exoplayer:${androidxMedia3Version}"
   implementation "androidx.media3:media3-exoplayer-dash:${androidxMedia3Version}"
   implementation "androidx.media3:media3-exoplayer-hls:${androidxMedia3Version}"
-  implementation "androidx.media3:media3-exoplayer-ima:${androidxMedia3Version}"
   implementation "androidx.media3:media3-ui:${androidxMedia3Version}"
   implementation "androidx.media3:media3-datasource-okhttp:${androidxMedia3Version}"
+
+  def imaVersion = "3.36.0"
+  implementation "com.google.ads.interactivemedia.v3:interactivemedia:${imaVersion}"
 
   def fragment_version = "1.6.2"
   implementation "androidx.fragment:fragment:$fragment_version"

@@ -11,9 +11,9 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.RawResourceDataSource
-import androidx.media3.exoplayer.ima.ImaAdsLoader
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.ui.PlayerView
+import com.google.ads.interactivemedia.v3.api.AdsLoader
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.video.UnsupportedDRMTypeException
@@ -42,9 +42,9 @@ class VideoSource(
       "NotificationDataArtwork:${this.metadata?.artwork?.path}"
   }
 
-  fun toMediaSource(context: Context, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource? {
+  fun toMediaSource(context: Context, playerView: PlayerView?): MediaSource? {
     this.uri ?: return null
-    return buildMediaSourceWithHeaders(context, this, adsLoader, playerView)
+    return buildMediaSourceWithHeaders(context, this, playerView)
   }
 
   fun toMediaItem(context: Context) = MediaItem
@@ -54,9 +54,6 @@ class VideoSource(
       setMediaId(toMediaId())
 
       // Fetch advertisement if available
-      advertisement?.googleIMA?.adTagUri?.let {
-        setAdsConfiguration(MediaItem.AdsConfiguration.Builder(Uri.parse(it)).build())
-      }
 
       drm?.let {
         if (it.type.isSupported()) {
