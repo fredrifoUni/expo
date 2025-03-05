@@ -3,11 +3,25 @@
 import AVFoundation
 import MediaPlayer
 import ExpoModulesCore
+import GoogleInteractiveMediaAds
 
-internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObserverDelegate {
+internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManagerDelegate, VideoPlayerObserverDelegate {
   lazy var contentKeyManager = ContentKeyManager()
   var observer: VideoPlayerObserver?
   lazy var subtitles: VideoPlayerSubtitles = VideoPlayerSubtitles(owner: self)
+    
+  var adsManager: VideoAdsManager? {
+    didSet {
+      adsManager?.player = self
+      adsManager?.delegate = self
+    }
+  }
+  
+  weak var videoView: VideoView? {
+    didSet {
+      videoView?.playerViewController.player = ref
+    }
+  }
 
   var loop = false
   var audioMixingMode: AudioMixingMode = .doNotMix {
@@ -137,6 +151,20 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
 
     try? self.replaceCurrentItem(with: nil)
   }
+    
+  func prepareAds(player: AVPlayer, videoPlayerItem: VideoPlayerItem?){
+    let advertisement = videoPlayerItem?.videoSource.advertisement?.googleIMA?.adTagUri
+        
+    if let adTagUri = advertisement, let videoView = videoView {
+      // TODO: Set loading ads (waitForPreroll config?)
+      let adDisplayContainer = IMAAdDisplayContainer( adContainer: videoView.playerViewController.view,  viewController: videoView.playerViewController)
+            
+      adsManager?.requestAds(
+        adDisplayContainer: adDisplayContainer,
+        adTagUri: adTagUri
+      )
+    }
+  }
 
   func replaceCurrentItem(with videoSource: VideoSource?) throws {
     guard
@@ -220,6 +248,12 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
     isPlaying = newIsPlaying
 
     VideoManager.shared.setAppropriateAudioSessionOrWarn()
+      
+    // Prevent video from starting when ad is actively playing.
+    if newIsPlaying && adsManager?.isPlayingAd == true {
+      log.warn("VideoPlayer: Prevented video resume because an ad is currently playing.")
+      ref.pause()
+    }
   }
 
   func onRateChanged(player: AVPlayer, oldRate: Float?, newRate: Float) {
@@ -244,12 +278,24 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
   }
 
   func onPlayedToEnd(player: AVPlayer) {
-    safeEmit(event: "playToEnd")
-    if loop {
-      self.pointer.seek(to: .zero)
-      self.pointer.play()
-    }
+    // Checking for queued Ads
+    let shouldShowPostRoll: Bool = adsManager?.hasMoreAds ?? false
+      
+    // Let the Ad manager know the video has finished
+    adsManager?.contentDidFinishPlaying()
+      
+    // Handle video end logic or wait for ads to complete
+    if !shouldShowPostRoll { onVideoAndAdsCompleted() }
   }
+    
+  func onVideoAndAdsCompleted() {
+      safeEmit(event: "playToEnd")
+    
+      if loop {
+        self.pointer.seek(to: .zero)
+        self.pointer.play()
+      }
+    }
 
   func onItemChanged(player: AVPlayer, oldVideoPlayerItem: VideoPlayerItem?, newVideoPlayerItem: VideoPlayerItem?) {
     let payload = SourceChangedEventPayload(
@@ -265,6 +311,9 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
   }
 
   func onLoadedPlayerItem(player: AVPlayer, playerItem: AVPlayerItem?) {
+    // Prepare Ads for the new content
+    prepareAds(player: player, videoPlayerItem: playerItem as? VideoPlayerItem)
+      
     // This event means that a new player item has been loaded so the subtitle tracks should change
     let oldTracks = subtitles.availableSubtitleTracks
     self.subtitles.onNewPlayerItemLoaded(playerItem: playerItem)
@@ -286,6 +335,11 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
     if self.appContext != nil {
       self.emit(event: event, arguments: payload?.toDictionary(appContext: appContext))
     }
+  }
+    
+  // MARK: - VideoAdsManagerDelegate
+  func postrollAdFinished(_ manager: VideoAdsManager) {
+      onVideoAndAdsCompleted()
   }
 
   // MARK: - Hashable

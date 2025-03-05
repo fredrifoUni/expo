@@ -11,7 +11,9 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.RawResourceDataSource
+import androidx.media3.exoplayer.ima.ImaAdsLoader
 import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.ui.PlayerView
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.video.UnsupportedDRMTypeException
@@ -21,12 +23,14 @@ import java.io.Serializable
 @OptIn(UnstableApi::class)
 class VideoSource(
   @Field var uri: Uri? = null,
+  @Field var advertisement: Advertisement? = null,
   @Field var drm: DRMOptions? = null,
   @Field var metadata: VideoMetadata? = null,
   @Field var headers: Map<String, String>? = null
 ) : Record, Serializable {
   private fun toMediaId(): String {
     return "uri:${this.uri}" +
+      "Advertisement: ${this.advertisement}" +
       "Headers: ${this.headers}" +
       "DrmType:${this.drm?.type}" +
       "DrmLicenseServer:${this.drm?.licenseServer}" +
@@ -38,9 +42,9 @@ class VideoSource(
       "NotificationDataArtwork:${this.metadata?.artwork?.path}"
   }
 
-  fun toMediaSource(context: Context): MediaSource? {
+  fun toMediaSource(context: Context, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource? {
     this.uri ?: return null
-    return buildMediaSourceWithHeaders(context, this)
+    return buildMediaSourceWithHeaders(context, this, adsLoader, playerView)
   }
 
   fun toMediaItem(context: Context) = MediaItem
@@ -48,6 +52,12 @@ class VideoSource(
     .apply {
       setUri(parseLocalAssetId(uri, context))
       setMediaId(toMediaId())
+
+      // Fetch advertisement if available
+      advertisement?.googleIMA?.adTagUri?.let {
+        setAdsConfiguration(MediaItem.AdsConfiguration.Builder(Uri.parse(it)).build())
+      }
+
       drm?.let {
         if (it.type.isSupported()) {
           setDrmConfiguration(it.toDRMConfiguration())
