@@ -276,6 +276,13 @@ export type VideoSource =
       uri?: string;
 
       /**
+       * Specifies the DRM options which will be used by the player while loading the video.
+       */
+      advertisement?: {
+        googleIMA?: GoogleIMA;
+      };
+
+      /**
        * The asset ID of a local video asset, acquired with the `require` function.
        * This property is exclusive with the `uri` property. When both are present, the `assetId` will be ignored.
        */
@@ -351,6 +358,16 @@ export type VideoMetadata = {
  * - iOS supports FairPlay.
  */
 export type DRMType = 'clearkey' | 'fairplay' | 'playready' | 'widevine';
+
+/**
+ * Specifies the IMA configuration which will be used with the loaded video.
+ * @platform android
+ * @platform ios
+ */
+export type GoogleIMA = {
+  adTagUri: string;
+  id?: string;
+};
 
 /**
  * Specifies DRM options which will be used by the player while loading the video.

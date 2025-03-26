@@ -13,6 +13,14 @@ export const VideoScreens = [
     },
   },
   {
+    name: 'Advertisement',
+    route: 'video/advertisement',
+    options: {},
+    getComponent() {
+      return optionalRequire(() => require('./VideoAdvertisementScreen.tsx'));
+    },
+  },
+  {
     name: 'Cache',
     route: 'video/cache',
     options: {},

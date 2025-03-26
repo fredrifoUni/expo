@@ -9,8 +9,10 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
+import androidx.media3.exoplayer.ima.ImaAdsLoader
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.ui.PlayerView
 import expo.modules.video.records.VideoSource
 import okhttp3.OkHttpClient
 
@@ -52,18 +54,22 @@ fun buildCacheDataSourceFactory(context: Context, videoSource: VideoSource): Dat
   }
 }
 
-fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Factory): MediaSource.Factory {
-  return DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)
+fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Factory, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource.Factory {
+  val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)
+  if( playerView !== null ){
+    mediaSourceFactory.setLocalAdInsertionComponents({ unusedAdTagUri -> adsLoader }, playerView)
+  }
+  return mediaSourceFactory
 }
 
 @OptIn(UnstableApi::class)
-fun buildExpoVideoMediaSource(context: Context, videoSource: VideoSource): MediaSource {
+fun buildExpoVideoMediaSource(context: Context, videoSource: VideoSource, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource {
   val dataSourceFactory = if (videoSource.useCaching) {
     buildCacheDataSourceFactory(context, videoSource)
   } else {
     buildBaseDataSourceFactory(context, videoSource)
   }
-  val mediaSourceFactory = buildMediaSourceFactory(context, dataSourceFactory)
+  val mediaSourceFactory = buildMediaSourceFactory(context, dataSourceFactory, adsLoader, playerView)
   val mediaItem = videoSource.toMediaItem(context)
   return mediaSourceFactory.createMediaSource(mediaItem)
 }
