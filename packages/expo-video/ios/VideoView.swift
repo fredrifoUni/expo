@@ -9,19 +9,19 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   lazy var playerViewController = AVPlayerViewController()
 
   weak var player: VideoPlayer? {
-      // Pass class instances to the VideoPlayer
-      didSet {
-        playerViewController.player = player?.ref
-          
-        // Add Video delegate
-        observer = VideoPlayerObserver(owner: self.player!)
-        observer?.registerDelegate(delegate: self)
-          
-        // Pass the VideoPlayer instance to the Ad manager
-        adsManager.player = player
-        player?.adsManager = adsManager
-        player?.videoView = self
-      }
+    // Pass class instances to the VideoPlayer
+    didSet {
+      playerViewController.player = player?.ref
+        
+      // Add Video delegate
+      observer = VideoPlayerObserver(owner: self.player!)
+      observer?.registerDelegate(delegate: self)
+        
+      // Pass the VideoPlayer instance to the Ad manager
+      adsManager.player = player
+      player?.adsManager = adsManager
+      player?.videoView = self
+    }
   }
 
   #if os(tvOS)

@@ -403,7 +403,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     activePlayerView = playerView
 
     player.clearVideoSurface()
-    player.setVideoSurfaceView(playerView.videoSurfaceView as SurfaceView?)
+    // player.setVideoSurfaceView(playerView.videoSurfaceView as SurfaceView?)
 
     if (player.playbackState != Player.STATE_IDLE) {
       // TODO: Can this switchTarget be removed? Not sure if we should update it or not
@@ -429,24 +429,17 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
       player.prepare()
       commitedSource = newSource
 
-      // HACK: Initialize the ad player when the player view is accessible
-      videoView?.playerView?.let { playerView ->
-        adsLoader.setPlayer(playerView.player)
-        Log.d("IMA", "Player is configured to display Ads")
-      } ?: Log.w("IMA", "HACK: Waiting for prepare to be called with a valid playerView")
-
       player.playWhenReady = true // TODO: This should be configured in props or only for IMA Ads
-      commitedSource = newSource
       uncommittedSource = null
       isLoadingNewSource = true
     } ?: run {
       player.clearMediaItems()
       player.prepare()
       isLoadingNewSource = false
-      
+
       // TODO: HACK: Re-initiating exoplayer to include ads. This is done here since player view is available
-      commitedSource?.toMediaSource(context, adsLoader, playerView)?.let {
-        adsLoader.setPlayer(playerView?.player)
+      commitedSource?.toMediaSource(context, adsLoader, activePlayerView)?.let {
+        adsLoader.setPlayer(activePlayerView?.player)
         player.prepare()
         player.setMediaSource(it)
       }
