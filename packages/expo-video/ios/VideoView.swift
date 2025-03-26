@@ -9,11 +9,12 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   lazy var playerViewController = AVPlayerViewController()
 
   weak var player: VideoPlayer? {
-      // Pass class instances to the VideoPlayer
-      didSet {
-        player?.adsManager = adsManager
-        player?.videoView = self
-      }
+    // Pass class instances to the VideoPlayer
+    didSet {
+      player?.adsManager = adsManager
+      player?.videoView = self
+      playerViewController.player = player?.ref
+    }
   }
 
   #if os(tvOS)
@@ -43,6 +44,9 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   let onPictureInPictureStop = EventDispatcher()
   let onFullscreenEnter = EventDispatcher()
   let onFullscreenExit = EventDispatcher()
+  let onFirstFrameRender = EventDispatcher()
+
+  var firstFrameObserver: NSKeyValueObservation?
 
   public override var bounds: CGRect {
     didSet {
@@ -64,11 +68,13 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     playerViewController.updatesNowPlayingInfoCenter = false
     #endif
 
+    addFirstFrameObserver()
     addSubview(playerViewController.view)
   }
 
   deinit {
     VideoManager.shared.unregister(videoView: self)
+    removeFirstFrameObserver()
   }
 
   func enterFullscreen() {
@@ -163,9 +169,9 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     self.playerViewController.endAppearanceTransition()
     // Ensure playing state is preserved
     if wasPlaying {
-      self.player?.pointer.play()
+      self.player?.ref.play()
     } else {
-      self.player?.pointer.pause()
+      self.player?.ref.pause()
     }
   }
   #endif
@@ -194,12 +200,12 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
       
     // Platform's behavior is to pause the player when exiting the fullscreen mode.
     // It seems better to continue playing, so we resume the player once the dismissing animation finishes.
-    let wasPlaying = player?.pointer.timeControlStatus == .playing
+    let wasPlaying = player?.ref.timeControlStatus == .playing
 
     coordinator.animate(alongsideTransition: nil) { context in
       if !context.isCancelled {
         if wasPlaying {
-          self.player?.pointer.play()
+          self.player?.ref.play()
         }
         self.onFullscreenExit()
         self.isFullscreen = false
@@ -227,5 +233,24 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     #if !os(tvOS)
     playerViewController.beginAppearanceTransition(self.window != nil, animated: true)
     #endif
+  }
+
+  public override func safeAreaInsetsDidChange() {
+    super.safeAreaInsetsDidChange()
+    // This is the only way that I (@behenate) found to force re-calculation of the safe-area insets for native controls
+    playerViewController.view.removeFromSuperview()
+    addSubview(playerViewController.view)
+  }
+
+  private func addFirstFrameObserver() {
+    firstFrameObserver = playerViewController.observe(\.isReadyForDisplay, changeHandler: { [weak self] playerViewController, _ in
+      if playerViewController.isReadyForDisplay {
+        self?.onFirstFrameRender()
+      }
+    })
+  }
+  private func removeFirstFrameObserver() {
+    firstFrameObserver?.invalidate()
+    firstFrameObserver = nil
   }
 }

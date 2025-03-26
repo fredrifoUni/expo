@@ -7,6 +7,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ima.ImaAdsLoader
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -16,7 +17,7 @@ import expo.modules.video.records.VideoSource
 import okhttp3.OkHttpClient
 
 @OptIn(UnstableApi::class)
-fun buildDataSourceFactory(context: Context, videoSource: VideoSource): DataSource.Factory {
+fun buildBaseDataSourceFactory(context: Context, videoSource: VideoSource): DataSource.Factory {
   return if (videoSource.uri?.scheme?.startsWith("http") == true) {
     buildOkHttpDataSourceFactory(context, videoSource)
   } else {
@@ -44,6 +45,15 @@ fun buildOkHttpDataSourceFactory(context: Context, videoSource: VideoSource): Ok
   }
 }
 
+@OptIn(UnstableApi::class)
+fun buildCacheDataSourceFactory(context: Context, videoSource: VideoSource): DataSource.Factory {
+  return CacheDataSource.Factory().apply {
+    setCache(VideoManager.cache.instance)
+    setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+    setUpstreamDataSourceFactory(buildBaseDataSourceFactory(context, videoSource))
+  }
+}
+
 fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Factory, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource.Factory {
   val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)
   if( playerView !== null ){
@@ -53,8 +63,12 @@ fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Fact
 }
 
 @OptIn(UnstableApi::class)
-fun buildMediaSourceWithHeaders(context: Context, videoSource: VideoSource, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource {
-  val dataSourceFactory = buildDataSourceFactory(context, videoSource)
+fun buildExpoVideoMediaSource(context: Context, videoSource: VideoSource, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource {
+  val dataSourceFactory = if (videoSource.useCaching) {
+    buildCacheDataSourceFactory(context, videoSource)
+  } else {
+    buildBaseDataSourceFactory(context, videoSource)
+  }
   val mediaSourceFactory = buildMediaSourceFactory(context, dataSourceFactory, adsLoader, playerView)
   val mediaItem = videoSource.toMediaItem(context)
   return mediaSourceFactory.createMediaSource(mediaItem)

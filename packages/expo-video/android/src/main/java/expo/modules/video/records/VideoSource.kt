@@ -17,7 +17,7 @@ import androidx.media3.ui.PlayerView
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.video.UnsupportedDRMTypeException
-import expo.modules.video.buildMediaSourceWithHeaders
+import expo.modules.video.buildExpoVideoMediaSource
 import java.io.Serializable
 
 @OptIn(UnstableApi::class)
@@ -26,7 +26,8 @@ class VideoSource(
   @Field var advertisement: Advertisement? = null,
   @Field var drm: DRMOptions? = null,
   @Field var metadata: VideoMetadata? = null,
-  @Field var headers: Map<String, String>? = null
+  @Field var headers: Map<String, String>? = null,
+  @Field var useCaching: Boolean = false
 ) : Record, Serializable {
   private fun toMediaId(): String {
     return "uri:${this.uri}" +
@@ -44,7 +45,7 @@ class VideoSource(
 
   fun toMediaSource(context: Context, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource? {
     this.uri ?: return null
-    return buildMediaSourceWithHeaders(context, this, adsLoader, playerView)
+    return buildExpoVideoMediaSource(context, this, adsLoader, playerView)
   }
 
   fun toMediaItem(context: Context) = MediaItem

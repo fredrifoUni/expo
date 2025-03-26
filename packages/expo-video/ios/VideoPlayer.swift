@@ -40,9 +40,9 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
         safeEmit(event: "playbackRateChange", payload: payload)
       }
       if #available(iOS 16.0, tvOS 16.0, *) {
-        pointer.defaultRate = playbackRate
+        ref.defaultRate = playbackRate
       }
-      pointer.rate = playbackRate
+      ref.rate = playbackRate
     }
   }
 
@@ -56,7 +56,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
 
   var preservesPitch = true {
     didSet {
-      pointer.currentItem?.audioTimePitchAlgorithm = preservesPitch ? .spectral : .varispeed
+      ref.currentItem?.audioTimePitchAlgorithm = preservesPitch ? .spectral : .varispeed
     }
   }
 
@@ -66,7 +66,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
         let payload = VolumeChangedEventPayload(volume: volume, oldVolume: oldValue)
         safeEmit(event: "volumeChange", payload: payload)
       }
-      pointer.volume = volume
+      ref.volume = volume
     }
   }
 
@@ -76,7 +76,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
         let payload = MutedChangedEventPayload(muted: isMuted, oldMuted: oldValue)
         safeEmit(event: "mutedChange", payload: payload)
       }
-      pointer.isMuted = isMuted
+      ref.isMuted = isMuted
       VideoManager.shared.setAppropriateAudioSessionOrWarn()
     }
   }
@@ -106,7 +106,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
   }
 
   var currentLiveTimestamp: Double? {
-    guard let currentDate = pointer.currentItem?.currentDate() else {
+    guard let currentDate = ref.currentItem?.currentDate() else {
       return nil
     }
     let timeIntervalSince = currentDate.timeIntervalSince1970
@@ -114,7 +114,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
   }
 
   var currentOffsetFromLive: Double? {
-    guard let currentDate = pointer.currentItem?.currentDate() else {
+    guard let currentDate = ref.currentItem?.currentDate() else {
       return nil
     }
     let timeIntervalSince = currentDate.timeIntervalSince1970
@@ -124,8 +124,8 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
 
   var bufferOptions = BufferOptions() {
     didSet {
-      pointer.currentItem?.preferredForwardBufferDuration = bufferOptions.preferredForwardBufferDuration
-      pointer.automaticallyWaitsToMinimizeStalling = bufferOptions.waitsToMinimizeStalling
+      ref.currentItem?.preferredForwardBufferDuration = bufferOptions.preferredForwardBufferDuration
+      ref.automaticallyWaitsToMinimizeStalling = bufferOptions.waitsToMinimizeStalling
     }
   }
 
@@ -133,15 +133,23 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
     return getBufferedPosition()
   }
 
-  override init(_ pointer: AVPlayer) {
-    super.init(pointer)
+  private(set) var availableVideoTracks: [VideoTrack] = []
+  private(set) var currentVideoTrack: VideoTrack? {
+    didSet {
+      let payload = VideoTrackChangedEventPayload(videoTrack: currentVideoTrack, oldVideoTrack: oldValue)
+      safeEmit(event: "videoTrackChange", payload: payload)
+    }
+  }
+
+  override init(_ ref: AVPlayer) {
+    super.init(ref)
     observer = VideoPlayerObserver(owner: self)
     observer?.registerDelegate(delegate: self)
     VideoManager.shared.register(videoPlayer: self)
 
     // Disable automatic subtitle selection
     let selectionCriteria = AVPlayerMediaSelectionCriteria(preferredLanguages: [], preferredMediaCharacteristics: [.legible])
-    pointer.setMediaSelectionCriteria(selectionCriteria, forMediaCharacteristic: .legible)
+    ref.setMediaSelectionCriteria(selectionCriteria, forMediaCharacteristic: .legible)
   }
 
   deinit {
@@ -171,22 +179,23 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
       let videoSource = videoSource,
       let url = videoSource.uri
     else {
-      DispatchQueue.main.async { [pointer] in
-        pointer.replaceCurrentItem(with: nil)
+      DispatchQueue.main.async { [ref] in
+        ref.replaceCurrentItem(with: nil)
       }
       return
     }
 
-    let asset = if let headers = videoSource.headers {
-      AVURLAsset(url: url, options: ["AVURLAssetHTTPHeaderFieldsKey": headers])
+    let playerItem = if let headers = videoSource.headers {
+      VideoPlayerItem(url: url, videoSource: videoSource, avUrlAssetOptions: ["AVURLAssetHTTPHeaderFieldsKey": headers])
     } else {
-      AVURLAsset(url: url)
+      VideoPlayerItem(url: url, videoSource: videoSource, avUrlAssetOptions: nil)
     }
-    let playerItem = VideoPlayerItem(asset: asset, videoSource: videoSource)
+
+    ref.automaticallyWaitsToMinimizeStalling = false
 
     if let drm = videoSource.drm {
       try drm.type.assertIsSupported()
-      contentKeyManager.addContentKeyRequest(videoSource: videoSource, asset: asset)
+      contentKeyManager.addContentKeyRequest(videoSource: videoSource, asset: playerItem.urlAsset)
     }
 
     playerItem.audioTimePitchAlgorithm = preservesPitch ? .spectral : .varispeed
@@ -196,7 +205,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
     // sometimes the KVOs will try to deliver updates after the item has been changed or player deallocated,
     // which causes crashes.
     DispatchQueue.main.async { [weak self] in
-      self?.pointer.replaceCurrentItem(with: playerItem)
+      self?.ref.replaceCurrentItem(with: playerItem)
     }
   }
 
@@ -206,7 +215,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
    * video invisible for around a second after foregrounding, disabling the tracks requires more code, but works a lot faster.
    */
   func setTracksEnabled(_ enabled: Bool) {
-    pointer.currentItem?.tracks.forEach({ track in
+    ref.currentItem?.tracks.forEach({ track in
       guard let assetTrack = track.assetTrack else {
         return
       }
@@ -218,10 +227,10 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
   }
 
   private func getBufferedPosition() -> Double {
-    guard let currentItem = pointer.currentItem else {
+    guard let currentItem = ref.currentItem else {
       return -1
     }
-    let currentTime = pointer.currentTime().seconds
+    let currentTime = ref.currentTime().seconds
 
     for timeRange in currentItem.loadedTimeRanges {
       let start = CMTimeGetSeconds(timeRange.timeRangeValue.start)
@@ -236,7 +245,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
   // MARK: - VideoPlayerObserverDelegate
 
   func onStatusChanged(player: AVPlayer, oldStatus: PlayerStatus?, newStatus: PlayerStatus, error: Exception?) {
-    let errorRecord = error != nil ? PlaybackError(message: error?.localizedDescription) : nil
+    let errorRecord = error != nil ? PlaybackError(message: error?.description) : nil
     let payload = StatusChangedEventPayload(status: newStatus, oldStatus: oldStatus, error: errorRecord)
     safeEmit(event: "statusChange", payload: payload)
     status = newStatus
@@ -265,7 +274,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
     } else if newRate != 0 && newRate != playbackRate {
       // On iOS < 16 play() method always returns the rate to 1.0, we have to keep resetting it back to desiredRate
       // iOS < 16 uses an older player UI, so we don't have to worry about changes to the rate that come from the player UI
-      pointer.rate = playbackRate
+      ref.rate = playbackRate
     }
   }
 
@@ -278,6 +287,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
   }
 
   func onPlayedToEnd(player: AVPlayer) {
+<<<<<<< HEAD
     // Checking for queued Ads
     let shouldShowPostRoll: Bool = adsManager?.hasMoreAds ?? false
       
@@ -286,6 +296,13 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
       
     // Handle video end logic or wait for ads to complete
     if !shouldShowPostRoll { onVideoAndAdsCompleted() }
+=======
+    safeEmit(event: "playToEnd")
+    if loop {
+      self.ref.seek(to: .zero)
+      self.ref.play()
+    }
+>>>>>>> main
   }
     
   func onVideoAndAdsCompleted() {
@@ -322,6 +339,20 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
       oldAvailableSubtitleTracks: oldTracks
     )
     safeEmit(event: "availableSubtitleTracksChange", payload: payload)
+
+    Task {
+      let videoPlayerItem: VideoPlayerItem? = playerItem as? VideoPlayerItem
+      // Those properties will be already loaded 99.9% of time, so the event delay should be almost 0
+      availableVideoTracks = await videoPlayerItem?.videoTracks ?? []
+
+      let videoSourceLoadedPayload = VideoSourceLoadedEventPayload(
+        videoSource: videoPlayerItem?.videoSource,
+        duration: playerItem?.duration.seconds,
+        availableVideoTracks: availableVideoTracks,
+        availableSubtitleTracks: subtitles.availableSubtitleTracks
+      )
+      safeEmit(event: "sourceLoad", payload: videoSourceLoadedPayload)
+    }
   }
 
   func onSubtitleSelectionChanged(player: AVPlayer, playerItem: AVPlayerItem?, subtitleTrack: SubtitleTrack?) {
@@ -329,6 +360,10 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
     subtitles.onNewSubtitleTrackSelected(subtitleTrack: subtitleTrack)
     let payload = SubtitleTrackChangedEventPayload(subtitleTrack: subtitles.currentSubtitleTrack, oldSubtitleTrack: oldTrack)
     safeEmit(event: "subtitleTrackChange", payload: payload)
+  }
+
+  func onVideoTrackChanged(player: AVPlayer, oldVideoTrack: VideoTrack?, newVideoTrack: VideoTrack?) {
+    currentVideoTrack = newVideoTrack
   }
 
   func safeEmit(event: String, payload: Record? = nil) {

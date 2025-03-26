@@ -130,6 +130,7 @@ export function cleanContent(content) {
     }
 
     let processed = part
+      .replace(/<RedirectNotification[^>]*>[\S\s]*?<\/RedirectNotification>/g, '')
       .replace(/\/\*\s*@(?:info|hide)\s*\*\/(?:(?!\/\*\s*@end)[\S\s])*\/\*\s*@end\s*\*\//g, '')
       .replace(/{\s*\/\*\s*todo:\s*[\S\s]*?\*\/\s*}/gi, '')
       .replace(/\/\*\s*@tutinfo(?:\s*<CODE>.*?<\/CODE>)?.*?\*\//g, '')
@@ -202,7 +203,10 @@ export function cleanContent(content) {
           return '```sh\n' + commands.join('\n') + '\n```';
         }
       )
-      .replace(/<br\s*\/?>/g, '');
+      .replace(/<br\s*\/?>/g, '')
+      .replace(/<PlatformAndDeviceForm\s*\/?>/g, '')
+      .replace(/<DevelopmentModeForm\s*\/?>/g, '')
+      .replace(/^(#{1,6}.*?)>\s*$/gm, '$1');
 
     if (index % 2 === 0) {
       processed = processed.replace(/^import\s+.*?from\s+["'].*?["'];?\s*\n/gm, '');
@@ -245,4 +249,58 @@ export function generateSectionMarkdown(section) {
   });
 
   return content;
+}
+
+function generateVideoUrl(videoId) {
+  return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
+function processTalks(talks, type = 'video') {
+  return talks.map(talk => {
+    if (type === 'podcast' && talk.link) {
+      return {
+        title: talk.title,
+        url: talk.link,
+      };
+    }
+
+    return {
+      title: talk.title,
+      url: talk.videoId ? generateVideoUrl(talk.videoId) : '',
+    };
+  });
+}
+
+export async function exportTalksData() {
+  const { TALKS, PODCASTS, LIVE_STREAMS, YOUTUBE_VIDEOS } = await import('./talks.js');
+  return {
+    title: 'Additional Resources',
+    description: 'Collection of talks, podcasts, and live streams from the Expo team',
+    sections: [
+      {
+        title: 'Conference Talks',
+        items: processTalks(TALKS),
+        groups: [],
+        sections: [],
+      },
+      {
+        title: 'Podcasts',
+        items: processTalks(PODCASTS, 'podcast'),
+        groups: [],
+        sections: [],
+      },
+      {
+        title: 'Live Streams',
+        items: processTalks(LIVE_STREAMS),
+        groups: [],
+        sections: [],
+      },
+      {
+        title: 'YouTube Tutorials',
+        items: processTalks(YOUTUBE_VIDEOS),
+        groups: [],
+        sections: [],
+      },
+    ],
+  };
 }

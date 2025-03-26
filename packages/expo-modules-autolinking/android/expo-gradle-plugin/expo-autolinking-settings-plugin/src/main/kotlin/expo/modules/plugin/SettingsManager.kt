@@ -13,6 +13,7 @@ import expo.modules.plugin.gradle.linkPlugin
 import expo.modules.plugin.gradle.linkProject
 import expo.modules.plugin.text.Colors
 import expo.modules.plugin.text.Emojis
+import expo.modules.plugin.text.withColor
 import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
 import org.gradle.internal.extensions.core.extra
@@ -44,7 +45,15 @@ class SettingsManager(
       env.commandLine(command)
     }.standardOutput.asText.get()
 
-    ExpoAutolinkingConfig.decodeFromString(result)
+    val decodedConfig = ExpoAutolinkingConfig.decodeFromString(result)
+
+    decodedConfig.allProjects.forEach { project ->
+      if (project.publication != null) {
+        project.configuration.shouldUsePublication = true
+      }
+    }
+
+    return@lazy decodedConfig
   }
 
   fun useExpoModules() {
@@ -52,9 +61,10 @@ class SettingsManager(
 
     settings.gradle.beforeProject { project ->
       // Adds precompiled artifacts
-      config.allAarProjects
-        .filter { it.name == project.name }
-        .forEach(project::applyAarProject)
+      val projectConfig = config.getConfigForProject(project)
+      projectConfig?.aarProjects?.forEach(
+        project::applyAarProject
+      )
     }
 
     // Defines the required features for the core module
@@ -75,7 +85,7 @@ class SettingsManager(
         .allPlugins
         .filter { it.applyToRootProject }
         .forEach { plugin ->
-          androidApplication.logger.quiet(" ${Emojis.INFORMATION}  ${Colors.YELLOW}Applying gradle plugin${Colors.RESET} '${Colors.GREEN}${plugin.id}${Colors.RESET}'")
+          androidApplication.logger.quiet(" ${Emojis.INFORMATION}  ${"Applying gradle plugin".withColor(Colors.YELLOW)} '${plugin.id.withColor(Colors.GREEN)}'")
           androidApplication.applyPlugin(plugin)
         }
     }
@@ -87,7 +97,11 @@ class SettingsManager(
    * Links all projects, plugins and aar projects.
    */
   private fun link() = with(config) {
-    allProjects.forEach(settings::linkProject)
+    allProjects.forEach { project ->
+      if (!project.shouldUsePublication) {
+        settings.linkProject(project)
+      }
+    }
     allPlugins.forEach(settings::linkPlugin)
     allAarProjects.forEach(settings::linkAarProject)
   }
