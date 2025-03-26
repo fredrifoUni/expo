@@ -402,7 +402,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     player.clearVideoSurface()
     player.setVideoSurfaceView(newPlayerView.videoSurfaceView as SurfaceView?)
 
-    PlayerView.switchTargetView(player, activePlayerView, newPlayerView)
+    switchTargetView(player, activePlayerView, newPlayerView)
 
     if (player.playbackState != Player.STATE_IDLE) {
       // TODO: Can this switchTarget be removed? Not sure if we should update it or not
@@ -413,7 +413,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     }
 
     activePlayerView = newPlayerView
-    currentPlayerView.set(playerView)
+    currentPlayerView.set(newPlayerView)
     initializeIMA()
   }
 
@@ -422,14 +422,13 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   fun prepare(alreadyPrepared: Boolean = false) {
     availableVideoTracks = listOf()
     currentVideoTrack = null
-    val newSource = if (alreadyPrepared) lastLoadedSource else uncommittedSource
+    val newSource = if (alreadyPrepared) commitedSource else uncommittedSource
     val mediaSource = newSource?.toMediaSource(context, adsLoader, activePlayerView)
 
     mediaSource?.let {
       player.setMediaSource(it)
       player.prepare()
       player.playWhenReady = true // TODO: This should be configured in props or only for IMA Ads
-      lastLoadedSource = newSource
       commitedSource = newSource
       uncommittedSource = null
       isLoadingNewSource = true
