@@ -400,10 +400,10 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   fun changePlayerView(playerView: PlayerView?) {
     PlayerView.switchTargetView(player, currentPlayerView.get(), playerView)
     currentPlayerView.set(playerView)
+    activePlayerView = playerView
 
     player.clearVideoSurface()
     player.setVideoSurfaceView(playerView.videoSurfaceView as SurfaceView?)
-
 
     if (player.playbackState != Player.STATE_IDLE) {
       // TODO: Can this switchTarget be removed? Not sure if we should update it or not
@@ -412,8 +412,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
       // TODO: Not necessary if it's the same instance as local player reference:
       // adsLoader.setPlayer(newPlayerView.player)
     }
-
-    activePlayerView = playerView
+    
     initializeIMA()
   }
 
@@ -422,8 +421,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   fun prepare(alreadyPrepared: Boolean = false) {
     availableVideoTracks = listOf()
     currentVideoTrack = null
-
-    val newSource = if (alreadyPrepared) lastLoadedSource else uncommittedSource
+    val newSource = if (alreadyPrepared) commitedSource else uncommittedSource
     val mediaSource = newSource?.toMediaSource(context, adsLoader, activePlayerView)
 
     mediaSource?.let {
@@ -438,15 +436,16 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
       } ?: Log.w("IMA", "HACK: Waiting for prepare to be called with a valid playerView")
 
       player.playWhenReady = true // TODO: This should be configured in props or only for IMA Ads
-      lastLoadedSource = newSource
+      commitedSource = newSource
       uncommittedSource = null
       isLoadingNewSource = true
     } ?: run {
       player.clearMediaItems()
       player.prepare()
       isLoadingNewSource = false
+      
       // TODO: HACK: Re-initiating exoplayer to include ads. This is done here since player view is available
-      lastLoadedSource?.toMediaSource(context, adsLoader, playerView)?.let {
+      commitedSource?.toMediaSource(context, adsLoader, playerView)?.let {
         adsLoader.setPlayer(playerView?.player)
         player.prepare()
         player.setMediaSource(it)
