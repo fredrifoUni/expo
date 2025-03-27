@@ -21,6 +21,14 @@ export const VideoScreens = [
     },
   },
   {
+    name: 'Advertisement',
+    route: 'video/advertisement',
+    options: {},
+    getComponent() {
+      return optionalRequire(() => require('./VideoAdvertisementScreen'));
+    },
+  },
+  {
     name: 'DRM',
     route: 'video/drm',
     options: {},

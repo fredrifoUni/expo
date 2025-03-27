@@ -2,10 +2,13 @@ package expo.modules.video.player
 
 import android.content.Context
 import android.media.MediaMetadataRetriever
-import androidx.media3.common.C
-import android.webkit.URLUtil
+import android.util.Log
+import android.view.SurfaceView
 import androidx.annotation.OptIn
 import androidx.media3.common.Format
+import androidx.media3.common.C
+import android.webkit.URLUtil
+import androidx.media3.common.AdViewProvider
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
@@ -20,13 +23,26 @@ import androidx.media3.exoplayer.DecoderReuseEvaluation
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
+import androidx.media3.exoplayer.ima.ImaAdsLoader
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.PlayerView.switchTargetView
+import androidx.multidex.MultiDex
+import com.google.ads.interactivemedia.v3.api.AdErrorEvent
+import com.google.ads.interactivemedia.v3.api.AdErrorEvent.AdErrorListener
+import com.google.ads.interactivemedia.v3.api.AdEvent
+import com.google.ads.interactivemedia.v3.api.AdEvent.AdEventListener
+import com.google.ads.interactivemedia.v3.api.player.AdMediaInfo
+import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer.VideoAdPlayerCallback
+import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 import expo.modules.video.IntervalUpdateClock
 import expo.modules.video.IntervalUpdateEmitter
 import expo.modules.video.VideoManager
+import expo.modules.video.VideoView
+import expo.modules.video.buildMediaSourceFactory
 import expo.modules.video.delegates.IgnoreSameSet
 import expo.modules.video.enums.AudioMixingMode
 import expo.modules.video.enums.PlayerStatus
@@ -47,6 +63,8 @@ import java.lang.ref.WeakReference
 @UnstableApi
 class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSource?) : AutoCloseable, SharedObject(appContext), IntervalUpdateEmitter {
   // This improves the performance of playing DRM-protected content
+  private var activePlayerView: PlayerView? = null
+  private var isIMAInitialized = false
   private var renderersFactory = DefaultRenderersFactory(context)
     .forceEnableMediaCodecAsynchronousQueueing()
     .setEnableDecoderFallback(true)
@@ -60,6 +78,12 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     .Builder(context, renderersFactory)
     .setLooper(context.mainLooper)
     .setLoadControl(loadControl)
+    .build()
+
+  private val adsLoader = ImaAdsLoader.Builder(context)
+    .setAdEventListener(buildAdEventListener())
+    .setAdErrorListener(buildAdErrorListener())
+    .setVideoAdPlayerCallback(buildAdPlayerCallback())
     .build()
 
   private val firstFrameEventGenerator = createFirstFrameEventGenerator()
@@ -173,6 +197,74 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   var availableVideoTracks: List<VideoTrack> = emptyList()
     private set
 
+  fun buildAdEventListener(): AdEventListener {
+    return AdEventListener { event: AdEvent ->
+      val eventType = event.type
+      Log.d("IMA", "Received AD Event: $eventType")
+    }
+  }
+
+  fun buildAdErrorListener(): AdErrorListener {
+    return AdErrorListener { event: AdErrorEvent ->
+      val eventType = event.error.message
+      Log.e("IMA", "Received AD Error: $eventType")
+    }
+  }
+
+  fun buildAdPlayerCallback(): VideoAdPlayerCallback {
+    return object : VideoAdPlayerCallback {
+      override fun onPlay(adMediaInfo: AdMediaInfo) {
+        Log.d("IMA", "Ad started playing: ${adMediaInfo.url}")
+      }
+
+      override fun onPause(adMediaInfo: AdMediaInfo) {
+        Log.d("IMA", "Ad paused: ${adMediaInfo.url}")
+      }
+
+      override fun onResume(adMediaInfo: AdMediaInfo) {
+        Log.d("IMA", "Ad resumed: ${adMediaInfo.url}")
+      }
+
+      override fun onVolumeChanged(adMediaInfo: AdMediaInfo, p1: Int) {
+        Log.d("IMA", "Ad volume changed: ${adMediaInfo.url}")
+      }
+
+      override fun onAdProgress(adMediaInfo: AdMediaInfo, p1: VideoProgressUpdate) {
+        Log.d("IMA", "Ad progress: ${adMediaInfo.url}")
+      }
+
+      override fun onBuffering(adMediaInfo: AdMediaInfo) {
+        Log.d("IMA", "Ad buffer: ${adMediaInfo.url}")
+      }
+
+      override fun onContentComplete() {
+        Log.d("IMA", "Ad completed")
+      }
+
+      override fun onEnded(adMediaInfo: AdMediaInfo) {
+        Log.d("IMA", "Ad ended: ${adMediaInfo.url}")
+      }
+
+      override fun onError(adMediaInfo: AdMediaInfo) {
+        Log.e("IMA", "Received AD Error: ${adMediaInfo.url}")
+      }
+
+      override fun onLoaded(adMediaInfo: AdMediaInfo) {
+        Log.d("IMA", "Ad ended: ${adMediaInfo.url}")
+      }
+    }
+  }
+
+  private fun initializeIMA() {
+    if( isIMAInitialized || activePlayerView == null ){ return }
+
+    Log.d("IMA", "Player is configured to display Ads")
+    isIMAInitialized = true
+
+    adsLoader.setPlayer(player)
+    prepare(true) // HACK: Re-prep sources now that IMA are initialized and ready to be injected
+  }
+
   private val playerListener = object : Player.Listener {
     override fun onIsPlayingChanged(isPlaying: Boolean) {
       this@VideoPlayer.playing = isPlaying
@@ -273,6 +365,9 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   }
 
   init {
+    // Because of the size of the ExoPlayer IMA extension, implement and enable multidex here.
+    MultiDex.install(context);
+
     ExpoVideoPlaybackService.startService(appContext, context, serviceConnection)
     player.addListener(playerListener)
     player.addAnalyticsListener(analyticsListener)
@@ -305,25 +400,49 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   fun changePlayerView(playerView: PlayerView?) {
     PlayerView.switchTargetView(player, currentPlayerView.get(), playerView)
     currentPlayerView.set(playerView)
+    activePlayerView = playerView
+
+    player.clearVideoSurface()
+    // player.setVideoSurfaceView(playerView.videoSurfaceView as SurfaceView?)
+
+    if (player.playbackState != Player.STATE_IDLE) {
+      // TODO: Can this switchTarget be removed? Not sure if we should update it or not
+//      switchTargetView(player, activePlayerView, newPlayerView)
+
+      // TODO: Not necessary if it's the same instance as local player reference:
+      // adsLoader.setPlayer(newPlayerView.player)
+    }
+    
+    initializeIMA()
   }
 
-  fun prepare() {
+  // HACK: This runs twice at startup due to videoView being unavailable early in the lifecycle.
+  // Advertisement setup depends on videoView being available.
+  fun prepare(alreadyPrepared: Boolean = false) {
     availableVideoTracks = listOf()
     currentVideoTrack = null
-
-    val newSource = uncommittedSource
-    val mediaSource = newSource?.toMediaSource(context)
+    val newSource = if (alreadyPrepared) commitedSource else uncommittedSource
+    val mediaSource = newSource?.toMediaSource(context, adsLoader, activePlayerView)
 
     mediaSource?.let {
       player.setMediaSource(it)
       player.prepare()
       commitedSource = newSource
+
+      player.playWhenReady = true // TODO: This should be configured in props or only for IMA Ads
       uncommittedSource = null
       isLoadingNewSource = true
     } ?: run {
       player.clearMediaItems()
       player.prepare()
       isLoadingNewSource = false
+
+      // TODO: HACK: Re-initiating exoplayer to include ads. This is done here since player view is available
+      commitedSource?.toMediaSource(context, adsLoader, activePlayerView)?.let {
+        adsLoader.setPlayer(activePlayerView?.player)
+        player.prepare()
+        player.setMediaSource(it)
+      }
     }
   }
 
