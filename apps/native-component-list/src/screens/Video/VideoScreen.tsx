@@ -25,7 +25,7 @@ export const VideoScreens = [
     route: 'video/advertisement',
     options: {},
     getComponent() {
-      return optionalRequire(() => require('./VideoAdvertisementScreen.tsx'));
+      return optionalRequire(() => require('./VideoAdvertisementScreen'));
     },
   },
   {
