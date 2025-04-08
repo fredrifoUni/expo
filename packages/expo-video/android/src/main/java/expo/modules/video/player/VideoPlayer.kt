@@ -403,7 +403,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     activePlayerView = playerView
 
     player.clearVideoSurface()
-    // player.setVideoSurfaceView(playerView.videoSurfaceView as SurfaceView?)
+    player.setVideoSurfaceView(playerView?.videoSurfaceView as SurfaceView?)
 
     if (player.playbackState != Player.STATE_IDLE) {
       // TODO: Can this switchTarget be removed? Not sure if we should update it or not
