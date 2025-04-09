@@ -392,9 +392,9 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     commitedSource = null
   }
 
-  override fun deallocate() {
-    super.deallocate()
+  override fun sharedObjectDidRelease() {
     close()
+    super.sharedObjectDidRelease()
   }
 
   fun changePlayerView(playerView: PlayerView?) {

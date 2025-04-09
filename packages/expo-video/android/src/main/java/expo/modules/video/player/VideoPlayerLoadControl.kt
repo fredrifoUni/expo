@@ -10,6 +10,7 @@ import androidx.media3.common.util.Util
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.LoadControl
 import androidx.media3.exoplayer.Renderer
+import androidx.media3.exoplayer.analytics.PlayerId
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.TrackGroupArray
 import androidx.media3.exoplayer.trackselection.ExoTrackSelection
@@ -199,7 +200,7 @@ private constructor(
 
   private var targetBufferBytes: Int
   private var isLoading = false
-  private var trackSelections: Array<out ExoTrackSelection>? = null
+  private var trackSelections: Array<out ExoTrackSelection?>? = null
   private val allocator: DefaultAllocator
 
   var targetBufferMs: Long = DEFAULT_MAX_BUFFER_MS.toLong()
@@ -315,16 +316,16 @@ private constructor(
     reset(false)
   }
 
-  override fun onTracksSelected(playerId: PlayerId, timeline: Timeline, mediaPeriodId: MediaSource.MediaPeriodId, renderers: Array<out Renderer>, trackGroups: TrackGroupArray, trackSelections: Array<out ExoTrackSelection>) {
+  override fun onTracksSelected(parameters: LoadControl.Parameters, trackGroups: TrackGroupArray, trackSelections: Array<out ExoTrackSelection?>) {
     this.trackSelections = trackSelections
     applyBufferBytes()
   }
 
-  override fun onStopped() {
+  override fun onStopped(playerId: PlayerId) {
     reset(true)
   }
 
-  override fun onReleased() {
+  override fun onReleased(playerId: PlayerId) {
     reset(true)
   }
 
@@ -332,58 +333,47 @@ private constructor(
     return allocator
   }
 
-  override fun getBackBufferDurationUs(): Long {
+  override fun getBackBufferDurationUs(playerId: PlayerId): Long {
     return backBufferDurationUs
   }
 
-  override fun retainBackBufferFromKeyframe(): Boolean {
+  override fun retainBackBufferFromKeyframe(playerId: PlayerId): Boolean {
     return retainBackBufferFromKeyframe
   }
 
-  override fun shouldContinueLoading(
-    playbackPositionUs: Long,
-    bufferedDurationUs: Long,
-    playbackSpeed: Float
-  ): Boolean {
+  override fun shouldContinueLoading(parameters: LoadControl.Parameters): Boolean {
     val targetBufferSizeReached = allocator.totalBytesAllocated >= targetBufferBytes
     var minBufferUs = this.minBufferUs
-    if (playbackSpeed > 1) {
+    if (parameters.playbackSpeed > 1) {
       // The playback speed is faster than real time, so scale up the minimum required media
       // duration to keep enough media buffered for a playout duration of minBufferUs.
       val mediaDurationMinBufferUs =
-        Util.getMediaDurationForPlayoutDuration(minBufferUs, playbackSpeed)
+        Util.getMediaDurationForPlayoutDuration(minBufferUs, parameters.playbackSpeed)
       minBufferUs = min(mediaDurationMinBufferUs.toDouble(), maxBufferUs.toDouble()).toLong()
     }
     // Prevent playback from getting stuck if minBufferUs is too small.
     minBufferUs = max(minBufferUs.toDouble(), 500000.0).toLong()
-    if (bufferedDurationUs < minBufferUs) {
+    if (parameters.bufferedDurationUs < minBufferUs) {
       isLoading = prioritizeTimeOverSizeThresholds || !targetBufferSizeReached
-      if (!isLoading && bufferedDurationUs < 500000) {
+      if (!isLoading && parameters.bufferedDurationUs < 500000) {
         Log.w(
           "DefaultLoadControl",
           "Target buffer size reached with less than 500ms of buffered media data."
         )
       }
-    } else if (bufferedDurationUs >= maxBufferUs || targetBufferSizeReached) {
+    } else if (parameters.bufferedDurationUs >= maxBufferUs || targetBufferSizeReached) {
       isLoading = false
     } // Else don't change the loading state.
 
     return isLoading
   }
 
-  override fun shouldStartPlayback(
-    timeline: Timeline,
-    mediaPeriodId: MediaSource.MediaPeriodId,
-    bufferedDurationUs: Long,
-    playbackSpeed: Float,
-    rebuffering: Boolean,
-    targetLiveOffsetUs: Long
-  ): Boolean {
-    var bufferedDurationUs = bufferedDurationUs
-    bufferedDurationUs = Util.getPlayoutDurationForMediaDuration(bufferedDurationUs, playbackSpeed)
-    var minBufferDurationUs = if (rebuffering) bufferForPlaybackAfterRebufferUs else bufferForPlaybackUs
-    if (targetLiveOffsetUs != C.TIME_UNSET) {
-      minBufferDurationUs = min((targetLiveOffsetUs / 2).toDouble(), minBufferDurationUs.toDouble()).toLong()
+  override fun shouldStartPlayback(parameters: LoadControl.Parameters): Boolean {
+    var bufferedDurationUs = parameters.bufferedDurationUs
+    bufferedDurationUs = Util.getPlayoutDurationForMediaDuration(bufferedDurationUs, parameters.playbackSpeed)
+    var minBufferDurationUs = if (parameters.rebuffering) bufferForPlaybackAfterRebufferUs else bufferForPlaybackUs
+    if (parameters.targetLiveOffsetUs != C.TIME_UNSET) {
+      minBufferDurationUs = min((parameters.targetLiveOffsetUs / 2).toDouble(), minBufferDurationUs.toDouble()).toLong()
     }
     return minBufferDurationUs <= 0 || bufferedDurationUs >= minBufferDurationUs || (
       !prioritizeTimeOverSizeThresholds &&
@@ -398,10 +388,12 @@ private constructor(
    * @param trackSelectionArray The selected tracks.
    * @return The target buffer size in bytes.
    */
-  private fun calculateTargetBufferBytes(trackSelectionArray: Array<out ExoTrackSelection>): Int {
+  private fun calculateTargetBufferBytes(trackSelectionArray: Array<out ExoTrackSelection?>): Int {
     var targetBufferSize = 0;
     for (exoTrackSelection in trackSelectionArray) {
-      targetBufferSize += getDefaultBufferSize(exoTrackSelection.trackGroup.type);
+      if(exoTrackSelection !== null){
+        targetBufferSize += getDefaultBufferSize(exoTrackSelection.trackGroup.type);
+      }
     }
 
     return max(DEFAULT_MIN_BUFFER_SIZE, targetBufferSize);
