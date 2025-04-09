@@ -4,6 +4,7 @@ import androidx.media3.common.C
 import androidx.media3.common.Timeline
 import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.Log
+import androidx.media3.common.util.NullableType
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -198,10 +199,7 @@ private constructor(
 
   private var targetBufferBytes: Int
   private var isLoading = false
-
-  private var renderers: Array<Renderer>? = null
-  private var trackSelections: Array<ExoTrackSelection>? = null
-
+  private var trackSelections: Array<ExoTrackSelection?>? = null
   private val allocator: DefaultAllocator
 
   var targetBufferMs: Long = DEFAULT_MAX_BUFFER_MS.toLong()
@@ -301,10 +299,8 @@ private constructor(
   }
 
   private fun applyBufferBytes() {
-    val calculatedBufferBytes = this.renderers?.let { renderers ->
-      this.trackSelections?.let { trackSelections ->
-        calculateTargetBufferBytes(renderers, trackSelections)
-      }
+    val calculatedBufferBytes = this.trackSelections?.let { trackSelections ->
+      calculateTargetBufferBytes(trackSelections)
     }
 
     if (targetBufferBytesOverwrite == C.LENGTH_UNSET && calculatedBufferBytes != null) {
@@ -319,14 +315,7 @@ private constructor(
     reset(false)
   }
 
-  override fun onTracksSelected(
-    timeline: Timeline,
-    mediaPeriodId: MediaSource.MediaPeriodId,
-    renderers: Array<Renderer>,
-    trackGroups: TrackGroupArray,
-    trackSelections: Array<ExoTrackSelection>
-  ) {
-    this.renderers = renderers
+  override fun onTracksSelected(parameters: LoadControl.Parameters, trackGroups: TrackGroupArray, trackSelections: Array<ExoTrackSelection?>) {
     this.trackSelections = trackSelections
     applyBufferBytes()
   }
@@ -406,21 +395,21 @@ private constructor(
    * Calculate target buffer size in bytes based on the selected tracks. The player will try not to
    * exceed this target buffer. Only used when `targetBufferBytes` is [C.LENGTH_UNSET].
    *
-   * @param renderers The renderers for which the track were selected.
    * @param trackSelectionArray The selected tracks.
    * @return The target buffer size in bytes.
    */
   protected fun calculateTargetBufferBytes(
-    renderers: Array<Renderer>,
-    trackSelectionArray: Array<ExoTrackSelection>
+    trackSelectionArray: Array<ExoTrackSelection?>
   ): Int {
-    var targetBufferSize = 0
-    for (i in renderers.indices) {
-      if (trackSelectionArray[i] != null) {
-        targetBufferSize += getDefaultBufferSize(renderers[i].trackType)
+    var targetBufferSize = 0;
+
+    for (exoTrackSelection in trackSelectionArray) {
+      if (exoTrackSelection != null) {
+        targetBufferSize += getDefaultBufferSize(exoTrackSelection.trackGroup.type);
       }
     }
-    return max(DEFAULT_MIN_BUFFER_SIZE.toDouble(), targetBufferSize.toDouble()).toInt()
+
+    return max(DEFAULT_MIN_BUFFER_SIZE, targetBufferSize);
   }
 
   private fun reset(resetAllocator: Boolean) {
