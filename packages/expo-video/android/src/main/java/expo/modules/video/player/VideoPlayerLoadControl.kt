@@ -199,7 +199,7 @@ private constructor(
 
   private var targetBufferBytes: Int
   private var isLoading = false
-  private var trackSelections: Array<ExoTrackSelection?>? = null
+  private var trackSelections: Array<out ExoTrackSelection>? = null
   private val allocator: DefaultAllocator
 
   var targetBufferMs: Long = DEFAULT_MAX_BUFFER_MS.toLong()
@@ -315,7 +315,7 @@ private constructor(
     reset(false)
   }
 
-  override fun onTracksSelected(parameters: LoadControl.Parameters, trackGroups: TrackGroupArray, trackSelections: Array<ExoTrackSelection?>) {
+  override fun onTracksSelected(playerId: PlayerId, timeline: Timeline, mediaPeriodId: MediaSource.MediaPeriodId, renderers: Array<out Renderer>, trackGroups: TrackGroupArray, trackSelections: Array<out ExoTrackSelection>) {
     this.trackSelections = trackSelections
     applyBufferBytes()
   }
@@ -398,15 +398,10 @@ private constructor(
    * @param trackSelectionArray The selected tracks.
    * @return The target buffer size in bytes.
    */
-  protected fun calculateTargetBufferBytes(
-    trackSelectionArray: Array<ExoTrackSelection?>
-  ): Int {
+  private fun calculateTargetBufferBytes(trackSelectionArray: Array<out ExoTrackSelection>): Int {
     var targetBufferSize = 0;
-
     for (exoTrackSelection in trackSelectionArray) {
-      if (exoTrackSelection != null) {
-        targetBufferSize += getDefaultBufferSize(exoTrackSelection.trackGroup.type);
-      }
+      targetBufferSize += getDefaultBufferSize(exoTrackSelection.trackGroup.type);
     }
 
     return max(DEFAULT_MIN_BUFFER_SIZE, targetBufferSize);
