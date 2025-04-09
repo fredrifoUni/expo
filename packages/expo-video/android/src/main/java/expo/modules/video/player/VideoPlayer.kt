@@ -230,7 +230,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
       }
 
       override fun onAdProgress(adMediaInfo: AdMediaInfo, p1: VideoProgressUpdate) {
-        Log.d("IMA", "Ad progress: ${adMediaInfo.url}")
+        Log.d("IMA", "Ad progress: ${p1.currentTimeMs}")
       }
 
       override fun onBuffering(adMediaInfo: AdMediaInfo) {
@@ -405,12 +405,14 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     player.clearVideoSurface()
     player.setVideoSurfaceView(playerView?.videoSurfaceView as SurfaceView?)
 
+    // TODO: Not necessary if it's the same instance as local player reference:
+    if (playerView != null) {
+      adsLoader.setPlayer(playerView.player)
+    }
+
     if (player.playbackState != Player.STATE_IDLE) {
       // TODO: Can this switchTarget be removed? Not sure if we should update it or not
 //      switchTargetView(player, activePlayerView, newPlayerView)
-
-      // TODO: Not necessary if it's the same instance as local player reference:
-      // adsLoader.setPlayer(newPlayerView.player)
     }
     
     initializeIMA()
