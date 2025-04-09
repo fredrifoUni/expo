@@ -385,6 +385,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     VideoManager.unregisterVideoPlayer(this@VideoPlayer)
 
     appContext?.mainQueue?.launch {
+      adsLoader.release()
       player.removeListener(playerListener)
       player.release()
     }
