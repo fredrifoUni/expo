@@ -19,6 +19,7 @@ import expo.modules.kotlin.records.Record
 import expo.modules.video.UnsupportedDRMTypeException
 import expo.modules.video.buildExpoVideoMediaSource
 import java.io.Serializable
+import androidx.core.net.toUri
 
 @OptIn(UnstableApi::class)
 class VideoSource(
@@ -56,7 +57,7 @@ class VideoSource(
 
       // Fetch advertisement if available
       advertisement?.googleIMA?.adTagUri?.let {
-        setAdsConfiguration(MediaItem.AdsConfiguration.Builder(Uri.parse(it)).build())
+        setAdsConfiguration(MediaItem.AdsConfiguration.Builder(it.toUri()).build())
       }
 
       drm?.let {
