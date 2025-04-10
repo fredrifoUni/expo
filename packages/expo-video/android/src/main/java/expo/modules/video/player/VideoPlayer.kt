@@ -3,7 +3,6 @@ package expo.modules.video.player
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.util.Log
-import android.view.SurfaceView
 import androidx.annotation.OptIn
 import androidx.media3.common.Format
 import androidx.media3.common.C
@@ -57,7 +56,8 @@ import java.lang.ref.WeakReference
 @UnstableApi
 class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSource?) : AutoCloseable, SharedObject(appContext), IntervalUpdateEmitter {
   // This improves the performance of playing DRM-protected content
-  private var isIMAInitialized = false
+  private var isAdManagerInitialized = false
+  private var isReadyToLoad = false
   private var renderersFactory = DefaultRenderersFactory(context)
     .forceEnableMediaCodecAsynchronousQueueing()
     .setEnableDecoderFallback(true)
@@ -248,14 +248,12 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     }
   }
 
-  private fun initializeIMA() {
-    if( isIMAInitialized || currentPlayerView.get() == null ){ return }
+  private fun initializeAds() {
+    if(isAdManagerInitialized){ return }
 
-    Log.d("IMA", "Player is configured to display Ads")
-    isIMAInitialized = true
+    isAdManagerInitialized = true
     adsLoader.setPlayer(player)
-
-    prepare(true) // HACK: Re-prep sources now that IMA are initialized and ready to be injected
+    Log.d("IMA", "Player is configured to display Ads")
   }
 
   private val playerListener = object : Player.Listener {
@@ -372,15 +370,24 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     }
   }
 
+  private fun disposeAdManager(){
+    isAdManagerInitialized = false
+
+    appContext?.mainQueue?.launch {
+      adsLoader.setPlayer(null)
+      adsLoader.release()
+    }
+  }
+
   override fun close() {
+    isReadyToLoad = false
+    this.disposeAdManager()
+
     appContext?.reactContext?.unbindService(serviceConnection)
     serviceConnection.playbackServiceBinder?.service?.unregisterPlayer(player)
     VideoManager.unregisterVideoPlayer(this@VideoPlayer)
 
     appContext?.mainQueue?.launch {
-      adsLoader.setPlayer(null)
-      adsLoader.release()
-
       currentPlayerView.set(null)
       player.removeListener(playerListener)
       player.release()
@@ -398,18 +405,23 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     PlayerView.switchTargetView(player, currentPlayerView.get(), playerView)
     currentPlayerView.set(playerView)
 
-    player.clearVideoSurface()
-    player.setVideoSurfaceView(playerView?.videoSurfaceView as SurfaceView?)
-
-    initializeIMA()
+    // Prepare videoPlayer
+    if (!isReadyToLoad && playerView !== null) { prepareToLoad() }
   }
 
-  // HACK: This runs twice at startup due to videoView being unavailable early in the lifecycle.
-  // Advertisement setup depends on videoView being available.
-  fun prepare(alreadyPrepared: Boolean = false) {
+  private fun prepareToLoad(){
+    initializeAds()
+    isReadyToLoad = true
+    prepare()
+  }
+
+  // TODO: rename to prepareVideo
+  fun prepare() {
+    if(!isReadyToLoad) { return }
+
     availableVideoTracks = listOf()
     currentVideoTrack = null
-    val newSource = if (alreadyPrepared) commitedSource else uncommittedSource
+    val newSource = uncommittedSource
     val mediaSource = newSource?.toMediaSource(context, adsLoader, currentPlayerView.get())
 
     mediaSource?.let {
