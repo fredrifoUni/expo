@@ -23,7 +23,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.ima.ImaAdsLoader
 import androidx.media3.ui.PlayerView
-import androidx.multidex.MultiDex
 import com.google.ads.interactivemedia.v3.api.AdErrorEvent
 import com.google.ads.interactivemedia.v3.api.AdErrorEvent.AdErrorListener
 import com.google.ads.interactivemedia.v3.api.AdEvent
@@ -356,9 +355,6 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   }
 
   init {
-    // Because of the size of the ExoPlayer IMA extension, implement and enable multidex here.
-    MultiDex.install(context);
-
     ExpoVideoPlaybackService.startService(appContext, context, serviceConnection)
     player.addListener(playerListener)
     player.addAnalyticsListener(analyticsListener)
