@@ -85,8 +85,6 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
       }
       videoPlayer?.removeListener(this)
       newPlayer?.addListener(this)
-      newPlayer?.changePlayerView(this.playerView)
-      playerView.player = newPlayer?.player
       field = newPlayer
       shouldHideSurfaceView = true
       attachPlayer()
