@@ -1,28 +1,26 @@
 package expo.modules.video
 
 import android.util.Log
-import com.google.ads.interactivemedia.v3.api.*
-import com.google.ads.interactivemedia.v3.api.AdEvent.AdEventListener
-import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer.VideoAdPlayerCallback
-import com.google.ads.interactivemedia.v3.api.AdErrorEvent.AdErrorListener
-import com.google.ads.interactivemedia.v3.api.player.AdMediaInfo
-import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate
+import com.google.ads.interactivemedia.v3.api.AdEvent
+import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer
+import com.google.ads.interactivemedia.v3.api.AdErrorEvent
+import com.google.ads.interactivemedia.v3.api.player.*
 
 class AdManager {
-  fun buildAdEventListener(): AdEventListener {
-    return AdEventListener { event ->
+  fun buildAdEventListener(): AdEvent.AdEventListener {
+    return AdEvent.AdEventListener { event ->
       Log.d("IMA", "Received AD Event: ${event.type}")
     }
   }
 
-  fun buildAdErrorListener(): AdErrorListener {
-    return AdErrorListener { errorEvent ->
+  fun buildAdErrorListener(): AdErrorEvent.AdErrorListener {
+    return AdErrorEvent.AdErrorListener { errorEvent ->
       Log.e("IMA", "Received AD Error: ${errorEvent.error.message}")
     }
   }
 
-  fun buildAdPlayerCallback(): VideoAdPlayerCallback {
-    return object : VideoAdPlayerCallback {
+  fun buildAdPlayerCallback(): VideoAdPlayer.VideoAdPlayerCallback {
+    return object : VideoAdPlayer.VideoAdPlayerCallback {
       override fun onPlay(adMediaInfo: AdMediaInfo) {
         Log.d("IMA", "Ad started playing: ${adMediaInfo.url}")
       }

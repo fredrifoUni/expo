@@ -23,13 +23,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.ima.ImaAdsLoader
 import androidx.media3.ui.PlayerView
-import com.google.ads.interactivemedia.v3.api.AdErrorEvent
-import com.google.ads.interactivemedia.v3.api.AdErrorEvent.AdErrorListener
-import com.google.ads.interactivemedia.v3.api.AdEvent
-import com.google.ads.interactivemedia.v3.api.AdEvent.AdEventListener
-import com.google.ads.interactivemedia.v3.api.player.AdMediaInfo
-import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer.VideoAdPlayerCallback
-import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 import expo.modules.video.AdManager
