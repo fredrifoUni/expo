@@ -2,7 +2,6 @@ package expo.modules.video.player
 
 import android.content.Context
 import android.media.MediaMetadataRetriever
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.Format
 import androidx.media3.common.C
@@ -21,7 +20,6 @@ import androidx.media3.exoplayer.DecoderReuseEvaluation
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
-import androidx.media3.exoplayer.ima.ImaAdsLoader
 import androidx.media3.ui.PlayerView
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
@@ -49,8 +47,6 @@ import java.lang.ref.WeakReference
 @UnstableApi
 class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSource?) : AutoCloseable, SharedObject(appContext), IntervalUpdateEmitter {
   // This improves the performance of playing DRM-protected content
-  private var adManager = AdManager()
-  private var isAdManagerInitialized = false
   private var isReadyToLoad = false
   private var renderersFactory = DefaultRenderersFactory(context)
     .forceEnableMediaCodecAsynchronousQueueing()
@@ -66,11 +62,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     .setLoadControl(loadControl)
     .build()
 
-  private val adsLoader = ImaAdsLoader.Builder(context)
-    .setAdEventListener(adManager.buildAdEventListener())
-    .setAdErrorListener(adManager.buildAdErrorListener())
-    .setVideoAdPlayerCallback(adManager.buildAdPlayerCallback())
-    .build()
+  private var adManager = AdManager(context, appContext)
 
   private val firstFrameEventGenerator = createFirstFrameEventGenerator()
   val serviceConnection = PlaybackServiceConnection(WeakReference(this))
@@ -183,14 +175,6 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   var availableVideoTracks: List<VideoTrack> = emptyList()
     private set
 
-  private fun initializeAds() {
-    if(isAdManagerInitialized){ return }
-
-    isAdManagerInitialized = true
-    adsLoader.setPlayer(player)
-    Log.d("IMA", "Player is configured to display Ads")
-  }
-
   private val playerListener = object : Player.Listener {
     override fun onIsPlayingChanged(isPlaying: Boolean) {
       this@VideoPlayer.playing = isPlaying
@@ -302,18 +286,9 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     }
   }
 
-  private fun disposeAdManager(){
-    isAdManagerInitialized = false
-
-    appContext?.mainQueue?.launch {
-      adsLoader.setPlayer(null)
-      adsLoader.release()
-    }
-  }
-
   override fun close() {
     isReadyToLoad = false
-    this.disposeAdManager()
+    adManager.dispose()
 
     appContext?.reactContext?.unbindService(serviceConnection)
     serviceConnection.playbackServiceBinder?.service?.unregisterPlayer(player)
@@ -342,7 +317,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   }
 
   private fun prepareToLoad(){
-    initializeAds()
+    adManager.initializeAds(player)
     isReadyToLoad = true
     prepare()
   }
@@ -357,14 +332,15 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     availableVideoTracks = listOf()
     currentVideoTrack = null
     val newSource = uncommittedSource
-    val mediaSource = newSource?.toMediaSource(context, adsLoader, playerView)
+    val mediaSource = newSource?.toMediaSource(context, adManager.adsLoader, playerView)
 
     mediaSource?.let {
       player.setMediaSource(it)
       player.prepare()
       commitedSource = newSource
 
-      player.playWhenReady = true // TODO: This should be configured in props or only for IMA Ads
+      // TODO: playWhenReady should be configured in props or only for IMA Ads
+      player.playWhenReady = true
       uncommittedSource = null
       isLoadingNewSource = true
     } ?: run {

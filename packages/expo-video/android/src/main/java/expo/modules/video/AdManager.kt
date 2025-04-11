@@ -1,12 +1,49 @@
 package expo.modules.video
 
+import android.content.Context
 import android.util.Log
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.ima.ImaAdsLoader
 import com.google.ads.interactivemedia.v3.api.AdEvent
 import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer
 import com.google.ads.interactivemedia.v3.api.AdErrorEvent
 import com.google.ads.interactivemedia.v3.api.player.*
+import expo.modules.kotlin.AppContext
+import kotlinx.coroutines.launch
 
-class AdManager {
+class AdManager(val context: Context, val appContext: AppContext?) {
+  private var isAdManagerInitialized = false
+  val adsLoader = buildAdsLoader()
+
+  fun initializeAds(player: ExoPlayer) {
+    if(isAdManagerInitialized){ return }
+
+    isAdManagerInitialized = true
+    adsLoader.setPlayer(player)
+    Log.d("IMA", "Player is configured to display Ads")
+  }
+
+  fun dispose(){
+    isAdManagerInitialized = false
+
+    appContext?.mainQueue?.launch {
+      adsLoader.setPlayer(null)
+      adsLoader.release()
+    }
+  }
+
+  // TODO: COMPANION FOR ALL BUILDERS?
+  @OptIn(UnstableApi::class)
+  fun buildAdsLoader(): ImaAdsLoader {
+    return ImaAdsLoader.Builder(context)
+      .setAdEventListener(buildAdEventListener())
+      .setAdErrorListener(buildAdErrorListener())
+      .setVideoAdPlayerCallback(buildAdPlayerCallback())
+      .build()
+  }
+
   fun buildAdEventListener(): AdEvent.AdEventListener {
     return AdEvent.AdEventListener { event ->
       Log.d("IMA", "Received AD Event: ${event.type}")
