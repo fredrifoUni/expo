@@ -32,6 +32,7 @@ import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer.VideoAdPlayer
 import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
+import expo.modules.video.AdManager
 import expo.modules.video.IntervalUpdateClock
 import expo.modules.video.IntervalUpdateEmitter
 import expo.modules.video.VideoManager
@@ -55,6 +56,7 @@ import java.lang.ref.WeakReference
 @UnstableApi
 class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSource?) : AutoCloseable, SharedObject(appContext), IntervalUpdateEmitter {
   // This improves the performance of playing DRM-protected content
+  private var adManager = AdManager()
   private var isAdManagerInitialized = false
   private var isReadyToLoad = false
   private var renderersFactory = DefaultRenderersFactory(context)
@@ -72,9 +74,9 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     .build()
 
   private val adsLoader = ImaAdsLoader.Builder(context)
-    .setAdEventListener(buildAdEventListener())
-    .setAdErrorListener(buildAdErrorListener())
-    .setVideoAdPlayerCallback(buildAdPlayerCallback())
+    .setAdEventListener(adManager.buildAdEventListener())
+    .setAdErrorListener(adManager.buildAdErrorListener())
+    .setVideoAdPlayerCallback(adManager.buildAdPlayerCallback())
     .build()
 
   private val firstFrameEventGenerator = createFirstFrameEventGenerator()
@@ -187,65 +189,6 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
 
   var availableVideoTracks: List<VideoTrack> = emptyList()
     private set
-
-  fun buildAdEventListener(): AdEventListener {
-    return AdEventListener { event: AdEvent ->
-      val eventType = event.type
-      Log.d("IMA", "Received AD Event: $eventType")
-    }
-  }
-
-  fun buildAdErrorListener(): AdErrorListener {
-    return AdErrorListener { event: AdErrorEvent ->
-      val eventType = event.error.message
-      Log.e("IMA", "Received AD Error: $eventType")
-    }
-  }
-
-  fun buildAdPlayerCallback(): VideoAdPlayerCallback {
-    return object : VideoAdPlayerCallback {
-      override fun onPlay(adMediaInfo: AdMediaInfo) {
-        Log.d("IMA", "Ad started playing: ${adMediaInfo.url}")
-      }
-
-      override fun onPause(adMediaInfo: AdMediaInfo) {
-        Log.d("IMA", "Ad paused: ${adMediaInfo.url}")
-      }
-
-      override fun onResume(adMediaInfo: AdMediaInfo) {
-        Log.d("IMA", "Ad resumed: ${adMediaInfo.url}")
-      }
-
-      override fun onVolumeChanged(adMediaInfo: AdMediaInfo, p1: Int) {
-        Log.d("IMA", "Ad volume changed: ${adMediaInfo.url}")
-      }
-
-      override fun onAdProgress(adMediaInfo: AdMediaInfo, p1: VideoProgressUpdate) {
-        if(!player.isPlayingAd){ return } // HACK: Prevent incorrect events when toggling fullscreen view during ads.
-        Log.d("IMA", "Ad progress: ${p1.currentTimeMs} ${player.isPlaying}")
-      }
-
-      override fun onBuffering(adMediaInfo: AdMediaInfo) {
-        Log.d("IMA", "Ad buffer: ${adMediaInfo.url}")
-      }
-
-      override fun onContentComplete() {
-        Log.d("IMA", "Ad completed")
-      }
-
-      override fun onEnded(adMediaInfo: AdMediaInfo) {
-        Log.d("IMA", "Ad ended: ${adMediaInfo.url}")
-      }
-
-      override fun onError(adMediaInfo: AdMediaInfo) {
-        Log.e("IMA", "Received AD Error: ${adMediaInfo.url}")
-      }
-
-      override fun onLoaded(adMediaInfo: AdMediaInfo) {
-        Log.d("IMA", "Ad ended: ${adMediaInfo.url}")
-      }
-    }
-  }
 
   private fun initializeAds() {
     if(isAdManagerInitialized){ return }
