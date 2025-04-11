@@ -54,22 +54,21 @@ fun buildCacheDataSourceFactory(context: Context, videoSource: VideoSource): Dat
   }
 }
 
-fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Factory, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource.Factory {
+fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Factory): DefaultMediaSourceFactory {
   val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)
-  if( playerView !== null ){
-    mediaSourceFactory.setLocalAdInsertionComponents({ unusedAdTagUri -> adsLoader }, playerView)
-  }
   return mediaSourceFactory
 }
 
 @OptIn(UnstableApi::class)
-fun buildExpoVideoMediaSource(context: Context, videoSource: VideoSource, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource {
+fun buildExpoVideoMediaSource(context: Context, videoSource: VideoSource, adsLoader: ImaAdsLoader, playerView: PlayerView): MediaSource {
   val dataSourceFactory = if (videoSource.useCaching) {
     buildCacheDataSourceFactory(context, videoSource)
   } else {
     buildBaseDataSourceFactory(context, videoSource)
   }
-  val mediaSourceFactory = buildMediaSourceFactory(context, dataSourceFactory, adsLoader, playerView)
+  val mediaSourceFactory = buildMediaSourceFactory(context, dataSourceFactory)
+    .setLocalAdInsertionComponents({ _ -> adsLoader }, playerView)
+
   val mediaItem = videoSource.toMediaItem(context)
   return mediaSourceFactory.createMediaSource(mediaItem)
 }

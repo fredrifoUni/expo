@@ -44,7 +44,7 @@ class VideoSource(
       "NotificationDataArtwork:${this.metadata?.artwork?.path}"
   }
 
-  fun toMediaSource(context: Context, adsLoader: ImaAdsLoader, playerView: PlayerView?): MediaSource? {
+  fun toMediaSource(context: Context, adsLoader: ImaAdsLoader, playerView: PlayerView): MediaSource? {
     this.uri ?: return null
     return buildExpoVideoMediaSource(context, this, adsLoader, playerView)
   }

@@ -64,7 +64,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     .setEnableDecoderFallback(true)
   private var listeners: MutableList<WeakReference<VideoPlayerListener>> = mutableListOf()
   private var currentPlayerView = MutableWeakReference<PlayerView?>(null)
-  private val loadControl: VideoPlayerLoadControl = VideoPlayerLoadControl.Builder().build()
+  val loadControl: VideoPlayerLoadControl = VideoPlayerLoadControl.Builder().build()
   val subtitles: VideoPlayerSubtitles = VideoPlayerSubtitles(this)
 
   val player = ExoPlayer
@@ -354,14 +354,17 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     prepare()
   }
 
-  // TODO: rename to prepareVideo
   fun prepare() {
     if(!isReadyToLoad) { return }
+
+    // Ensure there is a playerView attached to the video player
+    val playerView = currentPlayerView.get()
+    if(playerView === null) { return }
 
     availableVideoTracks = listOf()
     currentVideoTrack = null
     val newSource = uncommittedSource
-    val mediaSource = newSource?.toMediaSource(context, adsLoader, currentPlayerView.get())
+    val mediaSource = newSource?.toMediaSource(context, adsLoader, playerView)
 
     mediaSource?.let {
       player.setMediaSource(it)
