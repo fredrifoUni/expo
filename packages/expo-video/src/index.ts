@@ -16,6 +16,7 @@ export {
   VideoPlayer,
   VideoPlayerStatus,
   VideoSource,
+  VideoSourceObject,
   PlayerError,
   VideoMetadata,
   DRMType,

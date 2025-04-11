@@ -224,21 +224,19 @@ export type VideoThumbnailOptions = {
  * - `error`: The player has encountered an error while loading or playing the video.
  */
 export type VideoPlayerStatus = 'idle' | 'loading' | 'readyToPlay' | 'error';
-export type VideoSource = string | number | null | {
+export type VideoSourceObject = {
     /**
      * The URI of the video.
      *
      * This property is exclusive with the `assetId` property. When both are present, the `assetId` will be ignored.
      */
     uri?: string;
-
     /**
      * Specifies the DRM options which will be used by the player while loading the video.
      */
     advertisement?: {
-    googleIMA?: GoogleIMA;
+        googleIMA?: GoogleIMA;
     };
-
     /**
      * The asset ID of a local video asset, acquired with the `require` function.
      * This property is exclusive with the `uri` property. When both are present, the `assetId` will be ignored.
@@ -271,6 +269,7 @@ export type VideoSource = string | number | null | {
      */
     useCaching?: boolean;
 };
+export type VideoSource = string | number | null | VideoSourceObject;
 /**
  * Contains information about any errors that the player encountered during the playback
  */
@@ -308,6 +307,15 @@ export type VideoMetadata = {
  * - iOS supports FairPlay.
  */
 export type DRMType = 'clearkey' | 'fairplay' | 'playready' | 'widevine';
+/**
+ * Specifies the IMA configuration which will be used with the loaded video.
+ * @platform android
+ * @platform ios
+ */
+export type GoogleIMA = {
+    adTagUri: string;
+    id?: string;
+};
 /**
  * Specifies DRM options which will be used by the player while loading the video.
  */

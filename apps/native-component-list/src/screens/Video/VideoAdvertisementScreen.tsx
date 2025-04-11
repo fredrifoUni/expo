@@ -1,4 +1,4 @@
-import { useVideoPlayer, VideoSource, VideoView } from 'expo-video';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useCallback, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -19,7 +19,7 @@ export default function VideoAdvertisementScreen() {
           adTagUri: SAMPLE_ADS.preMidPost,
         },
       },
-    } as VideoSource,
+    },
     (player) => {
       player.loop = false;
       player.showNowPlayingNotification = false;

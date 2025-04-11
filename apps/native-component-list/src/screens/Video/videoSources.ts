@@ -1,4 +1,4 @@
-import { VideoSource } from 'expo-video';
+import { VideoSource, VideoSourceObject } from 'expo-video';
 
 const localVideoId: VideoSource = require('../../../assets/videos/ace.mp4') as number;
 
@@ -10,7 +10,7 @@ const localVideoSource: VideoSource = {
   },
 };
 
-const bigBuckBunnySource: Exclude<VideoSource, string | number | null> = {
+const bigBuckBunnySource: VideoSourceObject = {
   uri: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
   metadata: {
     title: 'Big Buck Bunny',
@@ -20,7 +20,7 @@ const bigBuckBunnySource: Exclude<VideoSource, string | number | null> = {
   },
 };
 
-const elephantsDreamSource: VideoSource = {
+const elephantsDreamSource: VideoSourceObject = {
   uri: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
   metadata: {
     title: 'Elephants Dream',
@@ -29,7 +29,7 @@ const elephantsDreamSource: VideoSource = {
   },
 };
 
-export const hlsSource: VideoSource = {
+export const hlsSource: VideoSourceObject = {
   uri: 'https://bitmovin-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
   metadata: {
     title: 'Sintel',
@@ -39,19 +39,19 @@ export const hlsSource: VideoSource = {
   },
 };
 
-export const nullSource: VideoSource = {
+export const nullSource: VideoSourceObject = {
   metadata: {
     title: 'Null Source',
     artist: '-',
   },
 };
 
-const forBiggerBlazesSource: VideoSource = {
+const forBiggerBlazesSource: VideoSourceObject = {
   uri: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
 };
 
 // source: https://reference.dashif.org/dash.js/latest/samples/drm/widevine.html
-const androidDrmSource: VideoSource = {
+const androidDrmSource: VideoSourceObject = {
   uri: 'https://bitmovin-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
 };
 
@@ -63,6 +63,7 @@ const videoLabels: string[] = [
   'Cute Doggo (local video)',
   'Null Source',
 ];
+
 const videoSources: VideoSource[] = [
   bigBuckBunnySource,
   elephantsDreamSource,

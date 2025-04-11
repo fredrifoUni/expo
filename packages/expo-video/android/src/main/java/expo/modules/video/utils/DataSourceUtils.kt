@@ -55,8 +55,7 @@ fun buildCacheDataSourceFactory(context: Context, videoSource: VideoSource): Dat
 }
 
 fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Factory): DefaultMediaSourceFactory {
-  val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)
-  return mediaSourceFactory
+  return DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)
 }
 
 @OptIn(UnstableApi::class)
@@ -66,6 +65,7 @@ fun buildExpoVideoMediaSource(context: Context, videoSource: VideoSource, adsLoa
   } else {
     buildBaseDataSourceFactory(context, videoSource)
   }
+
   val mediaSourceFactory = buildMediaSourceFactory(context, dataSourceFactory)
     .setLocalAdInsertionComponents({ _ -> adsLoader }, playerView)
 

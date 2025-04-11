@@ -263,61 +263,59 @@ export type VideoThumbnailOptions = {
  */
 export type VideoPlayerStatus = 'idle' | 'loading' | 'readyToPlay' | 'error';
 
-export type VideoSource =
-  | string
-  | number
-  | null
-  | {
-      /**
-       * The URI of the video.
-       *
-       * This property is exclusive with the `assetId` property. When both are present, the `assetId` will be ignored.
-       */
-      uri?: string;
+export type VideoSourceObject = {
+  /**
+   * The URI of the video.
+   *
+   * This property is exclusive with the `assetId` property. When both are present, the `assetId` will be ignored.
+   */
+  uri?: string;
 
-      /**
-       * Specifies the DRM options which will be used by the player while loading the video.
-       */
-      advertisement?: {
-        googleIMA?: GoogleIMA;
-      };
+  /**
+   * Specifies the DRM options which will be used by the player while loading the video.
+   */
+  advertisement?: {
+    googleIMA?: GoogleIMA;
+  };
 
-      /**
-       * The asset ID of a local video asset, acquired with the `require` function.
-       * This property is exclusive with the `uri` property. When both are present, the `assetId` will be ignored.
-       */
-      assetId?: number;
+  /**
+   * The asset ID of a local video asset, acquired with the `require` function.
+   * This property is exclusive with the `uri` property. When both are present, the `assetId` will be ignored.
+   */
+  assetId?: number;
 
-      /**
-       * Specifies the DRM options which will be used by the player while loading the video.
-       */
-      drm?: DRMOptions;
+  /**
+   * Specifies the DRM options which will be used by the player while loading the video.
+   */
+  drm?: DRMOptions;
 
-      /**
-       * Specifies information which will be displayed in the now playing notification.
-       * When undefined the player will display information contained in the video metadata.
-       * @platform android
-       * @platform ios
-       */
-      metadata?: VideoMetadata;
+  /**
+   * Specifies information which will be displayed in the now playing notification.
+   * When undefined the player will display information contained in the video metadata.
+   * @platform android
+   * @platform ios
+   */
+  metadata?: VideoMetadata;
 
-      /**
-       * Specifies headers sent with the video request.
-       * > For DRM license headers use the `headers` field of [`DRMOptions`](#drmoptions).
-       * @platform android
-       * @platform ios
-       */
-      headers?: Record<string, string>;
+  /**
+   * Specifies headers sent with the video request.
+   * > For DRM license headers use the `headers` field of [`DRMOptions`](#drmoptions).
+   * @platform android
+   * @platform ios
+   */
+  headers?: Record<string, string>;
 
-      /**
-       * Specifies whether the player should use caching for the video.
-       * > Due to platform limitations, the cache cannot be used with HLS video sources on iOS. Caching DRM-protected videos is not supported on Android and iOS.
-       * @default false
-       * @platform android
-       * @platform ios
-       */
-      useCaching?: boolean;
-    };
+  /**
+   * Specifies whether the player should use caching for the video.
+   * > Due to platform limitations, the cache cannot be used with HLS video sources on iOS. Caching DRM-protected videos is not supported on Android and iOS.
+   * @default false
+   * @platform android
+   * @platform ios
+   */
+  useCaching?: boolean;
+};
+
+export type VideoSource = string | number | null | VideoSourceObject;
 
 /**
  * Contains information about any errors that the player encountered during the playback
