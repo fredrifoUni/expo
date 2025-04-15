@@ -169,6 +169,7 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
   }
 
   fun enterFullscreen() {
+    if(isInFullscreen){ return }
     logHandler.d(LOG_TAG, "enterFullscreen")
 
     // Set before starting to avoid entering PiP unintentionally
@@ -181,20 +182,18 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
     applyAutoEnterPiP(currentActivity, false)
   }
 
+  /**
+   * NOTE: This method should only be called by [enterFullscreen].
+   */
   private fun enterFullscreenDialog(){
-    isInFullscreen = true
-
-    fullscreenPlayerDialog = FullscreenPlayerDialog(context, playerView, ::onDialogBackPress).apply {
-      show()
-    }
+    fullscreenPlayerDialog = FullscreenPlayerDialog(context, playerView, ::exitFullscreen)
+    fullscreenPlayerDialog?.show()
   }
 
-  private fun onDialogBackPress(){
-    exitFullscreenDialog()
-  }
-
+  /**
+   * NOTE: This method should only be called by [exitFullscreen].
+   */
   private fun exitFullscreenDialog() {
-    // Hide dialog
     val dialog = fullscreenPlayerDialog ?: return
     dialog.dismiss()
 
@@ -205,6 +204,9 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
     fullscreenPlayerDialog = null
   }
 
+  /**
+   * NOTE: This method should only be called by [enterFullscreen].
+   */
   private fun enterFullscreenActivity() {
     val intent = Intent(context, FullscreenPlayerActivity::class.java)
     intent.putExtra(VideoManager.INTENT_PLAYER_KEY, id)
@@ -225,6 +227,7 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
   }
 
   fun exitFullscreen() {
+    if(!isInFullscreen){ return }
     logHandler.d(LOG_TAG, "exitFullscreen")
 
     // Fullscreen uses a different PlayerView instance, because of that we need to manually update the non-fullscreen player icon after exiting
@@ -239,6 +242,9 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
     applyAutoEnterPiP(currentActivity, autoEnterPiP)
   }
 
+  /**
+   * NOTE: This method should only be called by [exitFullscreen].
+   */
   private fun exitFullscreenActivity() {
     attachPlayer()
   }
