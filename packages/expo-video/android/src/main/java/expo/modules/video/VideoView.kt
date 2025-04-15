@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.util.Log
 import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +15,7 @@ import android.widget.ImageButton
 import androidx.fragment.app.FragmentActivity
 import androidx.media3.common.Tracks
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.PlayerView.FullscreenButtonClickListener
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.ExpoView
@@ -68,6 +70,11 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
       field = value
     }
 
+  // TODO: Fully migrate to dialog (PiP needs rework)
+  // NOTE: IMA SDK breaks with activities. Use dialog instead.
+  private val useFullscreenDialog = true
+  private var fullscreenPlayerDialog: FullscreenPlayerDialog? = null
+
   var autoEnterPiP: Boolean by IgnoreSameSet(false) { new, _ ->
     applyAutoEnterPiP(currentActivity, new)
   }
@@ -100,10 +107,15 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
       field = value
     }
 
+  private val fullscreenButtonClickListener = FullscreenButtonClickListener { isFullscreen ->
+      if(isFullscreen) { enterFullscreen() }
+      else { exitFullscreen() }
+  }
+
   var allowsFullscreen: Boolean = true
     set(value) {
       if (value) {
-        playerView.setFullscreenButtonClickListener { enterFullscreen() }
+        playerView.setFullscreenButtonClickListener (fullscreenButtonClickListener)
       } else {
         playerView.setFullscreenButtonClickListener(null)
         // Setting listener to null should hide the button, but judging by ExoPlayer source code
@@ -123,7 +135,7 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
 
   init {
     VideoManager.registerVideoView(this)
-    playerView.setFullscreenButtonClickListener { enterFullscreen() }
+    playerView.setFullscreenButtonClickListener (fullscreenButtonClickListener)
     // The prop `useNativeControls` prop is sometimes applied after the view is created, and sometimes there is a visible
     // flash of controls event when they are set to off. Initially we set it to `false` and apply it in `onAttachedToWindow` to avoid this.
     this.playerView.useController = false
@@ -149,10 +161,45 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
   }
 
   fun enterFullscreen() {
+    Log.d("IMA", "enterFullscreen")
+
+    // Set before starting to avoid entering PiP unintentionally
+    isInFullscreen = true
+
+    if(useFullscreenDialog){ enterFullscreenDialog() }
+    else { enterFullscreenActivity() }
+
+    onFullscreenEnter(Unit)
+    applyAutoEnterPiP(currentActivity, false)
+  }
+
+  private fun enterFullscreenDialog(){
+    isInFullscreen = true
+
+    fullscreenPlayerDialog = FullscreenPlayerDialog(context, playerView, ::onDialogBackPress).apply {
+      show()
+    }
+  }
+
+  private fun onDialogBackPress(){
+    exitFullscreenDialog()
+  }
+
+  private fun exitFullscreenDialog() {
+    // Hide dialog
+    val dialog = fullscreenPlayerDialog ?: return
+    dialog.dismiss()
+
+    // Move playerView back to normal view
+    val playerViewParent = (playerView.parent as? ViewGroup)
+    playerViewParent?.removeView(playerView)
+    addView(playerView, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+    fullscreenPlayerDialog = null
+  }
+
+  private fun enterFullscreenActivity() {
     val intent = Intent(context, FullscreenPlayerActivity::class.java)
     intent.putExtra(VideoManager.INTENT_PLAYER_KEY, id)
-    // Set before starting the activity to avoid entering PiP unintentionally
-    isInFullscreen = true
     currentActivity.startActivity(intent)
 
     // Disable the enter transition
@@ -162,22 +209,30 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
       @Suppress("DEPRECATION")
       currentActivity.overridePendingTransition(0, 0)
     }
-    onFullscreenEnter(Unit)
-    applyAutoEnterPiP(currentActivity, false)
   }
 
   fun attachPlayer() {
+    Log.d("IMA", "attachPlayer")
     videoPlayer?.changePlayerView(playerView)
   }
 
   fun exitFullscreen() {
+    Log.d("IMA", "exitFullscreen")
+
     // Fullscreen uses a different PlayerView instance, because of that we need to manually update the non-fullscreen player icon after exiting
     val fullScreenButton: ImageButton = playerView.findViewById(androidx.media3.ui.R.id.exo_fullscreen)
     fullScreenButton.setImageResource(androidx.media3.ui.R.drawable.exo_icon_fullscreen_enter)
-    attachPlayer()
+
+    if(useFullscreenDialog){ exitFullscreenDialog() }
+    else { exitFullscreenActivity() }
+
     onFullscreenExit(Unit)
     isInFullscreen = false
     applyAutoEnterPiP(currentActivity, autoEnterPiP)
+  }
+
+  private fun exitFullscreenActivity() {
+    attachPlayer()
   }
 
   fun enterPictureInPicture() {
@@ -278,6 +333,7 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
   }
 
   override fun onAttachedToWindow() {
+    Log.d("IMA", "onAttachedToWindow")
     super.onAttachedToWindow()
     (currentActivity as? FragmentActivity)?.let {
       val fragment = PictureInPictureHelperFragment(this)
