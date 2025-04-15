@@ -10,6 +10,8 @@ import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import androidx.annotation.RequiresApi
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.ui.PlayerView
 
 private const val LOG_TAG = "FullscreenDialog"
@@ -63,6 +65,11 @@ class FullscreenPlayerDialog(
     // Move the player view to the fullscreen dialog
     (playerView.parent as? ViewGroup)?.removeView(playerView)
     containerView.addView(playerView, layoutParamsMatchParent)
+
+    // Hide system bars (including navigation back button)
+    val insetController = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
+    insetController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    insetController?.hide(WindowInsetsCompat.Type.systemBars())
 
     // Register listeners
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
