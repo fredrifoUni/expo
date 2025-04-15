@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
-import android.util.Log
 import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
@@ -28,10 +27,13 @@ import expo.modules.video.utils.applyRectHint
 import expo.modules.video.utils.calculateRectHint
 import java.util.UUID
 
+private const val LOG_TAG = "VideoView"
+
 // https://developer.android.com/guide/topics/media/media3/getting-started/migration-guide#improvements_in_media3
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class VideoView(context: Context, appContext: AppContext) : ExpoView(context, appContext), VideoPlayerListener {
   val id: String = UUID.randomUUID().toString()
+  val logHandler = LogHandler(enabled = true)
   val playerView: PlayerView = PlayerView(context.applicationContext)
   val onPictureInPictureStart by EventDispatcher<Unit>()
   val onPictureInPictureStop by EventDispatcher<Unit>()
@@ -167,7 +169,7 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
   }
 
   fun enterFullscreen() {
-    Log.d("IMA", "enterFullscreen")
+    logHandler.d(LOG_TAG, "enterFullscreen")
 
     // Set before starting to avoid entering PiP unintentionally
     isInFullscreen = true
@@ -218,12 +220,12 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
   }
 
   fun attachPlayer() {
-    Log.d("IMA", "attachPlayer")
+    logHandler.d(LOG_TAG, "attachPlayer")
     videoPlayer?.changePlayerView(playerView)
   }
 
   fun exitFullscreen() {
-    Log.d("IMA", "exitFullscreen")
+    logHandler.d(LOG_TAG, "exitFullscreen")
 
     // Fullscreen uses a different PlayerView instance, because of that we need to manually update the non-fullscreen player icon after exiting
     val fullScreenButton: ImageButton = playerView.findViewById(androidx.media3.ui.R.id.exo_fullscreen)
@@ -339,7 +341,7 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
   }
 
   override fun onAttachedToWindow() {
-    Log.d("IMA", "onAttachedToWindow")
+    logHandler.d("IMA", "onAttachedToWindow")
     super.onAttachedToWindow()
     (currentActivity as? FragmentActivity)?.let {
       val fragment = PictureInPictureHelperFragment(this)

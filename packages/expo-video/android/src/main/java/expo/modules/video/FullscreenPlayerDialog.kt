@@ -3,10 +3,8 @@ package expo.modules.video
 import android.app.Dialog
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import android.view.KeyEvent
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.FrameLayout
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
@@ -14,12 +12,15 @@ import androidx.annotation.RequiresApi
 import androidx.core.view.WindowCompat
 import androidx.media3.ui.PlayerView
 
+private const val LOG_TAG = "FullscreenDialog"
+
 class FullscreenPlayerDialog(
   context: Context,
   private val playerView: PlayerView,
   private val onBackPressCallback: () -> Unit
 ) : Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen) {
   private val containerView = FrameLayout(context)
+  val logHandler = LogHandler(enabled = true)
 
   private var layoutParamsMatchParent = FrameLayout.LayoutParams(
     FrameLayout.LayoutParams.MATCH_PARENT,
@@ -29,7 +30,7 @@ class FullscreenPlayerDialog(
   init {
     setContentView(containerView, layoutParamsMatchParent)
 
-    Log.d("IMA", "Fullscreen Dialog is initializing")
+    logHandler.d(LOG_TAG, "Fullscreen Dialog is initializing")
   }
 
 
@@ -71,6 +72,6 @@ class FullscreenPlayerDialog(
       )
     }
 
-    Log.d("IMA", "Fullscreen Dialog finished initialization")
+    logHandler.d(LOG_TAG, "Fullscreen Dialog finished initialization")
   }
 }
