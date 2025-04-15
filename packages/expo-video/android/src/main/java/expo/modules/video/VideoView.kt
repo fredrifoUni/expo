@@ -45,7 +45,13 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
   // We can get an event after PiP has started, that's when we should resume playback
   var wasAutoPaused: Boolean = false
   var isInFullscreen: Boolean = false
-    private set
+    private set(value) {
+      field = value
+
+      // Ensure player controls are always synced with fullscreen state
+      playerView.setFullscreenButtonState(value)
+    }
+
   var showsSubtitlesButton = false
     private set
 

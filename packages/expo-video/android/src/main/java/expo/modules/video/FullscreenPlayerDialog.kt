@@ -29,13 +29,7 @@ class FullscreenPlayerDialog(
   init {
     setContentView(containerView, layoutParamsMatchParent)
 
-    Log.d("IMA", "Dialog" + (window !== null).toString())
-
-    // Set the dialog to fullscreen
-//    window?.let {
-//      WindowCompat.setDecorFitsSystemWindows(it, false)
-//      it.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
-//    };
+    Log.d("IMA", "Fullscreen Dialog is initializing")
   }
 
 
@@ -65,8 +59,6 @@ class FullscreenPlayerDialog(
   override fun onStart() {
     super.onStart()
 
-    Log.d("IMA", "Dialog onStart")
-
     // Move the player view to the fullscreen dialog
     (playerView.parent as? ViewGroup)?.removeView(playerView)
     containerView.addView(playerView, layoutParamsMatchParent)
@@ -78,5 +70,7 @@ class FullscreenPlayerDialog(
         onBackInvokedCallback
       )
     }
+
+    Log.d("IMA", "Fullscreen Dialog finished initialization")
   }
 }
