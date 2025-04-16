@@ -1,6 +1,21 @@
-plugins {
-  id 'com.android.library'
-  id 'expo-module-gradle-plugin'
+Boolean isForkRelease = false
+
+// NOTE: Manually modify build.gradle for npm publishing due to issues with auto-linking of forked packages
+if(isForkRelease){
+  apply plugin: 'com.android.library'
+
+  def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
+  apply from: expoModulesCorePlugin
+  applyKotlinExpoModulesCorePlugin()
+  useCoreDependencies()
+  useDefaultAndroidSdkVersions()
+  useExpoPublishing()
+}
+else {
+  plugins {
+    id 'com.android.library'
+    id 'expo-module-gradle-plugin'
+  }
 }
 
 group = 'host.exp.exponent'
@@ -11,6 +26,12 @@ android {
   defaultConfig {
     versionCode 1
     versionName '2.1.0'
+
+    if(isForkRelease){
+      compileSdkVersion rootProject.ext.targetSdkVersion
+      minSdkVersion rootProject.ext.minSdkVersion
+      targetSdkVersion rootProject.ext.targetSdkVersion
+    }
   }
 }
 
