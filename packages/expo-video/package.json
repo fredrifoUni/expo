@@ -1,5 +1,5 @@
 {
-  "name": "@fredrifouni/expo-video",
+  "name": "expo-video",
   "title": "Expo Video",
   "version": "2.1.0",
   "description": "A cross-platform, performant video component for React Native and Expo with Web support",
@@ -18,7 +18,7 @@
   "homepage": "https://docs.expo.dev/versions/latest/sdk/video/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fredrifoUni/expo.git",
+    "url": "https://github.com/expo/expo.git",
     "directory": "packages/expo-video"
   },
   "keywords": [
