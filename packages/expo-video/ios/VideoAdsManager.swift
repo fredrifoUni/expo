@@ -9,7 +9,7 @@ protocol VideoAdsManagerDelegate: AnyObject {
 
 class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
     private var adsLoader: IMAAdsLoader = IMAAdsLoader(settings: nil)
-    var adsManager: IMAAdsManager!
+    var adsManager: IMAAdsManager?
     var adDisplayContainer: IMAAdDisplayContainer?
     var contentPlayhead: IMAAVPlayerContentPlayhead?
     weak var delegate: VideoAdsManagerDelegate?
@@ -43,7 +43,11 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
     
     weak var player: VideoPlayer? {
         didSet {
-            contentPlayhead = IMAAVPlayerContentPlayhead(avPlayer: self.player!.ref)
+            if let avPlayer = player?.ref {
+                contentPlayhead = IMAAVPlayerContentPlayhead(avPlayer: avPlayer)
+            } else {
+                contentPlayhead = nil
+            }
         }
     }
     
@@ -56,6 +60,22 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
     override init() {
         super.init()
         self.adsLoader.delegate = self
+    }
+    
+    // TODO: This was moved out from the deinit function so that it could be triggered by VideoPlayer instead. 
+    // TODO: With my latest changes this may not be necesarry anymore.
+    // TODO: Move back to init function, and test that it doesn't crash on iOS < 18
+    func release() {
+        // Prevent Ad from playing sound during de-initialization
+        adsManager?.volume = 0
+        adsManager?.pause()
+        
+        // Prevent crash when unmounting the video player on iOS < 18
+        player = nil
+        
+        DispatchQueue.main.async {
+            self.adsManager?.destroy()
+        }
     }
     
     private func getTopViewController() -> UIViewController? {
@@ -75,10 +95,10 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
       // The player is already in fullscreen
       if fullscreenController != nil { return }
         
-        fullscreenController = getTopViewController()
-        if let fullscreenController = fullscreenController, let adVideoView = self.adDisplayContainer?.adContainerViewController {
-        fullscreenController.modalPresentationStyle = .fullScreen
-        fullscreenController.present(adVideoView, animated: false, completion: nil)
+      fullscreenController = getTopViewController()
+      if let fullscreenController = fullscreenController, let adVideoView = self.adDisplayContainer?.adContainerViewController {
+          fullscreenController.modalPresentationStyle = .fullScreen
+          fullscreenController.present(adVideoView, animated: false, completion: nil)
       }
     }
     
@@ -116,8 +136,8 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
     func adsLoader(_ loader: IMAAdsLoader, adsLoadedWith adsLoadedData: IMAAdsLoadedData) {
       adsManager = adsLoadedData.adsManager
       adsManager?.delegate = self
-      adsManager.initialize(with: nil)
-        print("AdLoader successfully initialized")
+      adsManager?.initialize(with: nil)
+      print("AdLoader successfully initialized")
     }
 
     func adsLoader(_ loader: IMAAdsLoader, failedWith adErrorData: IMAAdLoadingErrorData) {

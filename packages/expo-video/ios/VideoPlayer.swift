@@ -153,6 +153,8 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
   }
 
   deinit {
+    adsManager?.release()
+    adsManager = nil
     observer?.cleanup()
     NowPlayingManager.shared.unregisterPlayer(self)
     VideoManager.shared.unregister(videoPlayer: self)
