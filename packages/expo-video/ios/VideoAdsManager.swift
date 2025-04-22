@@ -62,19 +62,16 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
         self.adsLoader.delegate = self
     }
     
-    // TODO: This was moved out from the deinit function so that it could be triggered by VideoPlayer instead. 
-    // TODO: With my latest changes this may not be necesarry anymore.
-    // TODO: Move back to init function, and test that it doesn't crash on iOS < 18
+    // This must be called before deinit due to adsManager exception - EXC_BAD_ACCESS
     func release() {
-        // Prevent Ad from playing sound during de-initialization
+        // Prevent Ad from playing sound during deinit
         adsManager?.volume = 0
         adsManager?.pause()
         
-        // Prevent crash when unmounting the video player on iOS < 18
+        // Prevent video unmount crash on iOS 17 production builds
         player = nil
-        
         DispatchQueue.main.async {
-            self.adsManager?.destroy()
+            self.adsManager?.destroy() // Causes exception if not on main thread
         }
     }
     
