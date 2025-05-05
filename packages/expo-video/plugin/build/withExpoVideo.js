@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const Permissions_1 = require("@expo/config-plugins/build/android/Permissions");
 const config_plugins_1 = require("expo/config-plugins");
-const withExpoVideo = (config, { supportsBackgroundPlayback, supportsPictureInPicture } = {}) => {
+const withExpoVideo = (config, { supportsBackgroundPlayback, supportsInteractiveMediaAds, supportsPictureInPicture } = {}) => {
     (0, config_plugins_1.withInfoPlist)(config, (config) => {
         const currentBackgroundModes = config.modResults.UIBackgroundModes ?? [];
         const shouldEnableBackgroundAudio = supportsBackgroundPlayback || supportsPictureInPicture;
@@ -18,6 +19,9 @@ const withExpoVideo = (config, { supportsBackgroundPlayback, supportsPictureInPi
         }
         return config;
     });
+    if (supportsInteractiveMediaAds) {
+        (0, Permissions_1.withPermissions)(config, ['android.permission.ACCESS_NETWORK_STATE']);
+    }
     (0, config_plugins_1.withAndroidManifest)(config, (config) => {
         const activity = config_plugins_1.AndroidConfig.Manifest.getMainActivityOrThrow(config.modResults);
         // No-op if the values are not defined
