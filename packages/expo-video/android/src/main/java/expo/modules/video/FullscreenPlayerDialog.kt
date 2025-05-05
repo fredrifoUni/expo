@@ -2,13 +2,9 @@ package expo.modules.video
 
 import android.app.Dialog
 import android.content.Context
-import android.os.Build
 import android.view.KeyEvent
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.window.OnBackInvokedCallback
-import android.window.OnBackInvokedDispatcher
-import androidx.annotation.RequiresApi
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -35,13 +31,6 @@ class FullscreenPlayerDialog(
     logHandler.d(LOG_TAG, "Fullscreen Dialog is initializing")
   }
 
-
-  // TODO: Not sure if this is ever triggered for Dialogs. DispatchKeyEvent might be sufficient.
-  @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-  private val onBackInvokedCallback = OnBackInvokedCallback {
-    onBackPressCallback()
-  }
-
   override fun dispatchKeyEvent(event: KeyEvent): Boolean {
     if (event.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
       onBackPressCallback()
@@ -52,11 +41,6 @@ class FullscreenPlayerDialog(
 
   override fun onStop() {
     super.onStop()
-
-    // Unregister listeners
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      onBackInvokedDispatcher.unregisterOnBackInvokedCallback(onBackInvokedCallback)
-    }
   }
 
   override fun onStart() {
@@ -70,14 +54,6 @@ class FullscreenPlayerDialog(
     val controller = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
     controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     controller?.hide(WindowInsetsCompat.Type.systemBars())
-
-    // Register listeners
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      onBackInvokedDispatcher.registerOnBackInvokedCallback(
-        OnBackInvokedDispatcher.PRIORITY_DEFAULT,
-        onBackInvokedCallback
-      )
-    }
 
     logHandler.d(LOG_TAG, "Fullscreen Dialog finished initialization")
   }
