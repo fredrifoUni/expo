@@ -11,15 +11,13 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.RawResourceDataSource
-import androidx.media3.exoplayer.ima.ImaAdsLoader
-import androidx.media3.exoplayer.source.MediaSource
-import androidx.media3.ui.PlayerView
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.video.UnsupportedDRMTypeException
 import expo.modules.video.buildExpoVideoMediaSource
 import java.io.Serializable
-import androidx.core.net.toUri
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import expo.modules.video.interfaces.AdManager
 
 @OptIn(UnstableApi::class)
 class VideoSource(
@@ -44,9 +42,9 @@ class VideoSource(
       "NotificationDataArtwork:${this.metadata?.artwork?.path}"
   }
 
-  fun toMediaSource(context: Context, adsLoader: ImaAdsLoader, playerView: PlayerView): MediaSource? {
+  fun toMediaSource(context: Context): DefaultMediaSourceFactory? {
     this.uri ?: return null
-    return buildExpoVideoMediaSource(context, this, adsLoader, playerView)
+    return buildExpoVideoMediaSource(context, this)
   }
 
   fun toMediaItem(context: Context) = MediaItem
@@ -55,10 +53,8 @@ class VideoSource(
       setUri(parseLocalAssetId(uri, context))
       setMediaId(toMediaId())
 
-      // Fetch advertisement if available
-      advertisement?.googleIMA?.adTagUri?.let {
-        setAdsConfiguration(MediaItem.AdsConfiguration.Builder(it.toUri()).build())
-      }
+      // Ensure Advertisement is added to the new media item
+      AdManager.injectAdsToMediaItemBuilder(this, advertisement)
 
       drm?.let {
         if (it.type.isSupported()) {
@@ -67,6 +63,7 @@ class VideoSource(
           throw UnsupportedDRMTypeException(it.type)
         }
       }
+
       setMediaMetadata(
         MediaMetadata.Builder().apply {
           metadata?.let { data ->

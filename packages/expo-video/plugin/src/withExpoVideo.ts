@@ -1,3 +1,4 @@
+import { withPermissions } from '@expo/config-plugins/build/android/Permissions';
 import {
   AndroidConfig,
   type ConfigPlugin,
@@ -7,12 +8,13 @@ import {
 
 type WithExpoVideoOptions = {
   supportsBackgroundPlayback?: boolean;
+  supportsInteractiveMediaAds?: boolean;
   supportsPictureInPicture?: boolean;
 };
 
 const withExpoVideo: ConfigPlugin<WithExpoVideoOptions> = (
   config,
-  { supportsBackgroundPlayback, supportsPictureInPicture } = {}
+  { supportsBackgroundPlayback, supportsInteractiveMediaAds, supportsPictureInPicture } = {}
 ) => {
   withInfoPlist(config, (config) => {
     const currentBackgroundModes = config.modResults.UIBackgroundModes ?? [];
@@ -35,6 +37,10 @@ const withExpoVideo: ConfigPlugin<WithExpoVideoOptions> = (
     }
     return config;
   });
+
+  if (supportsInteractiveMediaAds) {
+    withPermissions(config, ['android.permission.ACCESS_NETWORK_STATE']);
+  }
 
   withAndroidManifest(config, (config) => {
     const activity = AndroidConfig.Manifest.getMainActivityOrThrow(config.modResults);

@@ -1,25 +1,30 @@
-package expo.modules.video
+package expo.plugins.interactiveMediaAds
 
 import android.content.Context
 import androidx.annotation.OptIn
+import androidx.media3.ui.PlayerView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.ima.ImaAdsLoader
-import com.google.ads.interactivemedia.v3.api.AdEvent
-import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.google.ads.interactivemedia.v3.api.AdErrorEvent
-import com.google.ads.interactivemedia.v3.api.player.*
+import com.google.ads.interactivemedia.v3.api.AdEvent
+import com.google.ads.interactivemedia.v3.api.player.AdMediaInfo
+import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer
+import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate
 import expo.modules.kotlin.AppContext
+import expo.modules.video.LogHandler
+import expo.modules.video.interfaces.AdManager
 import kotlinx.coroutines.launch
 
 private const val LOG_TAG = "AdManager"
 
-class AdManager(val context: Context, val appContext: AppContext?) {
+class AdManagerIMA(val context: Context, val appContext: AppContext?): AdManager {
   private var isAdManagerInitialized = false
-  val adsLoader = buildAdsLoader()
-  val logHandler = LogHandler(enabled = false)
+  private val adsLoader = buildAdsLoader()
+  private val logHandler = LogHandler(enabled = false)
 
-  fun initializeAds(player: ExoPlayer) {
+  override fun initializeAds(player: ExoPlayer) {
     if(isAdManagerInitialized){ return }
 
     isAdManagerInitialized = true
@@ -27,7 +32,11 @@ class AdManager(val context: Context, val appContext: AppContext?) {
     logHandler.d(LOG_TAG, "Player is configured to display Ads")
   }
 
-  fun dispose(){
+  override fun setLocalAdInsertionComponents(mediaSourceBuilder: DefaultMediaSourceFactory?, playerView: PlayerView) {
+    mediaSourceBuilder?.setLocalAdInsertionComponents({ _ -> adsLoader }, playerView)
+  }
+
+  override fun dispose(){
     isAdManagerInitialized = false
 
     appContext?.mainQueue?.launch {
@@ -36,7 +45,6 @@ class AdManager(val context: Context, val appContext: AppContext?) {
     }
   }
 
-  // TODO: COMPANION FOR ALL BUILDERS?
   @OptIn(UnstableApi::class)
   fun buildAdsLoader(): ImaAdsLoader {
     return ImaAdsLoader.Builder(context)

@@ -23,7 +23,7 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.ui.PlayerView
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
-import expo.modules.video.AdManager
+import expo.modules.video.AdManagerFactory
 import expo.modules.video.IntervalUpdateClock
 import expo.modules.video.IntervalUpdateEmitter
 import expo.modules.video.VideoManager
@@ -62,7 +62,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     .setLoadControl(loadControl)
     .build()
 
-  private var adManager = AdManager(context, appContext)
+  private var adManager = AdManagerFactory.create(context, appContext)
 
   private val firstFrameEventGenerator = createFirstFrameEventGenerator()
   val serviceConnection = PlaybackServiceConnection(WeakReference(this))
@@ -332,7 +332,12 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     availableVideoTracks = listOf()
     currentVideoTrack = null
     val newSource = uncommittedSource
-    val mediaSource = newSource?.toMediaSource(context, adManager.adsLoader, playerView)
+
+    val mediaItem = newSource?.toMediaItem(context)
+    val mediaSourceBuilder = newSource?.toMediaSource(context)
+    adManager.setLocalAdInsertionComponents(mediaSourceBuilder, playerView)
+
+    val mediaSource = mediaItem?.let { mediaSourceBuilder?.createMediaSource(it) }
 
     mediaSource?.let {
       player.setMediaSource(it)

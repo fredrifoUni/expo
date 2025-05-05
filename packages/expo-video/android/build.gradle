@@ -1,21 +1,19 @@
+Boolean supportsInteractiveMediaAds = true // TODO: Retrieve this value from the expo config
 Boolean isForkRelease = false
 
 // NOTE: Manually modify build.gradle for npm publishing due to issues with auto-linking of forked packages
-if(isForkRelease){
-  apply plugin: 'com.android.library'
+apply plugin: 'com.android.library'
+if(!isForkRelease){
+  apply plugin: 'expo-module-gradle-plugin'
+}
 
+if(isForkRelease) {
   def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
   apply from: expoModulesCorePlugin
   applyKotlinExpoModulesCorePlugin()
   useCoreDependencies()
   useDefaultAndroidSdkVersions()
   useExpoPublishing()
-}
-else {
-  plugins {
-    id 'com.android.library'
-    id 'expo-module-gradle-plugin'
-  }
 }
 
 group = 'host.exp.exponent'
@@ -27,10 +25,24 @@ android {
     versionCode 1
     versionName '2.1.0'
 
+    consumerProguardFiles("proguard-rules.pro")
+    buildConfigField("boolean", "INCLUDE_IMA", "${supportsInteractiveMediaAds}")
+
     if(isForkRelease){
       compileSdkVersion rootProject.ext.targetSdkVersion
       minSdkVersion rootProject.ext.minSdkVersion
       targetSdkVersion rootProject.ext.targetSdkVersion
+    }
+
+    sourceSets {
+      main {
+        if (supportsInteractiveMediaAds) {
+          // TODO: This should be removed when I figure out how to keep it inside the default folder
+          java.srcDirs += "plugins/interactiveMediaAds"
+        } else {
+          java.exclude "plugins/interactiveMediaAds/**"
+        }
+      }
     }
   }
 }
@@ -44,9 +56,13 @@ dependencies {
   implementation "androidx.media3:media3-exoplayer:${androidxMedia3Version}"
   implementation "androidx.media3:media3-exoplayer-dash:${androidxMedia3Version}"
   implementation "androidx.media3:media3-exoplayer-hls:${androidxMedia3Version}"
-  implementation "androidx.media3:media3-exoplayer-ima:${androidxMedia3Version}"
   implementation "androidx.media3:media3-ui:${androidxMedia3Version}"
   implementation "androidx.media3:media3-datasource-okhttp:${androidxMedia3Version}"
+
+  // Load optional plugin dependencies
+  if(supportsInteractiveMediaAds){
+    implementation "androidx.media3:media3-exoplayer-ima:${androidxMedia3Version}"
+  }
 
   def fragment_version = "1.6.2"
   implementation "androidx.fragment:fragment:$fragment_version"
