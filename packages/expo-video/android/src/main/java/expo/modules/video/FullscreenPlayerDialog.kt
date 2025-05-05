@@ -67,9 +67,9 @@ class FullscreenPlayerDialog(
     containerView.addView(playerView, layoutParamsMatchParent)
 
     // Hide system bars (including navigation back button)
-    val insetController = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
-    insetController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-    insetController?.hide(WindowInsetsCompat.Type.systemBars())
+    val controller = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
+    controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    controller?.hide(WindowInsetsCompat.Type.systemBars())
 
     // Register listeners
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
