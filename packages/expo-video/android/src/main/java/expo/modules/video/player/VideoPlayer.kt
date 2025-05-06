@@ -135,7 +135,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
       if (window.windowStartTimeMs == C.TIME_UNSET) {
         return null
       }
-      return window.windowStartTimeMs + player.currentPosition
+      return window.windowStartTimeMs + player.contentPosition
     }
 
   var bufferOptions: BufferOptions = BufferOptions()
@@ -195,7 +195,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
         sendEvent(
           PlayerEvent.VideoSourceLoaded(
             commitedSource,
-            this@VideoPlayer.player.duration / 1000.0,
+            this@VideoPlayer.player.contentDuration / 1000.0,
             availableVideoTracks,
             newSubtitleTracks
           )
@@ -236,7 +236,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
         return
       }
       if (playbackState == Player.STATE_READY) {
-        this@VideoPlayer.duration = this@VideoPlayer.player.duration / 1000f
+        this@VideoPlayer.duration = this@VideoPlayer.player.contentDuration / 1000f
         this@VideoPlayer.isLive = this@VideoPlayer.player.isCurrentMediaItemLive
       }
       setStatus(playerStateToPlayerStatus(playbackState), null)
@@ -424,7 +424,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   // IntervalUpdateEmitter
   override fun emitTimeUpdate() {
     appContext?.mainQueue?.launch {
-      val updatePayload = TimeUpdate(player.currentPosition / 1000.0, currentOffsetFromLive, currentLiveTimestamp, bufferedPosition)
+      val updatePayload = TimeUpdate(player.contentPosition / 1000.0, currentOffsetFromLive, currentLiveTimestamp, bufferedPosition)
       sendEvent(PlayerEvent.TimeUpdated(updatePayload))
     }
   }
