@@ -167,7 +167,7 @@ class VideoModule : Module() {
           //  so we can't update the currentTime in a non-blocking way like the other properties.
           //  Until we think of something better we can temporarily do it this way
           runBlocking(appContext.mainQueue.coroutineContext) {
-            ref.player.currentPosition / 1000f
+            ref.player.contentPosition / 1000f
           }
         }
         .set { ref: VideoPlayer, currentTime: Double ->
@@ -346,7 +346,7 @@ class VideoModule : Module() {
 
       Function("seekBy") { ref: VideoPlayer, seekTime: Double ->
         appContext.mainQueue.launch {
-          val seekPos = ref.player.currentPosition + (seekTime * 1000).toLong()
+          val seekPos = ref.player.contentPosition + (seekTime * 1000).toLong()
           ref.player.seekTo(seekPos)
         }
       }
