@@ -1,4 +1,6 @@
 // Copyright 2024-present 650 Industries. All rights reserved.
+// Only compile file if the ads sdk is available
+#if canImport(GoogleInteractiveMediaAds)
 
 import Foundation
 import GoogleInteractiveMediaAds
@@ -128,6 +130,20 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
       adsLoader.contentComplete()
     }
     
+    func prepareAds(player: AVPlayer, videoPlayerItem: VideoPlayerItem?, videoView: VideoView?){
+      let advertisement = videoPlayerItem?.videoSource.advertisement?.googleIMA?.adTagUri
+          
+      if let adTagUri = advertisement, let videoView = videoView {
+        // TODO: Set loading ads (waitForPreroll config?)
+        let adDisplayContainer = IMAAdDisplayContainer( adContainer: videoView.playerViewController.view,  viewController: videoView.playerViewController)
+              
+        requestAds(
+          adDisplayContainer: adDisplayContainer,
+          adTagUri: adTagUri
+        )
+      }
+    }
+    
     // MARK: - IMAAdsLoaderDelegate
     
     func adsLoader(_ loader: IMAAdsLoader, adsLoadedWith adsLoadedData: IMAAdsLoadedData) {
@@ -192,3 +208,32 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
       exitFullscreen()
     }
 }
+
+// TODO: Move stub to seperate file.
+// TODO: Create interface
+// VideoAdsManger Stub
+#else
+import AVFoundation
+
+// Stub dependencies
+class IMAAdDisplayContainer {}
+protocol VideoAdsManagerDelegate: AnyObject { func postrollAdFinished(_ manager: VideoAdsManager) }
+
+class VideoAdsManager {
+    var player: VideoPlayer?
+    var isPlayingAd = false
+    var isContentFullscreen = false
+    var hasMoreAds = false
+    weak var delegate: VideoAdsManagerDelegate?;
+    
+    func logNotSupported(functionName: String = #function) {
+        print("VideoAdsManager stub function triggered." + functionName)
+    }
+    
+    // Stub functions
+    func prepareAds(player: AVPlayer, videoPlayerItem: VideoPlayerItem?, videoView: VideoView?){ logNotSupported() }
+    func release() { logNotSupported() }
+    func requestAds(adDisplayContainer: IMAAdDisplayContainer, adTagUri: String) { logNotSupported() }
+    func contentDidFinishPlaying() { logNotSupported() }
+}
+#endif
