@@ -4,6 +4,7 @@ import {
   type ConfigPlugin,
   withInfoPlist,
   withAndroidManifest,
+  withPodfileProperties,
 } from 'expo/config-plugins';
 
 type WithExpoVideoOptions = {
@@ -16,6 +17,15 @@ const withExpoVideo: ConfigPlugin<WithExpoVideoOptions> = (
   config,
   { supportsBackgroundPlayback, supportsInteractiveMediaAds, supportsPictureInPicture } = {}
 ) => {
+  /** // TODO: Cant get withPodfileProperties to work.
+   ** Right now it's using the default property value in:
+   ** /Users/a206753751/Projects/expo/apps/bare-expo/ios/Podfile.properties.json
+   */
+  config = withPodfileProperties(config, (config) => {
+    config.modResults.USE_IMA_ADS = (supportsInteractiveMediaAds ?? false).toString();
+    return config;
+  });
+
   withInfoPlist(config, (config) => {
     const currentBackgroundModes = config.modResults.UIBackgroundModes ?? [];
     const shouldEnableBackgroundAudio = supportsBackgroundPlayback || supportsPictureInPicture;
