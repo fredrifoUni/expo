@@ -19,7 +19,7 @@ const withExpoVideo: ConfigPlugin<WithExpoVideoOptions> = (
 ) => {
   /** // TODO: Cant get withPodfileProperties to work.
    ** Right now it's using the default property value in:
-   ** /Users/a206753751/Projects/expo/apps/bare-expo/ios/Podfile.properties.json
+   ** ../Projects/expo/apps/bare-expo/ios/Podfile.properties.json
    */
   config = withPodfileProperties(config, (config) => {
     config.modResults.USE_IMA_ADS = (supportsInteractiveMediaAds ?? false).toString();
