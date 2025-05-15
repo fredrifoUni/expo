@@ -1,8 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const BuildProperties_1 = require("@expo/config-plugins/build/android/BuildProperties");
 const Permissions_1 = require("@expo/config-plugins/build/android/Permissions");
 const config_plugins_1 = require("expo/config-plugins");
-const withExpoVideo = (config, { supportsBackgroundPlayback, supportsInteractiveMediaAds, supportsPictureInPicture } = {}) => {
+const withExpoVideo = (config, { supportsBackgroundPlayback, supportsInteractiveMediaAds = false, supportsPictureInPicture } = {}) => {
+    config = (0, config_plugins_1.withPodfileProperties)(config, (config) => {
+        config.modResults.USE_IMA_ADS = supportsInteractiveMediaAds.toString();
+        // config.modResults.USE_IMA_ADS = 'false';
+        return config;
+    });
+    (0, config_plugins_1.withGradleProperties)(config, (config) => {
+        config.modResults = (0, BuildProperties_1.updateAndroidBuildProperty)(config.modResults, 'expo.video.useInteractiveMediaAds', "true");
+        return config;
+    });
     (0, config_plugins_1.withInfoPlist)(config, (config) => {
         const currentBackgroundModes = config.modResults.UIBackgroundModes ?? [];
         const shouldEnableBackgroundAudio = supportsBackgroundPlayback || supportsPictureInPicture;

@@ -1,3 +1,4 @@
+import { updateAndroidBuildProperty } from '@expo/config-plugins/build/android/BuildProperties';
 import { withPermissions } from '@expo/config-plugins/build/android/Permissions';
 import {
   AndroidConfig,
@@ -5,6 +6,7 @@ import {
   withInfoPlist,
   withAndroidManifest,
   withPodfileProperties,
+  withGradleProperties,
 } from 'expo/config-plugins';
 
 type WithExpoVideoOptions = {
@@ -15,16 +17,22 @@ type WithExpoVideoOptions = {
 
 const withExpoVideo: ConfigPlugin<WithExpoVideoOptions> = (
   config,
-  { supportsBackgroundPlayback, supportsInteractiveMediaAds, supportsPictureInPicture } = {}
+  { supportsBackgroundPlayback, supportsInteractiveMediaAds = false, supportsPictureInPicture } = {}
 ) => {
-  /** // TODO: Cant get withPodfileProperties to work.
-   ** Right now it's using the default property value in:
-   ** ../Projects/expo/apps/bare-expo/ios/Podfile.properties.json
-   */
   config = withPodfileProperties(config, (config) => {
-    config.modResults.USE_IMA_ADS = (supportsInteractiveMediaAds ?? false).toString();
+    config.modResults.USE_IMA_ADS = supportsInteractiveMediaAds.toString();
+    // config.modResults.USE_IMA_ADS = 'false';
     return config;
   });
+
+  withGradleProperties(config, (config) => {
+    config.modResults = updateAndroidBuildProperty(
+      config.modResults,
+      'expo.video.useInteractiveMediaAds',
+      "true"
+    )
+    return config
+  })
 
   withInfoPlist(config, (config) => {
     const currentBackgroundModes = config.modResults.UIBackgroundModes ?? [];

@@ -1,6 +1,5 @@
-Boolean supportsInteractiveMediaAds = true // TODO: Retrieve this value from the expo config
 Boolean isForkRelease = false
-
+Boolean supportsInteractiveMediaAds = findProperty("expo.video.useInteractiveMediaAds") == "true"
 // NOTE: Manually modify build.gradle for npm publishing due to issues with auto-linking of forked packages
 apply plugin: 'com.android.library'
 if(!isForkRelease){
