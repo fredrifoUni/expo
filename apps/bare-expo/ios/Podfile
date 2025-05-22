@@ -77,7 +77,4 @@ abstract_target 'BareExpoMain' do
 
     pod 'ExpoModulesTestCore', :path => "../../../packages/expo-modules-test-core/ios"
   end
-
-  # Log all Podfile properties
-  puts "Podfile properties:\n#{JSON.pretty_generate(podfile_properties)}"
 end

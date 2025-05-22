@@ -1,8 +1,9 @@
 Boolean isForkRelease = false
 Boolean supportsInteractiveMediaAds = findProperty("expo.video.useInteractiveMediaAds") == "true"
-project.logger.lifecycle('GRADLE supportsInteractiveMediaAds' + supportsInteractiveMediaAds.toString())
-// NOTE: Manually modify build.gradle for npm publishing due to issues with auto-linking of forked packages
+
 apply plugin: 'com.android.library'
+
+// NOTE: Manually modify build.gradle for npm publishing due to issues with auto-linking of forked packages
 if(!isForkRelease){
   apply plugin: 'expo-module-gradle-plugin'
 }
