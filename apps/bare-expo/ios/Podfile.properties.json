@@ -1,6 +1,6 @@
 {
   "expo.jsEngine": "hermes",
   "newArchEnabled": "true",
-  "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true",
-  "useInteractiveMediaAds": "true"
+  "useInteractiveMediaAds": "true",
+  "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true"
 }

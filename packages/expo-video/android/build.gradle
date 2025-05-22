@@ -1,20 +1,8 @@
-Boolean isForkRelease = false
-Boolean supportsInteractiveMediaAds = findProperty("expo.video.useInteractiveMediaAds") == "true"
+Boolean useInteractiveMediaAds = findProperty("expo.video.useInteractiveMediaAds") == "true"
 
-apply plugin: 'com.android.library'
-
-// NOTE: Manually modify build.gradle for npm publishing due to issues with auto-linking of forked packages
-if(!isForkRelease){
-  apply plugin: 'expo-module-gradle-plugin'
-}
-
-if(isForkRelease) {
-  def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
-  apply from: expoModulesCorePlugin
-  applyKotlinExpoModulesCorePlugin()
-  useCoreDependencies()
-  useDefaultAndroidSdkVersions()
-  useExpoPublishing()
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
 }
 
 group = 'host.exp.exponent'
@@ -26,19 +14,17 @@ android {
     versionCode 1
     versionName '2.1.0'
 
+    // Add Proguard rules to compiler
+    // Prevents reflection based classes from being removed during compilation
     consumerProguardFiles("proguard-rules.pro")
-    buildConfigField("boolean", "INCLUDE_IMA", "${supportsInteractiveMediaAds}")
 
-    if(isForkRelease){
-      compileSdkVersion rootProject.ext.targetSdkVersion
-      minSdkVersion rootProject.ext.minSdkVersion
-      targetSdkVersion rootProject.ext.targetSdkVersion
-    }
+    // Add constants to the generated BuildConfig class so that it's accessible in Kotlin and Java files
+    buildConfigField("boolean", "useInteractiveMediaAds", "${useInteractiveMediaAds}")
 
     sourceSets {
       main {
-        if (supportsInteractiveMediaAds) {
-          // TODO: This should be removed when I figure out how to keep it inside the default folder
+        // Conditionally include the IMA specific files in the compiler output
+        if (useInteractiveMediaAds) {
           java.srcDirs += "plugins/interactiveMediaAds"
         } else {
           java.exclude "plugins/interactiveMediaAds/**"
@@ -61,7 +47,7 @@ dependencies {
   implementation "androidx.media3:media3-datasource-okhttp:${androidxMedia3Version}"
 
   // Load optional plugin dependencies
-  if(supportsInteractiveMediaAds){
+  if(useInteractiveMediaAds){
     implementation "androidx.media3:media3-exoplayer-ima:${androidxMedia3Version}"
   }
 
