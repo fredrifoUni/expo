@@ -2,7 +2,6 @@
 
 import AVKit
 import ExpoModulesCore
-import GoogleInteractiveMediaAds
 
 public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   lazy var adsManager = VideoAdsManager()

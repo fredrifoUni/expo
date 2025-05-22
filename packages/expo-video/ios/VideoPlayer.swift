@@ -3,7 +3,6 @@
 import AVFoundation
 import MediaPlayer
 import ExpoModulesCore
-import GoogleInteractiveMediaAds
 
 internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManagerDelegate, VideoPlayerObserverDelegate {
   lazy var contentKeyManager = ContentKeyManager()
@@ -163,20 +162,6 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
 
     try? self.replaceCurrentItem(with: nil)
   }
-    
-  func prepareAds(player: AVPlayer, videoPlayerItem: VideoPlayerItem?){
-    let advertisement = videoPlayerItem?.videoSource.advertisement?.googleIMA?.adTagUri
-        
-    if let adTagUri = advertisement, let videoView = videoView {
-      // TODO: Set loading ads (waitForPreroll config?)
-      let adDisplayContainer = IMAAdDisplayContainer( adContainer: videoView.playerViewController.view,  viewController: videoView.playerViewController)
-            
-      adsManager?.requestAds(
-        adDisplayContainer: adDisplayContainer,
-        adTagUri: adTagUri
-      )
-    }
-  }
 
   func replaceCurrentItem(with videoSource: VideoSource?) throws {
     guard
@@ -325,7 +310,8 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
 
   func onLoadedPlayerItem(player: AVPlayer, playerItem: AVPlayerItem?) {
     // Prepare Ads for the new content
-    prepareAds(player: player, videoPlayerItem: playerItem as? VideoPlayerItem)
+    // TODO: This should be called conditionally even though the stub class handles it properly.
+    adsManager?.prepareAds(player: player, videoPlayerItem: playerItem as? VideoPlayerItem, videoView: videoView)
       
     // This event means that a new player item has been loaded so the subtitle tracks should change
     let oldTracks = subtitles.availableSubtitleTracks

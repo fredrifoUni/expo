@@ -1,6 +1,7 @@
 require 'json'
 
 package = JSON.parse(File.read(File.join(__dir__, '..', 'package.json')))
+podfile_properties = JSON.parse(File.read("#{Pod::Config.instance.installation_root}/Podfile.properties.json")) rescue {}
 
 Pod::Spec.new do |s|
   s.name           = 'ExpoVideo'
@@ -19,7 +20,10 @@ Pod::Spec.new do |s|
   s.static_framework = true
 
   s.dependency 'ExpoModulesCore'
-  s.dependency 'GoogleAds-IMA-iOS-SDK', '~> 3.26.1'
+
+  if podfile_properties['useInteractiveMediaAds'] == 'true'
+    s.dependency 'GoogleAds-IMA-iOS-SDK', '~> 3.26.1'
+  end
 
   # Swift/Objective-C compatibility
   s.pod_target_xcconfig = {
