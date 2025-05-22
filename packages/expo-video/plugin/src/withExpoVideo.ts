@@ -19,20 +19,23 @@ const withExpoVideo: ConfigPlugin<WithExpoVideoOptions> = (
   config,
   { supportsBackgroundPlayback, supportsInteractiveMediaAds = false, supportsPictureInPicture } = {}
 ) => {
-  config = withPodfileProperties(config, (config) => {
-    config.modResults.USE_IMA_ADS = supportsInteractiveMediaAds.toString();
-    // config.modResults.USE_IMA_ADS = 'false';
-    return config;
-  });
+  if (supportsInteractiveMediaAds) {
+    withPodfileProperties(config, (config) => {
+      config.modResults.useInteractiveMediaAds = supportsInteractiveMediaAds.toString();
+      return config;
+    });
 
-  withGradleProperties(config, (config) => {
-    config.modResults = updateAndroidBuildProperty(
-      config.modResults,
-      'expo.video.useInteractiveMediaAds',
-      "true"
-    )
-    return config
-  })
+    withGradleProperties(config, (config) => {
+      config.modResults = updateAndroidBuildProperty(
+        config.modResults,
+        'expo.video.useInteractiveMediaAds',
+        'true'
+      );
+      return config;
+    });
+
+    withPermissions(config, ['android.permission.ACCESS_NETWORK_STATE']);
+  }
 
   withInfoPlist(config, (config) => {
     const currentBackgroundModes = config.modResults.UIBackgroundModes ?? [];
@@ -55,10 +58,6 @@ const withExpoVideo: ConfigPlugin<WithExpoVideoOptions> = (
     }
     return config;
   });
-
-  if (supportsInteractiveMediaAds) {
-    withPermissions(config, ['android.permission.ACCESS_NETWORK_STATE']);
-  }
 
   withAndroidManifest(config, (config) => {
     const activity = AndroidConfig.Manifest.getMainActivityOrThrow(config.modResults);

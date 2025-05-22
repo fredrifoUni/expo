@@ -21,7 +21,7 @@ Pod::Spec.new do |s|
 
   s.dependency 'ExpoModulesCore'
 
-  if podfile_properties['USE_IMA_ADS'] == 'true'
+  if podfile_properties['useInteractiveMediaAds'] == 'true'
     s.dependency 'GoogleAds-IMA-iOS-SDK', '~> 3.26.1'
   end
 
