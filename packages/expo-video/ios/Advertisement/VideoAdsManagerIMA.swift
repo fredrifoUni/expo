@@ -1,18 +1,14 @@
 // Copyright 2024-present 650 Industries. All rights reserved.
-// Only compile file if the ads sdk is available
-#if canImport(GoogleInteractiveMediaAds)
 
+// Only compile file if GoogleInteractiveMediaAds is available
+#if canImport(GoogleInteractiveMediaAds)
 import Foundation
 import GoogleInteractiveMediaAds
 
-protocol VideoAdsManagerDelegate: AnyObject {
-    func postrollAdFinished(_ manager: VideoAdsManager)
-}
-
-class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
+class VideoAdsManagerIMA: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate, VideoAdsManager {
     private var adsLoader: IMAAdsLoader = IMAAdsLoader(settings: nil)
     var adsManager: IMAAdsManager?
-    var adDisplayContainer: IMAAdDisplayContainer?
+    var adDisplayContainer: AdDisplayContainer?
     var contentPlayhead: IMAAVPlayerContentPlayhead?
     weak var delegate: VideoAdsManagerDelegate?
     var fullscreenController: UIViewController?
@@ -34,11 +30,11 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
       
       // Set the Ad view to fullscreen if content is playing
       didSet {
-        if isPlayingAd && isContentFullscreen { 
-          enterFullscreen() 
+        if isPlayingAd && isContentFullscreen {
+          enterFullscreen()
         }
-        else { 
-          exitFullscreen() 
+        else {
+          exitFullscreen()
         }
       }
     }
@@ -65,7 +61,7 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
     }
     
     // This must be called before deinit due to adsManager exception - EXC_BAD_ACCESS
-    func release() {
+    func cleanup() {
         // Prevent Ad from playing sound during deinit
         adsManager?.volume = 0
         adsManager?.pause()
@@ -109,7 +105,7 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
     }
      
     // Create an ad request with our ad tag,
-    public func requestAds(adDisplayContainer: IMAAdDisplayContainer, adTagUri: String){
+    public func requestAds(adDisplayContainer: AdDisplayContainer, adTagUri: String){
         self.adDisplayContainer = adDisplayContainer
         
         reset()
@@ -135,7 +131,7 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
           
       if let adTagUri = advertisement, let videoView = videoView {
         // TODO: Set loading ads (waitForPreroll config?)
-        let adDisplayContainer = IMAAdDisplayContainer( adContainer: videoView.playerViewController.view,  viewController: videoView.playerViewController)
+        let adDisplayContainer = AdDisplayContainer( adContainer: videoView.playerViewController.view,  viewController: videoView.playerViewController)
               
         requestAds(
           adDisplayContainer: adDisplayContainer,
@@ -171,8 +167,8 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
             break
           case IMAAdEventType.STARTED:
             // Set Ads to fullscreen if the AVPlayer is in fullscreen
-            if isContentFullscreen { 
-              enterFullscreen() 
+            if isContentFullscreen {
+              enterFullscreen()
             }
             break
           case IMAAdEventType.ALL_ADS_COMPLETED:
@@ -207,33 +203,5 @@ class VideoAdsManager: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate {
       // Exit fullscreen when the Ad is not playing.
       exitFullscreen()
     }
-}
-
-// TODO: Move stub to seperate file.
-// TODO: Create interface
-// VideoAdsManger Stub
-#else
-import AVFoundation
-
-// Stub dependencies
-class IMAAdDisplayContainer {}
-protocol VideoAdsManagerDelegate: AnyObject { func postrollAdFinished(_ manager: VideoAdsManager) }
-
-class VideoAdsManager {
-    var player: VideoPlayer?
-    var isPlayingAd = false
-    var isContentFullscreen = false
-    var hasMoreAds = false
-    weak var delegate: VideoAdsManagerDelegate?;
-    
-    func logNotSupported(functionName: String = #function) {
-        print("VideoAdsManager stub function triggered." + functionName)
-    }
-    
-    // Stub functions
-    func prepareAds(player: AVPlayer, videoPlayerItem: VideoPlayerItem?, videoView: VideoView?){ logNotSupported() }
-    func release() { logNotSupported() }
-    func requestAds(adDisplayContainer: IMAAdDisplayContainer, adTagUri: String) { logNotSupported() }
-    func contentDidFinishPlaying() { logNotSupported() }
 }
 #endif

@@ -4,7 +4,7 @@ import AVKit
 import ExpoModulesCore
 
 public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
-  lazy var adsManager = VideoAdsManager()
+  lazy var adsManager = VideoAdsManagerBuilder.create()
   lazy var playerViewController = AVPlayerViewController()
 
   weak var player: VideoPlayer? {

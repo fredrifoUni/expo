@@ -153,7 +153,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
 
   deinit {
     // Prepare the adsManager for deinit (needed for iOS 17 production builds)
-    adsManager?.release()
+    adsManager?.cleanup()
     adsManager = nil
       
     observer?.cleanup()
