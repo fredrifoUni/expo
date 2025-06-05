@@ -358,9 +358,6 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
       player.setMediaSource(it)
       player.prepare()
       commitedSource = newSource
-
-      // TODO: playWhenReady should be configured in props or only for IMA Ads
-      player.playWhenReady = true
       uncommittedSource = null
       isLoadingNewSource = true
     } ?: run {
