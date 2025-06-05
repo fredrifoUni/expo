@@ -46,6 +46,14 @@ export const nullSource: VideoSourceObject = {
   },
 };
 
+const audioTrackSource: VideoSource = {
+  metadata: {
+    title: 'Audio Track',
+    artist: 'Audio Track Artist',
+  },
+  uri: 'https://mirror.selfnet.de/CCC/congress/2019/h264-hd/36c3-11235-eng-deu-fra-36C3_Infrastructure_Review_hd.mp4',
+};
+
 const forBiggerBlazesSource: VideoSourceObject = {
   uri: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
 };
@@ -62,6 +70,7 @@ const videoLabels: string[] = [
   'Sintel (HLS)',
   'Cute Doggo (local video)',
   'Null Source',
+  'Audio Track',
 ];
 
 const videoSources: VideoSource[] = [
@@ -71,6 +80,7 @@ const videoSources: VideoSource[] = [
   hlsSource,
   localVideoSource,
   nullSource,
+  audioTrackSource,
 ];
 
 export {
@@ -81,4 +91,5 @@ export {
   androidDrmSource,
   videoLabels,
   videoSources,
+  audioTrackSource,
 };

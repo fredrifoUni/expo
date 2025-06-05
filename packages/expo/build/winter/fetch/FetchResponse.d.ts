@@ -1,4 +1,3 @@
-import { ReadableStream } from 'web-streams-polyfill';
 import type { NativeResponse } from './NativeRequest';
 declare const ConcreteNativeResponse: typeof NativeResponse;
 export type AbortSubscriptionCleanupFunction = () => void;
@@ -16,9 +15,13 @@ export declare class FetchResponse extends ConcreteNativeResponse implements Res
     get headers(): Headers;
     get ok(): boolean;
     readonly type = "default";
+    /**
+     * This method is not currently supported by react-native's Blob constructor.
+     */
     blob(): Promise<Blob>;
     formData(): Promise<UniversalFormData>;
     json(): Promise<any>;
+    bytes(): Promise<Uint8Array>;
     toString(): string;
     toJSON(): object;
     clone(): Response;

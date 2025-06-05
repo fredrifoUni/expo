@@ -7,9 +7,42 @@
 ### 🎉 New features
 
 ### 🐛 Bug fixes
-- Wrap exported config in `defineConfig`. ([#34371](https://github.com/expo/expo/pull/34371) by [@kadikraman](https://github.com/kadikraman))
 
 ### 💡 Others
+
+## 9.2.0 — 2025-04-30
+
+### 🎉 New features
+
+- Add `no-var` rule to disallow `var`. ([#36488](https://github.com/expo/expo/pull/36488) by [@kadikraman](https://github.com/kadikraman))
+
+## 9.1.1 — 2025-04-25
+
+_This version does not introduce any user-facing changes._
+
+## 9.1.0 — 2025-04-23
+
+### 🎉 New features
+
+- Disallow `require()` for source files and continue to allow for assets. ([#36346](https://github.com/expo/expo/pull/36346) by [@EvanBacon](https://github.com/EvanBacon))
+
+## 9.0.3 — 2025-04-22
+
+### 🎉 New features
+
+- use `react/recommended` plugin. ([#36265](https://github.com/expo/expo/pull/36265) by [@EvanBacon](https://github.com/EvanBacon))
+
+## 9.0.2 — 2025-04-11
+
+### 🐛 Bug fixes
+
+- Define browser globals correctly for flat config. ([#34371](https://github.com/expo/expo/pull/36101) by [@kadikraman](https://github.com/kadikraman))
+
+## 9.0.1 — 2025-04-08
+
+### 🐛 Bug fixes
+
+- Wrap exported config in `defineConfig`. ([#34371](https://github.com/expo/expo/pull/34371) by [@kadikraman](https://github.com/kadikraman))
 
 ## 9.0.0 — 2025-04-04
 

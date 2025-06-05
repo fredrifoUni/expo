@@ -1,5 +1,5 @@
 import type { NativeModule, SharedRef, SharedRefType } from 'expo';
-import { ImageStyle as RNImageStyle, ViewProps, StyleProp, ViewStyle, View } from 'react-native';
+import { ImageStyle as RNImageStyle, StyleProp, View, ViewProps, ViewStyle } from 'react-native';
 
 import ExpoImage from './ExpoImage';
 
@@ -18,12 +18,12 @@ export type ImageSource = {
    * Can be specified if known at build time, in which case the value
    * will be used to set the default `<Image/>` component dimension.
    */
-  width?: number;
+  width?: number | null;
   /**
    * Can be specified if known at build time, in which case the value
    * will be used to set the default `<Image/>` component dimension.
    */
-  height?: number;
+  height?: number | null;
 
   /**
    * A string used to generate the image [`placeholder`](#placeholder). For example,
@@ -376,8 +376,8 @@ export interface ImageNativeProps extends ImageProps {
   contentPosition?: ImageContentPositionObject;
   transition?: ImageTransition | null;
   autoplay?: boolean;
-  nativeViewRef?: React.RefObject<ExpoImage>;
-  containerViewRef?: React.RefObject<View>;
+  nativeViewRef?: React.RefObject<ExpoImage | null>;
+  containerViewRef?: React.RefObject<View | null>;
 }
 
 /**

@@ -6,9 +6,69 @@
 
 ### 🎉 New features
 
+- [Android][iOS] Added support for Audio Track feature. You can now set the audio track using `player.audioTrack` and list available audio tracks using `player.availableAudioTracks`. ([#36207](https://github.com/expo/expo/pull/36207) by [@HADeveloper](https://github.com/HADeveloper))
+
 ### 🐛 Bug fixes
 
+- [Android] Fix `onFirstFrameRender` not being emitted for sources with `pixelWidthHeightRatio` different than 1. ([#37009](https://github.com/expo/expo/pull/37009) by [@behenate](https://github.com/behenate))
+- [Android] Fix `useExoShutter` prop not being exposed to the JS side. ([#37012](https://github.com/expo/expo/pull/37012) by [@behenate](https://github.com/behenate))
+- [Android] Add missing `onFirstFrameRender` event to the `VideoView` definition. ([#37014](https://github.com/expo/expo/pull/37014) by [@behenate](https://github.com/behenate))
+- [iOS] Fix player not entering 'error' state when loading fails on iOS. ([#37177](https://github.com/expo/expo/pull/37177) by [@behenate](https://github.com/behenate))
+- [iOS] Fix player reporting status `readyToPlay` while a source is being loaded asynchronously. ([#37180](https://github.com/expo/expo/pull/37180) by [@behenate](https://github.com/behenate))
+- [iOS] Fix player going into `loading` status for a single frame when unpausing with a full buffer. ([#37181](https://github.com/expo/expo/pull/37181) by [@behenate](https://github.com/behenate))
+- [iOS] Fix player getting stuck in `loading` state for null sources. ([#37183](https://github.com/expo/expo/pull/37183) by [@behenate](https://github.com/behenate))
+
 ### 💡 Others
+
+## 2.1.9 — 2025-05-08
+
+### 🛠 Breaking changes
+
+- [web] Add crossOrigin prop, change default value to no CORS. ([#36713](https://github.com/expo/expo/pull/36713) by [@aleqsio](https://github.com/aleqsio))
+
+## 2.1.8 — 2025-04-30
+
+_This version does not introduce any user-facing changes._
+
+## 2.1.7 — 2025-04-28
+
+### 🎉 New features
+
+- Introduce `replaceAsync` method, which doesn't load the asset on the main thread. ([#36308](https://github.com/expo/expo/pull/36308) by [@behenate](https://github.com/behenate))
+
+### 🐛 Bug fixes
+
+- [iOS] Fix main thread being locked while the VideoPlayer is replacing or being created with a source. ([#36308](https://github.com/expo/expo/pull/36308) by [@behenate](https://github.com/behenate))
+
+## 2.1.6 — 2025-04-25
+
+### 🎉 New features
+
+- [Android] Add an option to choose the surface type. ([#36212](https://github.com/expo/expo/pull/36212) by [@behenate](https://github.com/behenate))
+
+## 2.1.5 — 2025-04-23
+
+### 🎉 New features
+
+- [web] Add playsInline prop ([#36335](https://github.com/expo/expo/pull/36335) by [@jakex7](https://github.com/jakex7))
+
+## 2.1.4 — 2025-04-22
+
+### 🎉 New features
+
+- Add `contentType` field to `VideoSource`. ([#36234](https://github.com/expo/expo/pull/36234) by [@behenate](https://github.com/behenate))
+
+## 2.1.3 — 2025-04-21
+
+_This version does not introduce any user-facing changes._
+
+## 2.1.2 — 2025-04-14
+
+_This version does not introduce any user-facing changes._
+
+## 2.1.1 — 2025-04-09
+
+_This version does not introduce any user-facing changes._
 
 ## 2.1.0 — 2025-04-04
 
@@ -23,11 +83,13 @@
 
 ### 🐛 Bug fixes
 
+- [Android] Fix ConcurrentModificationException app crashes ([#35356](https://github.com/expo/expo/pull/35356) by [@voslartomas](https://github.com/voslartomas))
 - [Web] Fix `playbackRate` not being applied in the setup function.([#34182](https://github.com/expo/expo/pull/34182) by [@behenate](https://github.com/behenate))
 - Fix safe area insets not updating for native controls on iOS. ([#32864](https://github.com/expo/expo/pull/32864) by [@behenate](https://github.com/behenate))
 - [iOS] Fix the Now Playing notification disappearing after the video is paused. ([#35273](https://github.com/expo/expo/pull/35273) by [@behenate](https://github.com/behenate))
 - [iOS] Fix a race condition in setting the targets for the Now Playing controls causing the controls to sometimes not work. ([#35274](https://github.com/expo/expo/pull/35274) by [@behenate](https://github.com/behenate))
 - [iOS] Fix disabling the Now Playing controls for multiple players at the same time causing the notification to break. ([#35275](https://github.com/expo/expo/pull/35275) by [@behenate](https://github.com/behenate))
+- [Android] Fix touch events not being emitted for `VideoView`. ([#35479](https://github.com/expo/expo/pull/35479) by [@behenate](https://github.com/behenate))
 
 ### 💡 Others
 

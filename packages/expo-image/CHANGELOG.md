@@ -6,11 +6,52 @@
 
 ### 🎉 New features
 
+- Add imperative api to lock/unlock/reload resource. ([#36912](https://github.com/expo/expo/pull/36912) by [@jakex7](https://github.com/jakex7))
+
+### 🐛 Bug fixes
+
+- Fix React Server Components support. ([#36801](https://github.com/expo/expo/pull/36801) by [@EvanBacon](https://github.com/EvanBacon))
+- [iOS] Fix PhotoLibrary assets being scaled twice. ([#36776](https://github.com/expo/expo/pull/36776) by [@alanjhughes](https://github.com/alanjhughes))
+- [iOS] Don't add transformers when unnecessary. ([#36884](https://github.com/expo/expo/pull/36884) by [@jakex7](https://github.com/jakex7))
+- [iOS] Fix blurry images when using `tintColor` by scaling `imageThumbnailPixelSize` with screen density. ([#37235](https://github.com/expo/expo/pull/37235) by [@hirbod](https://github.com/hirbod))
+
+
+### 💡 Others
+
+## 2.1.7 — 2025-05-06
+
+_This version does not introduce any user-facing changes._
+
+## 2.1.6 — 2025-04-30
+
+_This version does not introduce any user-facing changes._
+
+## 2.1.5 — 2025-04-25
+
+### 🐛 Bug fixes
+
+- Fixed `CUICatalog: Invalid asset name supplied: ''` error on iOS when the path is empty. ([#36294](https://github.com/expo/expo/pull/36294) by [@Innei](https://github.com/Innei))
+
+## 2.1.4 — 2025-04-14
+
 ### 🐛 Bug fixes
 
 - Fixed SVG image tinting on iOS. ([#35927](https://github.com/expo/expo/pull/35927) by [@kudo](https://github.com/kudo))
+- [Android] Fixed OutOfMemoryError crash when displaying some gif images ([#36097](https://github.com/expo/expo/pull/36097) by [@rahimrahman](https://github.com/rahimrahman))
 
-### 💡 Others
+## 2.1.3 — 2025-04-11
+
+_This version does not introduce any user-facing changes._
+
+## 2.1.2 — 2025-04-09
+
+_This version does not introduce any user-facing changes._
+
+## 2.1.1 — 2025-04-08
+
+### 🐛 Bug fixes
+
+- Fixed SVG image tinting on iOS. ([#35927](https://github.com/expo/expo/pull/35927) by [@kudo](https://github.com/kudo))
 
 ## 2.1.0 — 2025-04-04
 

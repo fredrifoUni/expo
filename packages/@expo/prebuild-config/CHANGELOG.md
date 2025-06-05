@@ -8,7 +8,57 @@
 
 ### 🐛 Bug fixes
 
+- remove `expo-notifications` from auto plugins ([#36873](https://github.com/expo/expo/pull/36873) by [@vonovak](https://github.com/vonovak))
+
 ### 💡 Others
+
+- Remove "Please" from warnings and errors ([#36862](https://github.com/expo/expo/pull/36862) by [@brentvatne](https://github.com/brentvatne))
+
+## 9.0.6 — 2025-05-06
+
+_This version does not introduce any user-facing changes._
+
+## 9.0.5 — 2025-05-01
+
+_This version does not introduce any user-facing changes._
+
+## 9.0.4 — 2025-04-30
+
+_This version does not introduce any user-facing changes._
+
+## 9.0.3 — 2025-04-30
+
+_This version does not introduce any user-facing changes._
+
+## 9.0.2 — 2025-04-25
+
+_This version does not introduce any user-facing changes._
+
+## 9.0.1 — 2025-04-21
+
+_This version does not introduce any user-facing changes._
+
+## 9.0.0 — 2025-04-14
+
+_This version does not introduce any user-facing changes._
+
+## 8.1.4 — 2025-04-14
+
+_This version does not introduce any user-facing changes._
+
+## 8.1.3 — 2025-04-11
+
+### 🎉 New features
+
+- [Android] Support `android.enableEdgeToEdge` field in app config. ([#35958](https://github.com/expo/expo/pull/35958) by [@behenate](https://github.com/behenate))
+
+## 8.1.2 — 2025-04-09
+
+_This version does not introduce any user-facing changes._
+
+## 8.1.1 — 2025-04-08
+
+_This version does not introduce any user-facing changes._
 
 ## 8.1.0 — 2025-04-04
 

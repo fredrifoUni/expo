@@ -10,6 +10,30 @@
 
 ### 💡 Others
 
+- Remove "Please" from warnings and errors ([#36862](https://github.com/expo/expo/pull/36862) by [@brentvatne](https://github.com/brentvatne))
+
+## 11.1.5 — 2025-05-03
+
+_This version does not introduce any user-facing changes._
+
+## 11.1.4 — 2025-04-30
+
+_This version does not introduce any user-facing changes._
+
+## 11.1.3 — 2025-04-25
+
+_This version does not introduce any user-facing changes._
+
+## 11.1.2 — 2025-04-14
+
+### 💡 Others
+
+- Added `file:///android_res/` format support. ([#36058](https://github.com/expo/expo/pull/36058) by [@kudo](https://github.com/kudo))
+
+## 11.1.1 — 2025-04-09
+
+_This version does not introduce any user-facing changes._
+
 ## 11.1.0 — 2025-04-04
 
 ### 🛠 Breaking changes
