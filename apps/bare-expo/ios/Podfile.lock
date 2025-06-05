@@ -623,7 +623,6 @@ PODS:
   - ExpoVideo (2.1.9):
     - ExpoModulesCore
     - GoogleAds-IMA-iOS-SDK (~> 3.26.1)
-  - ExpoVideoThumbnails (9.1.0):
   - ExpoVideoThumbnails (9.1.3):
     - ExpoModulesCore
   - ExpoWebBrowser (14.1.6):
@@ -3601,8 +3600,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   BenchmarkingModule: a97859cac8efb2f5411b2052e61841b349813a4a
-  boost: 1dca942403ed9342f98334bf4c3621f011aa7946
-  DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
+  boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
+  DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   EASClient: 83423c51dde4c5504cb4186e1f39728273ed334b
   EXApplication: b28de982d44768fc593de9d19ca5a7a0e49685b1
   EXAV: 0809cbb31eba2111d5413f2dbb547ba9727478ee
@@ -3670,7 +3669,7 @@ SPEC CHECKSUMS:
   ExpoSystemUI: 5ae7571742a69d0fc29145b6512f53879a3f42e5
   ExpoTrackingTransparency: 843029c42d70de59bb0503f6fc747b9d2fe67f7b
   ExpoUI: 4a03c3af5dd55144c788dfa3370bd244c21645ec
-  ExpoVideo: 54ce43735b4ceb6b3828e3eec3b750b0fe10314c
+  ExpoVideo: 7428a2c9ab0c24997c480da1749f6740afa5d209
   ExpoVideoThumbnails: 4280333bee3bd4d69b3b139bd50a8b7c967095ae
   ExpoWebBrowser: 1051486eb45a2f4d1ee075712604f43f3009f90e
   EXStructuredHeaders: 32bec6771c2db18c4cd47cecae530d1d06cdf972
@@ -3680,7 +3679,7 @@ SPEC CHECKSUMS:
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 84b955f7b4da8b895faf5946f73748267347c975
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
-  glog: 08b301085f15bcbb6ff8632a8ebaf239aae04e6a
+  glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   GoogleAds-IMA-iOS-SDK: 10b8f194e7cd2714d4de9a0587c46c8aaf06c620
   hermes-engine: 314be5250afa5692b57b4dd1705959e1973a8ebe
   libavif: 84bbb62fb232c3018d6f1bab79beea87e35de7b7
