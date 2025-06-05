@@ -91,9 +91,19 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
       field = value
     }
 
-  // TODO: Fully migrate to dialog (PiP needs rework)
-  // NOTE: IMA SDK breaks with activity based fullscreen. Using dialog instead.
-  private val useFullscreenDialog = true
+  /**
+   * HACK: Using Dialog for presenting the player in fullscreen instead of Activity.
+   * This is needed as some Ad breaks fail to render with Activity based fullscreen logic
+   *
+   * Issue (with activity fullscreen):
+   * - Start video with IMA ads.
+   * - While the first ad is playing, enter fullscreen.
+   * - That ad finishes and content resumes normally.
+   * - But on the next ad break:
+   *   ❌ No ad is rendered on the screen
+   *   ✅ Content video is paused for the duration of the Ad segment
+   */
+  private val useFullscreenDialog = BuildConfig.useInteractiveMediaAds
   private var fullscreenPlayerDialog: FullscreenPlayerDialog? = null
 
   var autoEnterPiP: Boolean by IgnoreSameSet(false) { new, _ ->
