@@ -114,17 +114,17 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     }
   }
     
-  // Ensures the player properly reappears after exiting fullscreen (and an Ad was shown)
+  // Refreshes and reattaches the player view with updated layout bounds
   func refreshPlayerViewLayout() {
       // Temporarily remove the view from the UI to ensure proper re-render
       playerViewController.view.removeFromSuperview()
 
-      // Set the frame bounds (that were lost during the fullscreen transition)
+      // Set the frame bounds
       playerViewController.view.frame = bounds
 
       // Ensure the player controls are re-rendered with the correct bounds
       playerViewController.endAppearanceTransition()
-       
+
       // Re-attach the view to the UI
       addSubview(playerViewController.view)
   }
@@ -184,8 +184,8 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     willBeginFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator
   ) {
 
+    // The ad player launches in fullscreen independently from AVPlayer.
     coordinator.animate(alongsideTransition: nil) { _ in
-      // The ad player needs to be opened in fullscreen seperately from the AVPlayer.
       self.adsManager.isContentFullscreen = true
     }
     

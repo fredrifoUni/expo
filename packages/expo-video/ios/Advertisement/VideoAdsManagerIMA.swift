@@ -65,11 +65,11 @@ class VideoAdsManagerIMA: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate,
         // Prevent Ad from playing sound during deinit
         adsManager?.volume = 0
         adsManager?.pause()
-        
-        // Prevent video unmount crash on iOS 17 production builds
         player = nil
+
+        // NOTE: Needs to run on main thread to avoid crash on iOS 17 release builds
         DispatchQueue.main.async {
-            self.adsManager?.destroy() // Causes exception if not on main thread
+            self.adsManager?.destroy()
         }
     }
     

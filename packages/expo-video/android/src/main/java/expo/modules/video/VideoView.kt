@@ -79,7 +79,7 @@ class VideoView(context: Context, appContext: AppContext) : ExpoView(context, ap
     }
 
   // TODO: Fully migrate to dialog (PiP needs rework)
-  // NOTE: IMA SDK breaks with activities. Use dialog instead.
+  // NOTE: IMA SDK breaks with activity based fullscreen. Using dialog instead.
   private val useFullscreenDialog = true
   private var fullscreenPlayerDialog: FullscreenPlayerDialog? = null
 

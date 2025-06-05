@@ -27,11 +27,11 @@ class FullscreenPlayerDialog(
 
   init {
     setContentView(containerView, layoutParamsMatchParent)
-
     logHandler.d(LOG_TAG, "Fullscreen Dialog is initializing")
   }
 
   override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+    // Forward backPress callback to parent view
     if (event.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
       onBackPressCallback()
       return true

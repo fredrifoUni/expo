@@ -10,7 +10,7 @@ class VideoAdsManagerStub: VideoAdsManager {
     
     // Log all stub function calls
     func logNotSupported(functionName: String = #function) {
-        print("VideoAdsManager stub function triggered." + functionName)
+        print("VideoAdsManager - Attempted to use plugin that has not been configured." + functionName)
     }
     
     // Stub functions
