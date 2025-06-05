@@ -1,5 +1,3 @@
-Boolean useInteractiveMediaAds = findProperty("expo.video.useInteractiveMediaAds") == "true"
-
 plugins {
   id 'com.android.library'
   id 'expo-module-gradle-plugin'
@@ -7,6 +5,8 @@ plugins {
 
 group = 'host.exp.exponent'
 version = '2.1.9'
+
+Boolean useInteractiveMediaAds = findProperty("expo.video.useInteractiveMediaAds") == "true"
 
 android {
   namespace "expo.modules.video"
