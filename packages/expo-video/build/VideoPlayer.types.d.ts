@@ -285,13 +285,6 @@ export type VideoSourceObject = {
      */
     metadata?: VideoMetadata;
     /**
-     * Specifies headers sent with the video request.
-     * > For DRM license headers use the `headers` field of [`DRMOptions`](#drmoptions).
-     * @platform android
-     * @platform ios
-     */
-    headers?: Record<string, string>;
-    /**
      * Specifies whether the player should use caching for the video.
      * > Due to platform limitations, the cache cannot be used with HLS video sources on iOS. Caching DRM-protected videos is not supported on Android and iOS.
      * @default false
