@@ -177,7 +177,7 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
     set(value) {
       field = value
       if (value.enable) {
-        playerView.setFullscreenButtonClickListener { enterFullscreen() }
+        playerView.setFullscreenButtonClickListener(fullscreenButtonClickListener)
       } else {
         playerView.setFullscreenButtonClickListener(null)
         playerView.setFullscreenButtonVisibility(false)
