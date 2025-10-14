@@ -371,8 +371,8 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
       safeEmit(event: "playToEnd")
     
       if loop {
-        self.pointer.seek(to: .zero)
-        self.pointer.play()
+        ref.seek(to: .zero)
+        ref.play()
       }
     }
 

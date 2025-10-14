@@ -5,7 +5,7 @@ import ExpoModulesCore
 
 public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   lazy var adsManager = VideoAdsManagerBuilder.create()
-  lazy var playerViewController = AVPlayerViewController()
+  lazy var playerViewController = OrientationAVPlayerViewController()
 
   weak var player: VideoPlayer? {
     // Pass class instances to the VideoPlayer
@@ -182,7 +182,10 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
 
       if !context.isCancelled {
         self.onFullscreenExit()
+
+        #if os(tvOS)
         self.isFullscreen = false
+        #endif
           
         // Ensure player view reappears when exiting fullscreen after an Ad was shown
         self.refreshPlayerViewLayout()
