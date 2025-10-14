@@ -5,7 +5,7 @@ import ExpoModulesCore
 
 public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   lazy var adsManager = VideoAdsManagerBuilder.create()
-  lazy var playerViewController = OrientationAVPlayerViewController()
+  lazy var playerViewController = OrientationAVPlayerViewController(delegate: self)
 
   weak var player: VideoPlayer? {
     // Pass class instances to the VideoPlayer
