@@ -2,6 +2,7 @@ package expo.modules.video
 
 import android.app.Dialog
 import android.content.Context
+import android.util.Log
 import android.view.KeyEvent
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -18,8 +19,6 @@ class FullscreenPlayerDialog(
   private val onBackPressCallback: () -> Unit
 ) : Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen) {
   private val containerView = FrameLayout(context)
-  val logHandler = LogHandler(enabled = true)
-
   private var layoutParamsMatchParent = FrameLayout.LayoutParams(
     FrameLayout.LayoutParams.MATCH_PARENT,
     FrameLayout.LayoutParams.MATCH_PARENT
@@ -27,7 +26,7 @@ class FullscreenPlayerDialog(
 
   init {
     setContentView(containerView, layoutParamsMatchParent)
-    logHandler.d(LOG_TAG, "Fullscreen Dialog is initializing")
+    Log.d(LOG_TAG, "Fullscreen Dialog is initializing")
   }
 
   override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -55,6 +54,6 @@ class FullscreenPlayerDialog(
     controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     controller?.hide(WindowInsetsCompat.Type.systemBars())
 
-    logHandler.d(LOG_TAG, "Fullscreen Dialog finished initialization")
+    Log.d(LOG_TAG, "Fullscreen Dialog finished initialization")
   }
 }
