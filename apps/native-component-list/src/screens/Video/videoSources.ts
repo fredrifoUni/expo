@@ -1,5 +1,5 @@
 import { requestPermissionsAsync, getAssetsAsync, getAssetInfoAsync } from 'expo-media-library';
-import { VideoSource, VideoSourceObject } from 'expo-video';
+import { VideoSource } from 'expo-video';
 const localVideoId: VideoSource = require('../../../assets/videos/ace.mp4') as number;
 
 const localVideoSource: VideoSource = {
@@ -10,7 +10,7 @@ const localVideoSource: VideoSource = {
   },
 };
 
-const bigBuckBunnySource: VideoSourceObject = {
+const bigBuckBunnySource: VideoSource & object = {
   uri: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
   metadata: {
     title: 'Big Buck Bunny',
@@ -20,7 +20,7 @@ const bigBuckBunnySource: VideoSourceObject = {
   },
 };
 
-const elephantsDreamSource: VideoSourceObject = {
+const elephantsDreamSource: VideoSource & object = {
   uri: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
   metadata: {
     title: 'Elephants Dream',
@@ -29,7 +29,7 @@ const elephantsDreamSource: VideoSourceObject = {
   },
 };
 
-export const hlsSource: VideoSourceObject = {
+export const hlsSource: VideoSource & object = {
   uri: 'https://bitmovin-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
   metadata: {
     title: 'Sintel',
@@ -39,7 +39,7 @@ export const hlsSource: VideoSourceObject = {
   },
 };
 
-export const nullSource: VideoSourceObject = {
+export const nullSource: VideoSource & object = {
   metadata: {
     title: 'Null Source',
     artist: '-',
@@ -84,12 +84,12 @@ const audioTrackSource: VideoSource = {
   uri: 'https://mirror.selfnet.de/CCC/congress/2019/h264-hd/36c3-11235-eng-deu-fra-36C3_Infrastructure_Review_hd.mp4',
 };
 
-const forBiggerBlazesSource: VideoSourceObject = {
+const forBiggerBlazesSource: VideoSource = {
   uri: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
 };
 
 // source: https://reference.dashif.org/dash.js/latest/samples/drm/widevine.html
-const androidDrmSource: VideoSourceObject = {
+const androidDrmSource: VideoSource = {
   uri: 'https://bitmovin-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
 };
 
