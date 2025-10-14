@@ -1,21 +1,8 @@
 package expo.modules.video.player
 
 import androidx.media3.common.C
-import androidx.media3.common.Timeline
-import androidx.media3.common.util.Assertions
-import androidx.media3.common.util.Log
-import androidx.media3.common.util.NullableType
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
-import androidx.media3.exoplayer.DefaultLoadControl
-import androidx.media3.exoplayer.LoadControl
-import androidx.media3.exoplayer.Renderer
-import androidx.media3.exoplayer.analytics.PlayerId
-import androidx.media3.exoplayer.source.MediaSource
-import androidx.media3.exoplayer.source.TrackGroupArray
-import androidx.media3.exoplayer.trackselection.ExoTrackSelection
-import androidx.media3.exoplayer.upstream.Allocator
-import androidx.media3.exoplayer.upstream.DefaultAllocator
 import expo.modules.video.records.BufferOptions
 
 @UnstableApi

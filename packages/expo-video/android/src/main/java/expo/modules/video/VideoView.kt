@@ -235,7 +235,7 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
     else { enterFullscreenActivity() }
 
     onFullscreenEnter(Unit)
-    applyAutoEnterPiP(currentActivity, false)
+    applyPiPParams(currentActivity, false, calculateCurrentPipAspectRatio())
   }
 
   /**
@@ -278,8 +278,6 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
       @Suppress("DEPRECATION")
       currentActivity.overridePendingTransition(0, 0)
     }
-    onFullscreenEnter(Unit)
-    applyPiPParams(currentActivity, false, calculateCurrentPipAspectRatio())
   }
 
   fun attachPlayer() {
