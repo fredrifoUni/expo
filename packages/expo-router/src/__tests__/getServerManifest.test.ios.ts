@@ -240,7 +240,7 @@ it(`matches expected with safe names that collide`, () => {
 it(`asserts duplicate keys eventually`, () => {
   const routeNode = getRoutesFor(['./[a]/b/[a].tsx']);
   const route = getServerManifest(routeNode).htmlRoutes[0];
-  expect(() => new RegExp(route.namedRegex)).toThrowError();
+  expect(() => new RegExp(route.namedRegex)).toThrow();
 });
 
 it(`converts dynamic routes`, () => {
@@ -599,4 +599,19 @@ it(`matches top-level catch-all before +not-found route`, () => {
       routesManifest.htmlRoutes.find((r) => new RegExp(r.namedRegex).test(matcher))?.file
     ).toBe(page);
   }
+});
+
+describe('headers', () => {
+  it('applies custom headers to manifest', () => {
+    const manifest = getServerManifest(getRoutesFor(['./home.js']), {
+      headers: {
+        'X-Powered-By': 'expo-server',
+        'Set-Cookie': ['hello=world', 'foo=bar'],
+      },
+    });
+    expect(manifest.headers).toEqual({
+      'X-Powered-By': 'expo-server',
+      'Set-Cookie': ['hello=world', 'foo=bar'],
+    });
+  });
 });

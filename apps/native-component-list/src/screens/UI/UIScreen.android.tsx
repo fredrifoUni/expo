@@ -3,6 +3,14 @@ import ComponentListScreen, { ListElement } from '../ComponentListScreen';
 
 export const UIScreens = [
   {
+    name: 'AlertDialog component',
+    route: 'ui/alert-dialog',
+    options: {},
+    getComponent() {
+      return optionalRequire(() => require('./AlertDialogScreen'));
+    },
+  },
+  {
     name: 'Button component',
     route: 'ui/button',
     options: {},
@@ -43,11 +51,11 @@ export const UIScreens = [
     },
   },
   {
-    name: 'Section component',
-    route: 'ui/section',
+    name: 'Form component',
+    route: 'ui/form',
     options: {},
     getComponent() {
-      return optionalRequire(() => require('./SectionScreen'));
+      return optionalRequire(() => require('./FormScreen'));
     },
   },
   {
@@ -107,6 +115,14 @@ export const UIScreens = [
     },
   },
   {
+    name: 'Chip component',
+    route: 'ui/assist-chip',
+    options: {},
+    getComponent() {
+      return optionalRequire(() => require('./ChipScreen'));
+    },
+  },
+  {
     name: 'Jetpack Compose primitives',
     route: 'ui/jetpack-compose-primitives',
     options: {},
@@ -124,7 +140,7 @@ export default function UIScreen() {
       route: `/components/${screen.route}`,
     };
   });
-  return <ComponentListScreen apis={apis} sort={false} />;
+  return <ComponentListScreen apis={apis} />;
 }
 
 UIScreen.navigationOptions = {

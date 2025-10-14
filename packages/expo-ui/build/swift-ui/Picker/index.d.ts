@@ -1,4 +1,5 @@
-import { StyleProp, ViewStyle } from 'react-native';
+import type { ColorValue } from 'react-native';
+import { type CommonViewModifierProps } from '../types';
 export type PickerProps = {
     /**
      * An array of options to be displayed in the picker.
@@ -30,23 +31,10 @@ export type PickerProps = {
     /**
      * Picker color. On iOS it only applies to the `'menu'` variant.
      */
-    color?: string;
-};
-type NativePickerProps = PickerProps;
-/**
- * @hidden
- */
-export declare function transformPickerProps(props: PickerProps): NativePickerProps;
-/**
- * `<Picker>` component without a host view.
- * You should use this with a `Host` component in ancestor.
- */
-export declare function PickerPrimitive(props: PickerProps): import("react").JSX.Element;
+    color?: ColorValue;
+} & CommonViewModifierProps;
 /**
  * Displays a native picker component. Depending on the variant it can be a segmented button, an inline picker, a list of choices or a radio button.
  */
-export declare function Picker(props: PickerProps & {
-    style?: StyleProp<ViewStyle>;
-}): import("react").JSX.Element;
-export {};
+export declare function Picker(props: PickerProps): import("react").JSX.Element;
 //# sourceMappingURL=index.d.ts.map

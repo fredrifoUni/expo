@@ -112,18 +112,15 @@ export async function getCoreAutolinkingSourcesFromExpoAndroid(
   if (useRNCoreAutolinkingFromExpo === false || !options.platforms.includes('android')) {
     return [];
   }
+  const args = [
+    resolveExpoAutolinkingCliPath(projectRoot),
+    'react-native-config',
+    '--json',
+    '--platform',
+    'android',
+  ];
   try {
-    const { stdout } = await spawnAsync(
-      'node',
-      [
-        resolveExpoAutolinkingCliPath(projectRoot),
-        'react-native-config',
-        '--json',
-        '--platform',
-        'android',
-      ],
-      { cwd: projectRoot }
-    );
+    const { stdout } = await spawnAsync('node', args, { cwd: projectRoot });
     const config = JSON.parse(stdout);
     const results: HashSource[] = await parseCoreAutolinkingSourcesAsync({
       config,

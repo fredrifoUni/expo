@@ -2,7 +2,9 @@ import { requireNativeView } from 'expo';
 import { Children, ReactElement, ReactNode, useMemo } from 'react';
 import { NativeSyntheticEvent, StyleProp, ViewStyle } from 'react-native';
 
+import { SubmenuProps } from './Submenu';
 import { MenuElement, transformChildrenToElementArray } from './utils';
+import { ExpoModifier } from '../../types';
 import { ButtonProps } from '../Button';
 import { PickerProps } from '../Picker';
 import { SwitchProps } from '../Switch';
@@ -70,20 +72,9 @@ export type ContextMenuProps = {
    * Optional styles to apply to the `ContextMenu`.
    */
   style?: StyleProp<ViewStyle>;
-};
 
-/**
- * Props of the `Submenu` component.
- */
-export type SubmenuProps = {
-  /**
-   * The button that will be used to expand the submenu. On Android the `text` prop of the `Button` will be used as a section title.
-   */
-  button: ReactElement<ButtonProps>;
-  /**
-   * Children of the submenu. Only `Button`, `Switch`, `Picker` and `Submenu` elements should be used.
-   */
-  children: ReactNode;
+  /** Modifiers for the component */
+  modifiers?: ExpoModifier[];
 };
 
 /**
@@ -109,11 +100,7 @@ type NativeMenuProps = ContextMenuProps & {
   ) => void;
 };
 
-export function Submenu() {
-  return <></>;
-}
-
-export function Items() {
+export function Items(props: ContextMenuContentProps) {
   return <></>;
 }
 Items.tag = 'Items';
@@ -158,6 +145,8 @@ function ContextMenu(props: ContextMenuProps) {
       onContextMenuButtonPressed={createEventHandler('onPress')}
       onContextMenuSwitchValueChanged={createEventHandler('onValueChange')}
       onContextMenuPickerOptionSelected={createEventHandler('onOptionSelected')}
+      // @ts-expect-error
+      modifiers={props.modifiers?.map((m) => m.__expo_shared_object_id__)}
       {...props}>
       {activationElement}
     </MenuNativeView>
@@ -169,3 +158,4 @@ ContextMenu.Preview = Preview;
 ContextMenu.Items = Items;
 
 export { ContextMenu };
+export { Submenu } from './Submenu';

@@ -74,7 +74,9 @@ struct AudioUtils {
     if let directory {
       let fileUrl = createRecordingUrl(from: directory, with: options)
       do {
-        return try AVAudioRecorder(url: fileUrl, settings: AudioUtils.createRecordingOptions(options))
+        let recorder = try AVAudioRecorder(url: fileUrl, settings: AudioUtils.createRecordingOptions(options))
+        recorder.isMeteringEnabled = options.isMeteringEnabled
+        return recorder
       } catch {
         return AVAudioRecorder()
       }
@@ -123,15 +125,17 @@ struct AudioUtils {
   }
 
   static func createRecordingOptions(_ options: RecordingOptions) -> [String: Any] {
-    let strategy = options.bitRateStrategy?.toAVBitRateStrategy() ?? AVAudioBitRateStrategy_Variable
+    let strategy = options.bitRateStrategy?.toAVBitRateStrategy()
 
     var settings = [String: Any]()
 
-    if strategy == AVAudioBitRateStrategy_Variable {
-      settings[AVEncoderAudioQualityForVBRKey] = strategy
-    } else {
-      settings[AVEncoderAudioQualityKey] = strategy
+    if let strategy {
+      settings[AVEncoderBitRateStrategyKey] = strategy
     }
+
+    let usesVBRQualityKey = strategy == AVAudioBitRateStrategy_Variable || strategy == AVAudioBitRateStrategy_VariableConstrained
+    let qualityKey = usesVBRQualityKey ? AVEncoderAudioQualityForVBRKey : AVEncoderAudioQualityKey
+    settings[qualityKey] = options.audioQuality
     settings[AVSampleRateKey] = options.sampleRate
     settings[AVNumberOfChannelsKey] = options.numberOfChannels
     settings[AVEncoderBitRateKey] = options.bitRate

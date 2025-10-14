@@ -1,9 +1,11 @@
 import { getBareExtensions } from '@expo/config/paths';
+import type Bundler from '@expo/metro/metro/Bundler';
+import type { ConfigT } from '@expo/metro/metro-config';
+import type { CustomResolutionContext, Resolution } from '@expo/metro/metro-resolver';
 import { vol } from 'memfs';
-import { ConfigT } from 'metro-config';
-import { CustomResolutionContext } from 'metro-resolver/src';
 import assert from 'node:assert';
 
+import { AutolinkingModuleResolverInput } from '../createExpoAutolinkingResolver';
 import { shouldCreateVirtualCanary, shouldCreateVirtualShim } from '../externals';
 import { getNodejsExtensions, withExtendedResolver } from '../withMetroMultiPlatform';
 
@@ -18,7 +20,7 @@ class FailedToResolveNameError extends Error {
     super('Failed to resolve name');
   }
 }
-jest.mock('metro-resolver', () => {
+jest.mock('@expo/metro/metro-resolver', () => {
   const resolve = jest.fn(() => ({ type: 'empty' }));
   return {
     resolve,
@@ -36,7 +38,7 @@ function getDefaultRequestContext(): CustomResolutionContext {
 }
 
 function getMetroBundlerGetter() {
-  return jest.fn(() => {
+  return jest.fn((): Bundler => {
     const transformFile = jest.fn();
     // @ts-expect-error
     transformFile.__patched = true;
@@ -44,11 +46,11 @@ function getMetroBundlerGetter() {
       hasVirtualModule: jest.fn((path) => false),
       setVirtualModule: jest.fn(),
       transformFile,
-    };
+    } as any;
   });
 }
 
-const expectVirtual = (result: import('metro-resolver').Resolution, name: string) => {
+const expectVirtual = (result: Resolution, name: string) => {
   expect(result.type).toBe('sourceFile');
   assert(result.type === 'sourceFile');
   assert(/^\0/.test(result.filePath), 'Virtual files must start with null byte: \\0');
@@ -92,7 +94,8 @@ function getNodeResolverContext({
 }
 
 function getResolveFunc() {
-  return require('metro-resolver').resolve;
+  const metroResolver: typeof import('@expo/metro/metro-resolver') = require('@expo/metro/metro-resolver');
+  return metroResolver.resolve;
 }
 
 describe(withExtendedResolver, () => {
@@ -290,7 +293,7 @@ describe(withExtendedResolver, () => {
           platform
         );
 
-        expect(getResolveFunc()).not.toBeCalled();
+        expect(getResolveFunc()).not.toHaveBeenCalled();
       });
     });
 
@@ -313,7 +316,7 @@ describe(withExtendedResolver, () => {
         'web'
       );
 
-      expect(getResolveFunc()).toBeCalled();
+      expect(getResolveFunc()).toHaveBeenCalled();
     });
 
     it(`resolves production react files normally when bundling for production`, async () => {
@@ -334,7 +337,7 @@ describe(withExtendedResolver, () => {
         'web'
       );
 
-      expect(getResolveFunc()).toBeCalled();
+      expect(getResolveFunc()).toHaveBeenCalled();
     });
   });
 
@@ -797,6 +800,12 @@ describe(withExtendedResolver, () => {
             'inline-style-prefixer/index.js',
           ].forEach((name) => {
             it(`externs ${name} to virtual node shim`, () => {
+              jest.mocked(getResolveFunc()).mockImplementation((context, moduleName, _platform) => {
+                return context.originModulePath === '/root/package.json'
+                  ? { type: 'sourceFile', filePath: `mock:${moduleName}` }
+                  : { type: 'empty' };
+              });
+
               const result = config.resolver.resolveRequest!(
                 // Context
                 getNodeResolverContext(),
@@ -812,11 +821,17 @@ describe(withExtendedResolver, () => {
                 `\0node:${name}`
               );
 
-              expect(getResolveFunc()).toHaveBeenCalledTimes(0);
+              expect(getResolveFunc()).toHaveBeenCalledTimes(1);
             });
           });
 
           it(`externs @babel/runtime/xxx subpaths `, () => {
+            jest.mocked(getResolveFunc()).mockImplementation((context, moduleName, _platform) => {
+              return context.originModulePath === '/root/package.json'
+                ? { type: 'sourceFile', filePath: `mock:${moduleName}` }
+                : { type: 'empty' };
+            });
+
             const result = config.resolver.resolveRequest!(
               getNodeResolverContext(),
               '@babel/runtime/xxx/foo.js',
@@ -829,7 +844,7 @@ describe(withExtendedResolver, () => {
               '\0node:@babel/runtime/xxx/foo.js'
             );
 
-            expect(getResolveFunc()).toHaveBeenCalledTimes(0);
+            expect(getResolveFunc()).toHaveBeenCalledTimes(1);
           });
         });
       });
@@ -1024,7 +1039,7 @@ describe(withExtendedResolver, () => {
       expect(getResolveFunc()).toHaveBeenNthCalledWith(
         3,
         expect.objectContaining({
-          originModulePath: '/node_modules/expo',
+          originModulePath: '/node_modules/expo/index.js',
           nodeModulesPaths: ['/node_modules/expo'],
         }),
         '@babel/runtime/helpers/interopRequireDefault',
@@ -1102,7 +1117,7 @@ describe(withExtendedResolver, () => {
       expect(getResolveFunc()).toHaveBeenNthCalledWith(
         4,
         expect.objectContaining({
-          originModulePath: '/node_modules/expo-router',
+          originModulePath: '/node_modules/expo-router/index.js',
           nodeModulesPaths: ['/node_modules/expo-router'],
         }),
         'example',
@@ -1199,6 +1214,71 @@ describe(withExtendedResolver, () => {
         3,
         expect.objectContaining({ originModulePath: '/root/package.json' }),
         'expo-router/package.json',
+        platform
+      );
+    });
+  });
+
+  describe('with autolinking module resolver', () => {
+    function getModifiedConfig(input: AutolinkingModuleResolverInput) {
+      return withExtendedResolver(asMetroConfig({ projectRoot: '/root/' }), {
+        tsconfig: {},
+        autolinkingModuleResolverInput: input,
+        isTsconfigPathsEnabled: false,
+        isReactCanaryEnabled: true,
+        getMetroBundler: getMetroBundlerGetter() as any,
+      });
+    }
+
+    it('resolves redirect path for autolinking module input', () => {
+      const platform = 'ios';
+      const modified = getModifiedConfig({
+        ios: {
+          platform: 'ios',
+          moduleTestRe: /^(expo-router)($|\/.*)/,
+          resolvedModulePaths: {
+            'expo-router': '/sticky/expo-router',
+          },
+        },
+      });
+
+      jest.mocked(getResolveFunc()).mockImplementation((context, moduleName, _platform) => {
+        return { type: 'sourceFile', filePath: context.originModulePath };
+      });
+
+      // Supports bare module name
+      let result = modified.resolver.resolveRequest!(
+        getDefaultRequestContext(),
+        'expo-router',
+        platform
+      );
+      expect(getResolveFunc()).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        filePath: '/sticky/expo-router',
+        type: 'sourceFile',
+      });
+
+      expect(getResolveFunc()).toHaveBeenLastCalledWith(
+        expect.objectContaining({ originModulePath: '/sticky/expo-router' }),
+        'expo-router',
+        platform
+      );
+
+      // Supports sub-path module name
+      result = modified.resolver.resolveRequest!(
+        getDefaultRequestContext(),
+        'expo-router/file',
+        platform
+      );
+      expect(getResolveFunc()).toHaveBeenCalledTimes(2);
+      expect(result).toEqual({
+        filePath: '/sticky/expo-router',
+        type: 'sourceFile',
+      });
+
+      expect(getResolveFunc()).toHaveBeenLastCalledWith(
+        expect.objectContaining({ originModulePath: '/sticky/expo-router' }),
+        'expo-router/file',
         platform
       );
     });

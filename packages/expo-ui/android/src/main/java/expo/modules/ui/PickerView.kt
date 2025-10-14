@@ -29,6 +29,7 @@ import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.ComposeProps
 import expo.modules.kotlin.views.ExpoComposeView
+import expo.modules.kotlin.views.ComposableScope
 
 class PickerColors : Record {
   @Field
@@ -72,16 +73,18 @@ data class PickerProps(
   val options: MutableState<Array<String>> = mutableStateOf(emptyArray()),
   val selectedIndex: MutableState<Int?> = mutableStateOf(null),
   val elementColors: MutableState<PickerColors> = mutableStateOf(PickerColors()),
-  val variant: MutableState<String> = mutableStateOf("segmented")
+  val variant: MutableState<String> = mutableStateOf("segmented"),
+  val modifiers: MutableState<List<ExpoModifier>> = mutableStateOf(emptyList()),
+  val buttonModifiers: MutableState<List<ExpoModifier>> = mutableStateOf(emptyList())
 ) : ComposeProps
 
 class PickerView(context: Context, appContext: AppContext) :
-  ExpoComposeView<PickerProps>(context, appContext, withHostingView = true) {
+  ExpoComposeView<PickerProps>(context, appContext) {
   override val props = PickerProps()
   private val onOptionSelected by EventDispatcher()
 
   @Composable
-  override fun Content() {
+  override fun ComposableScope.Content() {
     val (selectedIndex) = props.selectedIndex
     val (options) = props.options
     val (colors) = props.elementColors
@@ -91,7 +94,9 @@ class PickerView(context: Context, appContext: AppContext) :
     fun SegmentedComposable() {
       DynamicTheme {
         AutoSizingComposable(shadowNodeProxy) {
-          SingleChoiceSegmentedButtonRow {
+          SingleChoiceSegmentedButtonRow(
+            modifier = Modifier.fromExpoModifiers(props.modifiers.value)
+          ) {
             options.forEachIndexed { index, label ->
               SegmentedButton(
                 shape = SegmentedButtonDefaults.itemShape(
@@ -101,6 +106,7 @@ class PickerView(context: Context, appContext: AppContext) :
                 onClick = {
                   onOptionSelected(mapOf("index" to index, "label" to label))
                 },
+                modifier = Modifier.fromExpoModifiers(props.buttonModifiers.value),
                 selected = index == selectedIndex,
                 label = { Text(label) },
                 colors = SegmentedButtonDefaults.colors(

@@ -1,34 +1,37 @@
+import { composeSourceMaps } from '@expo/metro/metro-source-map';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs';
-import { composeSourceMaps } from 'metro-source-map';
 import os from 'os';
 import path from 'path';
 import process from 'process';
+import resolveFrom from 'resolve-from';
 
 const debug = require('debug')('expo:metro:hermes') as typeof console.log;
 
-function importHermesCommandFromProject(): string {
+function importHermesCommandFromProject(projectRoot: string): string {
   const platformExecutable = getHermesCommandPlatform();
-  const hermescLocations = [
+
+  const reactNativeRoot = path.dirname(resolveFrom(projectRoot, 'react-native/package.json'));
+
+  const hermescPaths = [
     // Override hermesc dir by environment variables
     process.env['REACT_NATIVE_OVERRIDE_HERMES_DIR']
       ? `${process.env['REACT_NATIVE_OVERRIDE_HERMES_DIR']}/build/bin/hermesc`
       : '',
 
     // Building hermes from source
-    'react-native/ReactAndroid/hermes-engine/build/hermes/bin/hermesc',
+    `${reactNativeRoot}/ReactAndroid/hermes-engine/build/hermes/bin/hermesc`,
 
     // Prebuilt hermesc in official react-native 0.69+
-    `react-native/sdks/hermesc/${platformExecutable}`,
-
-    // Legacy hermes-engine package
-    `hermes-engine/${platformExecutable}`,
+    `${reactNativeRoot}/sdks/hermesc/${platformExecutable}`,
   ];
 
-  for (const location of hermescLocations) {
+  for (const hermescPath of hermescPaths) {
     try {
-      return require.resolve(location);
+      if (fs.existsSync(hermescPath)) {
+        return hermescPath;
+      }
     } catch {}
   }
   throw new Error('Cannot find the hermesc executable.');
@@ -53,6 +56,7 @@ interface HermesBundleOutput {
 }
 
 type BuildHermesOptions = {
+  projectRoot: string;
   filename: string;
   code: string;
   map: string | null;
@@ -74,6 +78,7 @@ export async function buildHermesBundleAsync(
 }
 
 async function directlyBuildHermesBundleAsync({
+  projectRoot,
   code,
   map,
   minify = false,
@@ -91,7 +96,7 @@ async function directlyBuildHermesBundleAsync({
     }
 
     const tempHbcFile = path.join(tempDir, 'index.hbc');
-    const hermesCommand = importHermesCommandFromProject();
+    const hermesCommand = importHermesCommandFromProject(projectRoot);
     const args = ['-emit-binary', '-out', tempHbcFile, tempBundleFile];
     if (minify) {
       args.push('-O');

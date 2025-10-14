@@ -16,6 +16,7 @@ const debug = Debug('expo:prebuild-config:expo-splash-screen:ios:assets');
 
 const IMAGE_CACHE_NAME = 'splash-ios';
 const IMAGESET_PATH = 'Images.xcassets/SplashScreenLogo.imageset';
+const LEGACY_IMAGESET_PATH = 'Images.xcassets/SplashScreenLegacy.imageset';
 const PNG_FILENAME = 'image';
 const DARK_PNG_FILENAME = 'dark_image';
 const TABLET_PNG_FILENAME = 'tablet_image';
@@ -68,7 +69,15 @@ async function configureImageAssets({
   imageWidth: number;
   enableFullScreenImage?: boolean;
 }) {
-  const imageSetPath = path.resolve(iosNamedProjectRoot, IMAGESET_PATH);
+  const imagePath = enableFullScreenImage ? LEGACY_IMAGESET_PATH : IMAGESET_PATH;
+  const imageSetPath = path.resolve(iosNamedProjectRoot, imagePath);
+
+  // remove legacy imageSet if it is not used
+  if (!enableFullScreenImage) {
+    const legacyImageSetPath = path.resolve(iosNamedProjectRoot, LEGACY_IMAGESET_PATH);
+    await fs.promises.rm(legacyImageSetPath, { force: true, recursive: true });
+  }
+
   // ensure old SplashScreen imageSet is removed
   await fs.promises.rm(imageSetPath, { force: true, recursive: true });
 
@@ -117,26 +126,35 @@ async function copyImageFiles({
 }) {
   await generateImagesAssetsAsync({
     async generateImageAsset(item, fileName) {
-      [
-        { ratio: 1, suffix: '' },
-        { ratio: 2, suffix: '@2x' },
-        { ratio: 3, suffix: '@3x' },
-      ].map(async ({ ratio, suffix }) => {
-        const size = imageWidth * ratio;
-        // Using this method will cache the images in `.expo` based on the properties used to generate them.
-        // this method also supports remote URLs and using the global sharp instance.
-        const { source } = await generateImageAsync({ projectRoot, cacheType: IMAGE_CACHE_NAME }, {
-          src: item,
-          width: enableFullScreenImage ? undefined : size,
-          height: enableFullScreenImage ? undefined : size,
-        } as any);
-        // Write image buffer to the file system.
-        // const assetPath = join(iosNamedProjectRoot, IMAGESET_PATH, filename);
-        await fs.promises.writeFile(
-          path.resolve(iosNamedProjectRoot, IMAGESET_PATH, `${fileName}${suffix}.png`),
-          source
-        );
-      });
+      await Promise.all(
+        [
+          { ratio: 1, suffix: '' },
+          { ratio: 2, suffix: '@2x' },
+          { ratio: 3, suffix: '@3x' },
+        ].map(async ({ ratio, suffix }) => {
+          const size = imageWidth * ratio;
+          // Using this method will cache the images in `.expo` based on the properties used to generate them.
+          // this method also supports remote URLs and using the global sharp instance.
+          const { source } = await generateImageAsync(
+            { projectRoot, cacheType: IMAGE_CACHE_NAME },
+            {
+              src: item,
+              width: enableFullScreenImage ? undefined : size,
+              height: enableFullScreenImage ? undefined : size,
+            } as any
+          );
+          // Write image buffer to the file system.
+          // const assetPath = join(iosNamedProjectRoot, IMAGESET_PATH, filename);
+          await fs.promises.writeFile(
+            path.resolve(
+              iosNamedProjectRoot,
+              enableFullScreenImage ? LEGACY_IMAGESET_PATH : IMAGESET_PATH,
+              `${fileName}${suffix}.png`
+            ),
+            source
+          );
+        })
+      );
     },
     anyItem: image,
     darkItem: darkImage,

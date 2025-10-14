@@ -3,11 +3,32 @@ package expo.modules.kotlin.views
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.size
 import expo.modules.kotlin.AppContext
+
+data class ComposableScope(
+  val rowScope: RowScope? = null,
+  val columnScope: ColumnScope? = null,
+  val boxScope: BoxScope? = null
+)
+
+fun ComposableScope.with(rowScope: RowScope?): ComposableScope {
+  return this.copy(rowScope = rowScope)
+}
+
+fun ComposableScope.with(columnScope: ColumnScope?): ComposableScope {
+  return this.copy(columnScope = columnScope)
+}
+
+fun ComposableScope.with(boxScope: BoxScope?): ComposableScope {
+  return this.copy(boxScope = boxScope)
+}
 
 /**
  * A base class that should be used by compose views.
@@ -20,7 +41,7 @@ abstract class ExpoComposeView<T : ComposeProps>(
   open val props: T? = null
 
   @Composable
-  abstract fun Content()
+  abstract fun ComposableScope.Content()
 
   override val shouldUseAndroidLayout = withHostingView
 
@@ -34,14 +55,14 @@ abstract class ExpoComposeView<T : ComposeProps>(
   }
 
   @Composable
-  protected fun Children() {
-    if (withHostingView) {
-      return Content()
-    }
-
+  protected fun Children(composableScope: ComposableScope) {
     for (index in 0..<this.size) {
       val child = getChildAt(index) as? ExpoComposeView<*> ?: continue
-      child.Content()
+      with(composableScope) {
+        with(child) {
+          Content()
+        }
+      }
     }
   }
 
@@ -59,7 +80,9 @@ abstract class ExpoComposeView<T : ComposeProps>(
       it.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
       it.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
       it.setContent {
-        Children()
+        with(ComposableScope()) {
+          Content()
+        }
       }
       it.addOnAttachStateChangeListener(object : OnAttachStateChangeListener {
         override fun onViewAttachedToWindow(v: View) {

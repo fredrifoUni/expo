@@ -3,6 +3,7 @@ import { EasMetadataIcon } from '@expo/styleguide-icons/custom/EasMetadataIcon';
 import { EasSubmitIcon } from '@expo/styleguide-icons/custom/EasSubmitIcon';
 import { PlanEnterpriseIcon } from '@expo/styleguide-icons/custom/PlanEnterpriseIcon';
 import { StoplightIcon } from '@expo/styleguide-icons/custom/StoplightIcon';
+import { PlaySquareDuotoneIcon } from '@expo/styleguide-icons/duotone/PlaySquareDuotoneIcon';
 import { CheckIcon } from '@expo/styleguide-icons/outline/CheckIcon';
 import { Cloud01Icon } from '@expo/styleguide-icons/outline/Cloud01Icon';
 import { CodeSquare01Icon } from '@expo/styleguide-icons/outline/CodeSquare01Icon';
@@ -14,9 +15,13 @@ import { LayersTwo02Icon } from '@expo/styleguide-icons/outline/LayersTwo02Icon'
 import { NotificationBoxIcon } from '@expo/styleguide-icons/outline/NotificationBoxIcon';
 import { PaletteIcon } from '@expo/styleguide-icons/outline/PaletteIcon';
 import { Phone01Icon } from '@expo/styleguide-icons/outline/Phone01Icon';
+import { PlaySquareIcon } from '@expo/styleguide-icons/outline/PlaySquareIcon';
 import { Rocket01Icon } from '@expo/styleguide-icons/outline/Rocket01Icon';
+import { Star06Icon } from '@expo/styleguide-icons/outline/Star06Icon';
 import { TerminalBrowserIcon } from '@expo/styleguide-icons/outline/TerminalBrowserIcon';
+import { useRouter } from 'next/compat/router';
 
+import { isRouteActive } from '~/common/routes';
 import { reportEasTutorialCompleted } from '~/providers/Analytics';
 import { useTutorialChapterCompletion } from '~/providers/TutorialChapterCompletionProvider';
 import { NavigationRoute } from '~/types/common';
@@ -31,6 +36,7 @@ import { SidebarNodeProps } from './types';
 export const SidebarGroup = ({ route, parentRoute }: SidebarNodeProps) => {
   const { chapters, setChapters, getStartedChapters, setGetStartedChapters } =
     useTutorialChapterCompletion();
+  const router = useRouter();
 
   const title = route.sidebarTitle ?? route.name;
   const Icon = getIconElement(title);
@@ -60,7 +66,9 @@ export const SidebarGroup = ({ route, parentRoute }: SidebarNodeProps) => {
       <div className="mb-5">
         {!shouldSkipTitle(route, parentRoute) && title && (
           <div className="flex flex-row items-center justify-between py-0">
-            <SidebarTitle Icon={Icon}>{title}</SidebarTitle>
+            <SidebarTitle Icon={Icon} sectionName={title}>
+              {title}
+            </SidebarTitle>
             <div className="flex flex-row items-center pb-1">
               <CircularProgressBar progress={progressPercentage} />{' '}
               <p className="ml-2 text-xs text-tertiary">{`${completedChaptersCount} of ${totalChapters}`}</p>
@@ -70,11 +78,23 @@ export const SidebarGroup = ({ route, parentRoute }: SidebarNodeProps) => {
         {route.children.map(child => {
           const childSlug = child.href;
           const completed = isChapterCompleted(childSlug);
+          const isSelected = isRouteActive(child, router?.asPath, router?.pathname);
 
           return (
-            <SidebarLink info={child} className="flex flex-1" key={`${route.name}-${child.name}`}>
-              {child.sidebarTitle ?? child.name}
-              {completed && <CheckIcon className="icon-sm ml-auto mt-0.5 self-start" />}
+            <SidebarLink
+              info={{ ...child, hasVideoLink: false }}
+              className="flex flex-1"
+              key={`${route.name}-${child.name}`}>
+              <span className="inline">
+                {child.sidebarTitle ?? child.name}
+                {child.hasVideoLink &&
+                  (!isSelected ? (
+                    <PlaySquareIcon className="icon-xs ml-1 inline text-icon-secondary" />
+                  ) : (
+                    <PlaySquareDuotoneIcon className="icon-xs ml-1 inline text-palette-blue11" />
+                  ))}
+              </span>
+              {completed && <CheckIcon className="icon-sm ml-auto" />}
             </SidebarLink>
           );
         })}
@@ -118,7 +138,9 @@ export const SidebarGroup = ({ route, parentRoute }: SidebarNodeProps) => {
       <div className="mb-5">
         {!shouldSkipTitle(route, parentRoute) && title && (
           <div className="flex flex-row items-center justify-between py-0">
-            <SidebarTitle Icon={Icon}>{title}</SidebarTitle>
+            <SidebarTitle Icon={Icon} sectionName={title}>
+              {title}
+            </SidebarTitle>
             <div className="flex flex-row items-center pb-1">
               <CircularProgressBar progress={progressPercentageForGetStarted} />{' '}
               <p className="ml-2 text-xs text-tertiary">{`${completedGetStartedChaptersCount} of ${totalGetStartedChapters}`}</p>
@@ -128,11 +150,23 @@ export const SidebarGroup = ({ route, parentRoute }: SidebarNodeProps) => {
         {route.children.map(child => {
           const childSlug = child.href;
           const completed = isGetStartedChapterCompleted(childSlug);
+          const isSelected = isRouteActive(child, router?.asPath, router?.pathname);
 
           return (
-            <SidebarLink info={child} className="flex flex-1" key={`${route.name}-${child.name}`}>
-              {child.sidebarTitle ?? child.name}
-              {completed && <CheckIcon className="icon-sm ml-auto mt-0.5 self-start" />}
+            <SidebarLink
+              info={{ ...child, hasVideoLink: false }}
+              className="flex flex-1"
+              key={`${route.name}-${child.name}`}>
+              <span className="inline">
+                {child.sidebarTitle ?? child.name}
+                {child.hasVideoLink &&
+                  (!isSelected ? (
+                    <PlaySquareIcon className="icon-xs ml-1 inline text-icon-secondary" />
+                  ) : (
+                    <PlaySquareDuotoneIcon className="icon-xs ml-1 inline text-palette-blue11" />
+                  ))}
+              </span>
+              {completed && <CheckIcon className="icon-sm ml-auto" />}
             </SidebarLink>
           );
         })}
@@ -152,7 +186,9 @@ export const SidebarGroup = ({ route, parentRoute }: SidebarNodeProps) => {
   return (
     <div className="mb-5">
       {!shouldSkipTitle(route, parentRoute) && title && (
-        <SidebarTitle Icon={Icon}>{title}</SidebarTitle>
+        <SidebarTitle Icon={Icon} sectionName={title}>
+          {title}
+        </SidebarTitle>
       )}
       {(route.children ?? []).map(child =>
         child.type === 'page' ? (
@@ -191,6 +227,8 @@ function shouldSkipTitle(info: NavigationRoute, parentGroup?: NavigationRoute) {
 
 function getIconElement(iconName?: string) {
   switch (iconName) {
+    case 'AI':
+      return Star06Icon;
     case 'Develop':
       return TerminalBrowserIcon;
     case 'Review':

@@ -179,9 +179,9 @@ We, sometimes, have buttons that lead to an Expo Snack. Use title case for these
 - Correct: Try this example on Snack
 - Incorrect: Try This Example On Snack
 
-### File and directory names as bold text
+### File names, directory names, file extensions as bold text
 
-File and directory names are used as bold text in the markdown files.
+File names, directory names and file extensions are used as bold text in the markdown files.
 
 Example:
 
@@ -192,6 +192,11 @@ Example:
 
 - Correct: If you commit your **android** or **ios** directories, it won't work.
 - Incorrect: If you commit your `android` or `ios` directories, it won't work.
+
+Example:
+
+- Correct: This command should produce **.tar.gz** archive.
+- Incorrect: This command should produce .tar.gz archive.
 
 ### Capitalization
 
@@ -275,9 +280,18 @@ To avoid using the term "managed workflow", use "using Expo" to represent the cu
 
 When offering guidance for projects that require manually editing native code/directories, put those instructions in a dropdown saying "manual setup", or "usage in bare React Native projects", or "usage in existing React Native projects".
 
-### Numbered Lists
+### Numbered lists
 
 Any numbered list should start with `1` instead of `0`. This avoids inconsistency across all areas in the documentation.
+
+### SDK version range callouts
+
+In Expo and Expo SDK documentation, use _later_ and/or _earlier_ to describe a range of version numbers.
+
+- Correct: **info** Available in **SDK 54 and later**.
+- Correct: **info** Available in **SDK 54 and earlier**.
+- Incorrect: **info** Available in **SDK 54 and above**.
+- Incorrect: **info** Available in **SDK 54 and below**.
 
 ## Tools to use when using visualization or interactivity to communicate
 

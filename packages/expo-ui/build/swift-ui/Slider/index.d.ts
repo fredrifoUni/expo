@@ -1,5 +1,5 @@
-import { StyleProp, ViewStyle } from 'react-native';
-import { ViewEvent } from '../../types';
+import type { ColorValue } from 'react-native';
+import { type CommonViewModifierProps } from '../types';
 export type SliderProps = {
     /**
      * The current value of the slider.
@@ -24,22 +24,11 @@ export type SliderProps = {
     /**
      * Slider color.
      */
-    color?: string;
+    color?: ColorValue;
     /**
      * Callback triggered on dragging along the slider.
      */
     onValueChange?: (value: number) => void;
-};
-type NativeSliderProps = Omit<SliderProps, 'onValueChange'> & ViewEvent<'onValueChanged', {
-    value: number;
-}>;
-/**
- * @hidden
- */
-export declare function transformSliderProps(props: SliderProps): NativeSliderProps;
-export declare function SliderPrimitive(props: SliderProps): import("react").JSX.Element;
-export declare function Slider(props: SliderProps & {
-    style?: StyleProp<ViewStyle>;
-}): import("react").JSX.Element;
-export {};
+} & CommonViewModifierProps;
+export declare function Slider(props: SliderProps): import("react").JSX.Element;
 //# sourceMappingURL=index.d.ts.map

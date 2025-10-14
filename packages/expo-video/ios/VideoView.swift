@@ -21,11 +21,8 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
 
   #if os(tvOS)
   var wasPlaying: Bool = false
-  #endif
-  var isFullscreen: Bool = false
-  var isInPictureInPicture = false
-  #if os(tvOS)
   let startPictureInPictureAutomatically = false
+  var isFullscreen: Bool = false
   #else
   var startPictureInPictureAutomatically = false {
     didSet {
@@ -62,7 +59,6 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     VideoManager.shared.register(videoView: self)
 
     clipsToBounds = true
-    playerViewController.delegate = self
     playerViewController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     playerViewController.view.backgroundColor = .clear
     // Now playing is managed by the `NowPlayingManager`
@@ -80,38 +76,26 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   }
 
   func enterFullscreen() {
-    if isFullscreen {
-      return
-    }
-    let selectorName = "enterFullScreenAnimated:completionHandler:"
-    let selectorToForceFullScreenMode = NSSelectorFromString(selectorName)
-
-    if playerViewController.responds(to: selectorToForceFullScreenMode) {
-      playerViewController.perform(selectorToForceFullScreenMode, with: true, with: nil)
-    } else {
+    let tvOSFallback = {
       #if os(tvOS)
       // For TV, save the currently playing state,
       // remove the view controller from its superview,
       // and present the view controller normally
-      wasPlaying = player?.isPlaying == true
+      self.wasPlaying = self.player?.isPlaying == true
       self.playerViewController.view.removeFromSuperview()
       self.reactViewController().present(self.playerViewController, animated: true)
-      onFullscreenEnter()
-      isFullscreen = true
+      self.onFullscreenEnter()
+      self.isFullscreen = true
       #endif
     }
+    playerViewController.enterFullscreen(selectorUnsupportedFallback: tvOSFallback)
   }
 
   func exitFullscreen() {
-    if !isFullscreen {
-      return
-    }
-    let selectorName = "exitFullScreenAnimated:completionHandler:"
-    let selectorToExitFullScreenMode = NSSelectorFromString(selectorName)
-
-    if playerViewController.responds(to: selectorToExitFullScreenMode) {
-      playerViewController.perform(selectorToExitFullScreenMode, with: true, with: nil)
-    }
+    playerViewController.exitFullscreen()
+    #if os(tvOS)
+    self.isFullscreen = false
+    #endif
   }
     
   // Refreshes and reattaches the player view with updated layout bounds
@@ -130,25 +114,11 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   }
 
   func startPictureInPicture() throws {
-    if !AVPictureInPictureController.isPictureInPictureSupported() {
-      throw PictureInPictureUnsupportedException()
-    }
-
-    let selectorName = "startPictureInPicture"
-    let selectorToStartPictureInPicture = NSSelectorFromString(selectorName)
-
-    if playerViewController.responds(to: selectorToStartPictureInPicture) {
-      playerViewController.perform(selectorToStartPictureInPicture)
-    }
+    try playerViewController.startPictureInPicture()
   }
 
   func stopPictureInPicture() {
-    let selectorName = "stopPictureInPicture"
-    let selectorToStopPictureInPicture = NSSelectorFromString(selectorName)
-
-    if playerViewController.responds(to: selectorToStopPictureInPicture) {
-      playerViewController.perform(selectorToStopPictureInPicture)
-    }
+    playerViewController.stopPictureInPicture()
   }
 
   // MARK: - AVPlayerViewControllerDelegate
@@ -190,7 +160,6 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     }
     
     onFullscreenEnter()
-    isFullscreen = true
   }
 
   public func playerViewController(
@@ -202,13 +171,16 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
       
     // Platform's behavior is to pause the player when exiting the fullscreen mode.
     // It seems better to continue playing, so we resume the player once the dismissing animation finishes.
-    let wasPlaying = player?.ref.timeControlStatus == .playing
+    let wasPlaying = player?.isPlaying ?? false
 
     coordinator.animate(alongsideTransition: nil) { context in
-      if !context.isCancelled {
-        if wasPlaying {
+      if !context.isCancelled && wasPlaying {
+        DispatchQueue.main.async {
           self.player?.ref.play()
         }
+      }
+
+      if !context.isCancelled {
         self.onFullscreenExit()
         self.isFullscreen = false
           
@@ -220,12 +192,10 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   #endif
 
   public func playerViewControllerDidStartPictureInPicture(_ playerViewController: AVPlayerViewController) {
-    isInPictureInPicture = true
     onPictureInPictureStart()
   }
 
   public func playerViewControllerDidStopPictureInPicture(_ playerViewController: AVPlayerViewController) {
-    isInPictureInPicture = false
     onPictureInPictureStop()
   }
 

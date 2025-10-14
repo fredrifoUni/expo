@@ -1,5 +1,5 @@
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from 'ThemeProvider';
 import * as React from 'react';
 
@@ -8,13 +8,15 @@ import { TabBackground } from '../components/TabBackground';
 import TabIcon from '../components/TabIcon';
 import getStackNavWithConfig from '../navigation/StackConfig';
 import { AudioScreens } from '../screens/Audio/AudioScreen';
+import { BlobScreens } from '../screens/Blob/BlobScreen';
 import { CalendarsScreens } from '../screens/CalendarsScreen';
 import { ContactsScreens } from '../screens/Contacts/ContactsScreen';
 import ExpoApis from '../screens/ExpoApisScreen';
+import { MediaLibraryScreens } from '../screens/MediaLibrary@Next/MediaLibraryScreens';
 import { ModulesCoreScreens } from '../screens/ModulesCore/ModulesCoreScreen';
 import { type ScreenApiItem, type ScreenConfig } from '../types/ScreenConfig';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 export const ScreensList: ScreenConfig[] = [
   {
@@ -23,6 +25,13 @@ export const ScreensList: ScreenConfig[] = [
     },
     name: 'ModulesCore',
     options: { title: 'Expo Modules Core' },
+  },
+  {
+    getComponent() {
+      return optionalRequire(() => require('../screens/MediaLibrary@Next/MediaLibraryScreens'));
+    },
+    name: 'MediaLibrary@Next',
+    options: { title: 'MediaLibrary@Next' },
   },
   {
     getComponent() {
@@ -66,6 +75,12 @@ export const ScreensList: ScreenConfig[] = [
       return optionalRequire(() => require('../screens/AppearanceScreen'));
     },
     name: 'Appearance',
+  },
+  {
+    getComponent() {
+      return optionalRequire(() => require('../screens/AppIntegrity/AppIntegrityScreen'));
+    },
+    name: 'AppIntegrity',
   },
   {
     getComponent() {
@@ -118,6 +133,12 @@ export const ScreensList: ScreenConfig[] = [
       return optionalRequire(() => require('../screens/BatteryScreen'));
     },
     name: 'Battery',
+  },
+  {
+    getComponent() {
+      return optionalRequire(() => require('../screens/Blob/BlobScreen'));
+    },
+    name: 'Blob',
   },
   {
     getComponent() {
@@ -399,6 +420,12 @@ export const ScreensList: ScreenConfig[] = [
   },
   {
     getComponent() {
+      return optionalRequire(() => require('../screens/UpdatesScreen'));
+    },
+    name: 'Updates Reload Screen',
+  },
+  {
+    getComponent() {
       return optionalRequire(() => require('../screens/WebBrowser/WebBrowserScreen'));
     },
     name: 'WebBrowser',
@@ -420,7 +447,9 @@ export const ScreensList: ScreenConfig[] = [
 export const Screens: ScreenConfig[] = [
   ...ScreensList,
   ...ModulesCoreScreens,
+  ...MediaLibraryScreens,
   ...AudioScreens,
+  ...BlobScreens,
   ...ContactsScreens,
   ...CalendarsScreens,
 ];

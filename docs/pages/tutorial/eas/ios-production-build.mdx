@@ -2,6 +2,7 @@
 title: Create a production build for iOS
 sidebar_title: iOS production build
 description: Learn about the process of creating a production build for iOS and automating the release process.
+hasVideoLink: true
 ---
 
 import { ContentSpotlight } from '~/ui/components/ContentSpotlight';
@@ -158,6 +159,8 @@ To prepare our app for App Store submission, go to the **App Store** tab:
 For future releases, we can streamline the process by combining build creation and App Store submission into a single step by using the [`--auto-submit`](/build/automate-submissions/) flag with `eas build`:
 
 <Terminal cmd={['$ eas build --platform ios --auto-submit']} />
+
+> **Note:** This command will automatically upload your build to TestFlight for internal testing, but it will not automatically submit your app for App Store review. You'll still need to manually promote the build from TestFlight to the App Store when you're ready for public release. For more information, see [Default submission behavior for app stores](/build/automate-submissions/#default-submission-behavior-for-app-stores).
 
 </Step>
 

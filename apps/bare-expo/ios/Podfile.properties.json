@@ -1,6 +1,7 @@
 {
   "expo.jsEngine": "hermes",
   "newArchEnabled": "true",
-  "useInteractiveMediaAds": "true",
-  "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true"
+  "useInteractiveMediaAds": "true",  
+  "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true",
+  "ios.buildReactNativeFromSource": "false"
 }

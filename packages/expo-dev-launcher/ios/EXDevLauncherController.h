@@ -50,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)sharedInstance;
 
-- (void)startWithWindow:(UIWindow *)window delegate:(id<EXDevLauncherControllerDelegate>)delegate launchOptions:(NSDictionary * _Nullable)launchOptions;
+- (void)startWithWindow:(UIWindow *)window;
 
 - (void)autoSetupPrepare:(id<EXDevLauncherControllerDelegate>)delegate launchOptions:(NSDictionary * _Nullable)launchOptions;
 
@@ -93,6 +93,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)copyToClipboard:(NSString *)content;
 
 - (NSDictionary *)getUpdatesConfig: (nullable NSDictionary *) constants;
+
+- (UIViewController *)createRootViewController;
+
+- (void)setRootView:(UIView *)rootView toRootViewController:(UIViewController *)rootViewController;
 
 @end
 

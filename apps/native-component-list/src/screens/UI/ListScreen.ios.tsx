@@ -1,18 +1,24 @@
 import {
   Button,
   ColorPicker,
-  LabelPrimitive,
+  Host,
+  Label,
   List,
-  ListStyle,
+  type ListStyle,
   Picker,
+  Section,
   Switch,
 } from '@expo/ui/swift-ui';
+import { frame, scrollDismissesKeyboard } from '@expo/ui/swift-ui/modifiers';
+import { useNavigation } from '@react-navigation/native';
+import type { SFSymbol } from 'expo-symbols';
 import * as React from 'react';
+import { useLayoutEffect } from 'react';
 
 export default function ListScreen() {
   const [color, setColor] = React.useState<string>('blue');
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(0);
-  const data = [
+  const data: { text: string; systemImage: SFSymbol }[] = [
     { text: 'Good Morning', systemImage: 'sun.max.fill' },
     { text: 'Weather', systemImage: 'cloud.sun.fill' },
     { text: 'Settings', systemImage: 'gearshape.fill' },
@@ -28,91 +34,89 @@ export default function ListScreen() {
     'grouped',
     'sidebar',
   ];
+  const scrollDismissesKeyboardOptions = [
+    'automatic',
+    'never',
+    'interactively',
+    'immediately',
+  ] as const;
   const [selectEnabled, setSelectEnabled] = React.useState<boolean>(true);
   const [deleteEnabled, setDeleteEnabled] = React.useState<boolean>(true);
   const [moveEnabled, setMoveEnabled] = React.useState<boolean>(true);
   const [editModeEnabled, setEditModeEnabled] = React.useState<boolean>(false);
+  const [scrollDismissesKeyboardIndex, setScrollDismissesKeyboardIndex] = React.useState<
+    number | null
+  >(0);
+
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'List',
+      headerSearchBarOptions: {
+        placeholder: 'Test different keyboard dismissals',
+      },
+    });
+  }, [navigation]);
 
   return (
-    <>
-      <List listStyle="automatic" scrollEnabled={false}>
-        <Button onPress={() => setEditModeEnabled(!editModeEnabled)}>Toggle Edit</Button>
-        <Switch
-          value={selectEnabled}
-          label="Select enabled"
-          onValueChange={setSelectEnabled}
-          style={{
-            width: 300,
-            height: 100,
-          }}
-        />
-        <Switch
-          value={deleteEnabled}
-          label="Delete enabled"
-          onValueChange={setDeleteEnabled}
-          style={{
-            width: 300,
-            height: 100,
-          }}
-        />
-        <Switch
-          value={moveEnabled}
-          label="Move enabled"
-          onValueChange={setMoveEnabled}
-          style={{
-            width: 300,
-            height: 100,
-          }}
-        />
-        <ColorPicker
-          label="Item icon color"
-          selection={color}
-          supportsOpacity
-          onValueChanged={setColor}
-          style={{
-            width: 300,
-            height: 100,
-          }}
-        />
-        <Picker
-          label="List style"
-          options={listStyleOptions}
-          selectedIndex={selectedIndex}
-          onOptionSelected={({ nativeEvent: { index } }) => {
-            setSelectedIndex(index);
-          }}
-          variant="menu"
-          style={{
-            width: 300,
-            height: 100,
-          }}
-        />
-      </List>
-
+    <Host style={{ flex: 1 }}>
       <List
-        scrollEnabled={false}
         editModeEnabled={editModeEnabled}
         onSelectionChange={(items) => alert(`indexes of selected items: ${items.join(', ')}`)}
         moveEnabled={moveEnabled}
         onMoveItem={(from, to) => alert(`moved item at index ${from} to index ${to}`)}
         onDeleteItem={(item) => alert(`deleted item at index: ${item}`)}
-        style={{ flex: 1 }}
         listStyle={listStyleOptions[selectedIndex ?? 0]}
+        modifiers={[
+          scrollDismissesKeyboard(
+            scrollDismissesKeyboardOptions[scrollDismissesKeyboardIndex ?? 0]
+          ),
+        ]}
         deleteEnabled={deleteEnabled}
         selectEnabled={selectEnabled}>
-        {data.map((item, index) => (
-          <LabelPrimitive
-            key={index}
-            title={item.text}
-            systemImage={item.systemImage}
-            color={color}
+        <Section title="Controls">
+          <Button onPress={() => setEditModeEnabled(!editModeEnabled)}>Toggle Edit</Button>
+          <Switch value={selectEnabled} label="Select enabled" onValueChange={setSelectEnabled} />
+          <Switch value={deleteEnabled} label="Delete enabled" onValueChange={setDeleteEnabled} />
+          <Switch value={moveEnabled} label="Move enabled" onValueChange={setMoveEnabled} />
+          <ColorPicker
+            label="Item icon color"
+            selection={color}
+            supportsOpacity
+            onValueChanged={setColor}
           />
-        ))}
+          <Picker
+            label="Scroll dismisses keyboard"
+            options={[...scrollDismissesKeyboardOptions]}
+            selectedIndex={scrollDismissesKeyboardIndex}
+            onOptionSelected={({ nativeEvent: { index } }) => {
+              setScrollDismissesKeyboardIndex(index);
+            }}
+            variant="menu"
+          />
+          <Picker
+            label="List style"
+            options={listStyleOptions}
+            selectedIndex={selectedIndex}
+            onOptionSelected={({ nativeEvent: { index } }) => {
+              setSelectedIndex(index);
+            }}
+            variant="menu"
+          />
+        </Section>
+        <Section title="Data">
+          {data.map((item, index) => (
+            <Label
+              key={index}
+              modifiers={[frame({ height: 24 })]}
+              title={item.text}
+              systemImage={item.systemImage}
+              color={color}
+            />
+          ))}
+        </Section>
       </List>
-    </>
+    </Host>
   );
 }
-
-ListScreen.navigationOptions = {
-  title: 'List',
-};

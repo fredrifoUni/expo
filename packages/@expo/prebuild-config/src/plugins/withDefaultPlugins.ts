@@ -17,15 +17,17 @@ import { withAndroidIcons } from './icons/withAndroidIcons';
 import { withIosIcons } from './icons/withIosIcons';
 import { withSdk52ReactNative77CompatAndroid } from './sdk52/ReactNative77CompatPlugin';
 import { withSdk52ReactNative78CompatAndroid } from './sdk52/ReactNative78CompatPlugin';
+import withEdgeToEdge from './unversioned/edge-to-edge/withEdgeToEdge';
 import withAdMob from './unversioned/expo-ads-admob/expo-ads-admob';
 import withAppleAuthentication from './unversioned/expo-apple-authentication';
 import withContacts from './unversioned/expo-contacts';
 import withDocumentPicker from './unversioned/expo-document-picker';
 import withNavigationBar from './unversioned/expo-navigation-bar/expo-navigation-bar';
+import withNotifications from './unversioned/expo-notifications/expo-notifications';
 import withSplashScreen from './unversioned/expo-splash-screen/expo-splash-screen';
 import withSystemUI from './unversioned/expo-system-ui/expo-system-ui';
 import withUpdates from './unversioned/expo-updates';
-import withEdgeToEdge from './unversioned/react-native-edge-to-edge/withEdgeToEdge';
+import withNewArchPlistHotfix from './unversioned/new-arch-plist-hotfix/new-arch-plist-hotfix';
 import withMaps from './unversioned/react-native-maps';
 
 const debug = Debug('expo:prebuild-config');
@@ -65,6 +67,8 @@ export const withIosExpoPlugins: ConfigPlugin<{
     // Dangerous
     withIosIcons,
     IOSConfig.PrivacyInfo.withPrivacyInfo,
+    // Temporary hotfix
+    withNewArchPlistHotfix,
   ]);
 };
 
@@ -98,6 +102,7 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
     // AndroidManifest.xml
     AndroidConfig.AllowBackup.withAllowBackup,
     AndroidConfig.WindowSoftInputMode.withWindowSoftInputMode,
+    AndroidConfig.PredictiveBackGesture.withPredictiveBackGesture,
     // Note: The withAndroidIntentFilters plugin must appear before the withScheme
     // plugin or withScheme will override the output of withAndroidIntentFilters.
     AndroidConfig.IntentFilters.withAndroidIntentFilters,
@@ -108,6 +113,7 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
 
     // strings.xml
     AndroidConfig.Name.withName,
+    AndroidConfig.Locales.withLocales,
 
     // Dangerous -- these plugins run in reverse order.
     AndroidConfig.GoogleServices.withGoogleServicesFile,
@@ -132,6 +138,7 @@ const versionedExpoSDKPackages: string[] = [
   'expo-ads-admob',
   'expo-apple-authentication',
   'expo-contacts',
+  'expo-notifications',
   'expo-updates',
   'expo-navigation-bar',
   'expo-document-picker',
@@ -145,6 +152,7 @@ export const withVersionedExpoSDKPlugins: ConfigPlugin = (config) => {
     withAdMob,
     withAppleAuthentication,
     withContacts,
+    withNotifications,
     withUpdates,
     withDocumentPicker,
     // System UI must come before splash screen as they overlap

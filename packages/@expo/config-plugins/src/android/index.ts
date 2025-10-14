@@ -5,12 +5,14 @@ import * as EasBuild from './EasBuild';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
 import * as GoogleServices from './GoogleServices';
 import * as IntentFilters from './IntentFilters';
+import * as Locales from './Locales';
 import * as Manifest from './Manifest';
 import * as Name from './Name';
 import * as Orientation from './Orientation';
 import * as Package from './Package';
 import * as Paths from './Paths';
 import * as Permissions from './Permissions';
+import * as PredictiveBackGesture from './PredictiveBackGesture';
 import * as PrimaryColor from './PrimaryColor';
 import * as Properties from './Properties';
 import * as Resources from './Resources';
@@ -21,6 +23,7 @@ import * as Styles from './Styles';
 import * as Updates from './Updates';
 import * as Version from './Version';
 import * as WindowSoftInputMode from './WindowSoftInputMode';
+import * as CodeMod from './codeMod';
 
 export { Manifest, Colors, Paths, Permissions, Properties, Resources, Scheme, Strings, Styles };
 
@@ -32,6 +35,7 @@ export {
   GoogleServices,
   IntentFilters,
   Name,
+  Locales,
   Orientation,
   Package,
   PrimaryColor,
@@ -39,4 +43,6 @@ export {
   Updates,
   Version,
   WindowSoftInputMode,
+  PredictiveBackGesture,
+  CodeMod,
 };

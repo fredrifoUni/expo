@@ -1,17 +1,23 @@
-import { ViewProps } from 'react-native';
+import { RefObject } from 'react';
+import { ViewProps, View } from 'react-native';
 
 /**
  * Blur method to use on Android.
  *
  * - `'none'` - Falls back to a semi-transparent view instead of rendering a blur effect.
  *
- * - `'dimezisBlurView'` - Uses a native blur view implementation based on [BlurView](https://github.com/Dimezis/BlurView) library. This method may lead to decreased performance and rendering issues during transitions made by `react-native-screens`.
+ * - `'dimezisBlurView'` - Uses a native blur view implementation based on [BlurView](https://github.com/Dimezis/BlurView) library. This method may lead to decreased performance.
  *
  * @platform android
  */
 export type ExperimentalBlurMethod = 'none' | 'dimezisBlurView';
-
 export type BlurViewProps = {
+  /**
+   * A ref to a BlurTargetView, which this BlurView will blur as its background.
+   *
+   * @platform android
+   */
+  blurTarget?: RefObject<View | null>;
   /**
    * A tint mode which will be applied to the view.
    * @default 'default'
@@ -47,6 +53,10 @@ export type BlurViewProps = {
    * @platform android
    */
   experimentalBlurMethod?: ExperimentalBlurMethod;
+} & ViewProps;
+
+export type BlurTargetViewProps = {
+  ref?: RefObject<View | null>;
 } & ViewProps;
 
 export type BlurTint =

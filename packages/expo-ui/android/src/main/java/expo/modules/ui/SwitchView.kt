@@ -17,6 +17,7 @@ import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.AutoSizingComposable
 import expo.modules.kotlin.views.ComposeProps
 import expo.modules.kotlin.views.ExpoComposeView
+import expo.modules.kotlin.views.ComposableScope
 import java.io.Serializable
 
 open class ValueChangeEvent(
@@ -58,7 +59,8 @@ class SwitchColors : Record {
 data class SwitchProps(
   val value: MutableState<Boolean> = mutableStateOf(false),
   val variant: MutableState<String> = mutableStateOf("switch"),
-  val elementColors: MutableState<SwitchColors> = mutableStateOf(SwitchColors())
+  val elementColors: MutableState<SwitchColors> = mutableStateOf(SwitchColors()),
+  val modifiers: MutableState<List<ExpoModifier>> = mutableStateOf(emptyList())
 ) : ComposeProps
 
 @Composable
@@ -115,12 +117,12 @@ fun ThemedHybridSwitch(
 }
 
 class SwitchView(context: Context, appContext: AppContext) :
-  ExpoComposeView<SwitchProps>(context, appContext, withHostingView = true) {
+  ExpoComposeView<SwitchProps>(context, appContext) {
   override val props = SwitchProps()
   private val onValueChange by EventDispatcher<ValueChangeEvent>()
 
   @Composable
-  override fun Content() {
+  override fun ComposableScope.Content() {
     val (checked) = props.value
     val (variant) = props.variant
     val (colors) = props.elementColors
@@ -129,7 +131,7 @@ class SwitchView(context: Context, appContext: AppContext) :
     }
 
     AutoSizingComposable(shadowNodeProxy) {
-      ThemedHybridSwitch(variant, checked, onCheckedChange, colors)
+      ThemedHybridSwitch(variant, checked, onCheckedChange, colors, Modifier.fromExpoModifiers(props.modifiers.value))
     }
   }
 }

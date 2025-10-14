@@ -4,13 +4,18 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
+import android.util.Log
 import androidx.annotation.UiThread
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.net.toUri
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.ReactApplication
+import com.facebook.react.ReactHost
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.ReactContext
-import expo.interfaces.devmenu.ReactHostWrapper
 import expo.modules.devlauncher.helpers.DevLauncherInstallationIDHelper
 import expo.modules.devlauncher.helpers.DevLauncherMetadataHelper
 import expo.modules.devlauncher.helpers.DevLauncherUrl
@@ -29,8 +34,6 @@ import expo.modules.devlauncher.launcher.DevLauncherIntentRegistryInterface
 import expo.modules.devlauncher.launcher.DevLauncherLifecycle
 import expo.modules.devlauncher.launcher.DevLauncherNetworkInterceptor
 import expo.modules.devlauncher.launcher.DevLauncherReactActivityDelegateSupplier
-import expo.modules.devlauncher.launcher.DevLauncherReactHost
-import expo.modules.devlauncher.launcher.DevLauncherReactNativeHost
 import expo.modules.devlauncher.launcher.DevLauncherRecentlyOpenedAppsRegistry
 import expo.modules.devlauncher.launcher.errors.DevLauncherAppError
 import expo.modules.devlauncher.launcher.errors.DevLauncherErrorActivity
@@ -39,6 +42,7 @@ import expo.modules.devlauncher.launcher.loaders.DevLauncherAppLoaderFactoryInte
 import expo.modules.devlauncher.launcher.manifest.DevLauncherManifestParser
 import expo.modules.devlauncher.react.activitydelegates.DevLauncherReactActivityNOPDelegate
 import expo.modules.devlauncher.react.activitydelegates.DevLauncherReactActivityRedirectDelegate
+import expo.modules.devlauncher.services.DependencyInjection
 import expo.modules.devlauncher.tests.DevLauncherTestInterceptor
 import expo.modules.devmenu.DevMenuManager
 import expo.modules.manifests.core.Manifest
@@ -51,10 +55,6 @@ import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.koin.dsl.module
 
-// Use this to load from a development server for the development client launcher UI
-// private val DEV_LAUNCHER_HOST = "10.0.0.175:8090";
-private val DEV_LAUNCHER_HOST: String? = null
-
 private const val NEW_ACTIVITY_FLAGS = Intent.FLAG_ACTIVITY_NEW_TASK or
   Intent.FLAG_ACTIVITY_CLEAR_TASK or
   Intent.FLAG_ACTIVITY_NO_ANIMATION
@@ -64,7 +64,7 @@ class DevLauncherController private constructor() :
   private val context: Context by lazy {
     DevLauncherKoinContext.app.koin.get()
   }
-  override val appHost: ReactHostWrapper by inject()
+  override val appHost: ReactHost by inject()
   private val httpClient: OkHttpClient by inject()
   private val lifecycle: DevLauncherLifecycle by inject()
   private val pendingIntentRegistry: DevLauncherIntentRegistryInterface by inject()
@@ -73,27 +73,29 @@ class DevLauncherController private constructor() :
   var devMenuManager: DevMenuManager = DevMenuManager
   override var updatesInterface: UpdatesInterface?
     get() = internalUpdatesInterface
-    set(value) = DevLauncherKoinContext.app.koin.loadModules(
-      listOf(
-        module {
-          single { value }
-        }
-      )
-    )
-  override val coroutineScope = CoroutineScope(Dispatchers.Default)
+    set(value) = run {
+      if (value != null) {
+        DependencyInjection.appService.setUpUpdateInterface(value, context)
+      }
 
-  override val devClientHost by lazy {
-    ReactHostWrapper(
-      reactNativeHost = DevLauncherReactNativeHost(context as Application, DEV_LAUNCHER_HOST),
-      reactHostProvider = { DevLauncherReactHost.create(context as Application, DEV_LAUNCHER_HOST) }
-    )
-  }
+      DevLauncherKoinContext.app.koin.loadModules(
+        listOf(
+          module {
+            single { value }
+          }
+        )
+      )
+    }
+
+  override val coroutineScope = CoroutineScope(Dispatchers.Default)
 
   private val recentlyOpedAppsRegistry = DevLauncherRecentlyOpenedAppsRegistry(context)
   override var manifest: Manifest? = null
     private set
+
   override var manifestURL: Uri? = null
     private set
+
   override var latestLoadedApp: Uri? = null
   override var useDeveloperSupport = true
   var canLaunchDevMenuOnStart = false
@@ -107,7 +109,12 @@ class DevLauncherController private constructor() :
 
   private var appIsLoading = false
 
+  private val _isLoadingToBundler = mutableStateOf(false)
+  val isLoadingToBundler: State<Boolean>
+    get() = _isLoadingToBundler
+
   private var networkInterceptor: DevLauncherNetworkInterceptor? = null
+  private var pendingIntentExtras: Bundle? = null
 
   private fun isEASUpdateURL(url: Uri): Boolean {
     return url.host.equals("u.expo.dev") || url.host.equals("staging-u.expo.dev")
@@ -129,6 +136,7 @@ class DevLauncherController private constructor() :
         return
       }
       appIsLoading = true
+      _isLoadingToBundler.value = true
     }
 
     try {
@@ -142,7 +150,7 @@ class DevLauncherController private constructor() :
       // default to the EXPO_UPDATE_URL value configured in AndroidManifest.xml when project url is unspecified for an EAS update
       if (isEASUpdate && projectUrl == null) {
         val projectUrlString = getMetadataValue(context, "expo.modules.updates.EXPO_UPDATE_URL")
-        parsedProjectUrl = Uri.parse(projectUrlString)
+        parsedProjectUrl = projectUrlString.toUri()
       }
 
       val manifestParser = DevLauncherManifestParser(httpClient, parsedUrl, installationIDHelper.getOrCreateInstallationID(context))
@@ -162,6 +170,7 @@ class DevLauncherController private constructor() :
       lifecycle.addListener(appLoaderListener)
       mode = Mode.APP
 
+      _isLoadingToBundler.value = false
       // Note that `launch` method is a suspend one. So the execution will be stopped here until the method doesn't finish.
       if (appLoader.launch(appIntent)) {
         recentlyOpedAppsRegistry.appWasOpened(parsedUrl.toString(), devLauncherUrl.queryParams, manifest)
@@ -178,6 +187,7 @@ class DevLauncherController private constructor() :
     } catch (e: Exception) {
       synchronized(this) {
         appIsLoading = false
+        _isLoadingToBundler.value = false
       }
       throw e
     }
@@ -204,7 +214,8 @@ class DevLauncherController private constructor() :
     }
   }
 
-  override fun getRecentlyOpenedApps(): List<DevLauncherAppEntry> = recentlyOpedAppsRegistry.getRecentlyOpenedApps()
+  override fun getRecentlyOpenedApps(): List<DevLauncherAppEntry> =
+    recentlyOpedAppsRegistry.getRecentlyOpenedApps()
 
   override fun clearRecentlyOpenedApps() {
     recentlyOpedAppsRegistry.clearRegistry()
@@ -232,7 +243,7 @@ class DevLauncherController private constructor() :
         // used by appetize for snack
         if (intent.getBooleanExtra("EXDevMenuDisableAutoLaunch", false)) {
           canLaunchDevMenuOnStart = false
-          this.devMenuManager.setCanLaunchDevMenuOnStart(canLaunchDevMenuOnStart)
+          this.devMenuManager.setCanLaunchDevMenuOnStart(false)
         }
 
         if (!isDevLauncherUrl(uri)) {
@@ -248,6 +259,7 @@ class DevLauncherController private constructor() :
 
         coroutineScope.launch {
           try {
+            pendingIntentRegistry.intent = intent
             loadApp(uri, activityToBeInvalidated)
           } catch (e: Throwable) {
             DevLauncherErrorActivity.showFatalError(context, DevLauncherAppError(e.message, e))
@@ -267,8 +279,8 @@ class DevLauncherController private constructor() :
       if (shouldTryToLaunchLastOpenedBundle && lastOpenedApp != null) {
         coroutineScope.launch {
           try {
-            loadApp(Uri.parse(lastOpenedApp.url), activityToBeInvalidated)
-          } catch (e: Throwable) {
+            loadApp(lastOpenedApp.url.toUri(), activityToBeInvalidated)
+          } catch (_: Throwable) {
             navigateToLauncher()
           }
         }
@@ -281,6 +293,8 @@ class DevLauncherController private constructor() :
   }
 
   private fun handleExternalIntent(intent: Intent): Boolean {
+    // Always store the intent extras even if we don't set the pending intent.
+    pendingIntentExtras = intent.extras
     if (mode != Mode.APP && intent.action != Intent.ACTION_MAIN) {
       pendingIntentRegistry.intent = intent
     }
@@ -288,8 +302,8 @@ class DevLauncherController private constructor() :
     return false
   }
 
-  private fun ensureHostWasCleared(host: ReactHostWrapper, activityToBeInvalidated: ReactActivity? = null) {
-    if (host.hasInstance) {
+  private fun ensureHostWasCleared(host: ReactHost, activityToBeInvalidated: ReactActivity? = null) {
+    if (host.currentReactContext?.hasActiveReactInstance() == true) {
       runBlockingOnMainThread {
         networkInterceptor?.close()
         networkInterceptor = null
@@ -299,6 +313,9 @@ class DevLauncherController private constructor() :
   }
 
   private fun setupDevMenu(launchUrl: String) {
+    devMenuManager.setGoToHomeAction {
+      navigateToLauncher()
+    }
     devMenuManager.currentManifest = manifest
     devMenuManager.currentManifestURL = manifestURL.toString()
     devMenuManager.launchUrl = launchUrl
@@ -311,8 +328,8 @@ class DevLauncherController private constructor() :
   }
 
   @UiThread
-  private fun clearHost(host: ReactHostWrapper, activityToBeInvalidated: ReactActivity?) {
-    host.destroy()
+  private fun clearHost(host: ReactHost, activityToBeInvalidated: ReactActivity?) {
+    host.destroy("DevLauncher reloading app", null)
     activityToBeInvalidated?.let {
       invalidateActivity(it)
     }
@@ -362,7 +379,15 @@ class DevLauncherController private constructor() :
           intent.categories?.let {
             categories.addAll(it)
           }
+        } ?: run {
+        // If no pending intent is available, use the extras from the intent that was used to launch the app.
+        pendingIntentExtras?.let {
+          putExtras(it)
         }
+      }
+
+      // Clear the pending intent extras after using them.
+      pendingIntentExtras = null
     }
 
   private fun createBasicAppIntent() =
@@ -398,7 +423,18 @@ class DevLauncherController private constructor() :
       }
 
     @JvmStatic
-    internal fun initialize(context: Context, reactHost: ReactHostWrapper) {
+    internal fun initialize(context: Context, reactHost: ReactHost) {
+      try {
+        val splashScreenManagerClass = Class.forName("expo.modules.splashscreen.SplashScreenManager")
+        val splashScreenManager = splashScreenManagerClass
+          .kotlin
+          .objectInstance
+        splashScreenManagerClass.getMethod("hide")
+          .invoke(splashScreenManager)
+      } catch (e: Throwable) {
+        Log.e("DevLauncherController", "Failed to hide splash screen", e)
+      }
+
       val testInterceptor = DevLauncherKoinContext.app.koin.get<DevLauncherTestInterceptor>()
       if (!testInterceptor.allowReinitialization()) {
         check(!wasInitialized()) { "DevelopmentClientController was initialized." }
@@ -428,14 +464,19 @@ class DevLauncherController private constructor() :
     }
 
     @JvmStatic
-    fun initialize(context: Context, reactHost: ReactHostWrapper, launcherClass: Class<*>? = null) {
+    fun initialize(context: Context, reactHost: ReactHost, launcherClass: Class<*>? = null) {
       initialize(context, reactHost)
       sLauncherClass = launcherClass
     }
 
     @JvmStatic
     fun initialize(reactApplication: ReactApplication, additionalPackages: List<ReactPackage>? = null, launcherClass: Class<*>? = null) {
-      initialize(reactApplication as Context, ReactHostWrapper(reactApplication.reactNativeHost, { reactApplication.reactHost }))
+      val reactHost = reactApplication.reactHost
+      checkNotNull(reactHost) {
+        "DevLauncherController.initialize() was called before reactHost was initialized"
+      }
+
+      initialize(reactApplication as Context, reactHost)
       sAdditionalPackages = additionalPackages
       sLauncherClass = launcherClass
     }

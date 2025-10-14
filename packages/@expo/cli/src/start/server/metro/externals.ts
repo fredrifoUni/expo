@@ -24,13 +24,15 @@ export const NODE_STDLIB_MODULES: string[] = [
   'stream/consumers',
   'timers/promises',
   'util/types',
+  'sqlite',
+
   // Collect all builtin modules...
   ...(
     builtinModules ||
     // @ts-expect-error
     (process.binding ? Object.keys(process.binding('natives')) : []) ||
     []
-  ).filter((x) => !/^_|^(internal|v8|node-inspect)\/|\//.test(x) && !['sys'].includes(x)),
+  ).filter((x) => !/^(internal|v8|node-inspect)\/|\//.test(x) && !['sys'].includes(x)),
 ].sort();
 
 const shimsFolder = path.join(require.resolve('@expo/cli/package.json'), '../static/shims');

@@ -8,12 +8,90 @@
 
 ### 🐛 Bug fixes
 
+### 💡 Others
+
+## 16.0.8 — 2025-09-10
+
+### 🐛 Bug fixes
+
+- Fixed `:memory:` path issue when building on Xcode 26. ([#39511](https://github.com/expo/expo/pull/39511) by [@kudo](https://github.com/kudo))
+
+## 16.0.7 — 2025-09-02
+
+_This version does not introduce any user-facing changes._
+
+## 16.0.6 — 2025-08-31
+
+_This version does not introduce any user-facing changes._
+
+## 16.0.5 — 2025-08-27
+
+_This version does not introduce any user-facing changes._
+
+## 16.0.4 — 2025-08-25
+
+_This version does not introduce any user-facing changes._
+
+## 16.0.3 — 2025-08-18
+
+### 💡 Others
+
+- Updated API doc for `loadExtensionAsync()` and `loadExtensionSync()`. ([#38905](https://github.com/expo/expo/pull/38905) by [@kudo](https://github.com/kudo))
+- Change Constants to Constant/Property. ([#38926](https://github.com/expo/expo/pull/38926) by [@jakex7](https://github.com/jakex7))
+
+## 16.0.2 — 2025-08-16
+
+_This version does not introduce any user-facing changes._
+
+## 16.0.1 — 2025-08-15
+
+_This version does not introduce any user-facing changes._
+
+## 16.0.0 — 2025-08-13
+
+### 🎉 New features
+
+- [iOS] Support Apple TV. ([#38475](https://github.com/expo/expo/pull/38475) by [@douglowder](https://github.com/douglowder))
+- Added `loadExtensionAsync` / `loadExtensionSync` APIs and pre-bundled [sqlite-vec](https://github.com/asg017/sqlite-vec) extension. ([#38693](https://github.com/expo/expo/pull/38693) by [@kudo](https://github.com/kudo))
+- Added `expo-sqlite/localStorage/install` for [`localStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) drop-in replacement API. ([#38699](https://github.com/expo/expo/pull/38699) by [@kudo](https://github.com/kudo))
+
+### 🐛 Bug fixes
+
 - [Android] Fix nullability of binding params. ([#37200](https://github.com/expo/expo/pull/37200) by [@lukmccall](https://github.com/lukmccall))
+
+### 📚 3rd party library updates
+
+- Updated SQLite to 3.50.3. ([#38200](https://github.com/expo/expo/pull/38200) by [@kudo](https://github.com/kudo))
+
+## 15.2.14 - 2025-07-07
+
+### 🐛 Bug fixes
+
+- Fixed unnecessary database reopen from `SQLiteProvider` with same options. ([#37872](https://github.com/expo/expo/pull/37872) by [@kudo](https://github.com/kudo))
+
+## 15.2.13 - 2025-07-01
+
+### 🐛 Bug fixes
+
+- Added Android 16KB page size support. ([#37446](https://github.com/expo/expo/pull/37446) by [@kudo](https://github.com/kudo))
+
+### 📚 3rd party library updates
+
+- Updated libSQL SDK to 0.9.11. ([#37442](https://github.com/expo/expo/pull/37442) by [@kudo](https://github.com/kudo))
+
+## 15.2.12 - 2025-06-08
+
+### 🐛 Bug fixes
+
+- Fixed exceptions when SQLite session API returns empty buffer. ([#37246](https://github.com/expo/expo/pull/37246) by [@kudo](https://github.com/kudo))
+- Fixed minimum OS version support for libsql.xcframework. ([#37130](https://github.com/expo/expo/pull/37130) by [@kudo](https://github.com/kudo))
+
+## 15.2.11 - 2025-06-04
 
 ### 💡 Others
 
 - Prevent `maybeFinalizeAllStatements` throwing exceptions. ([#36843](https://github.com/expo/expo/pull/36843) by [@kudo](https://github.com/kudo))
-- Apply [#36674](https://github.com/expo/expo/pull/36674) change to **SQLiteModuleLibSQL.swift**. ([#36850](https://github.com/expo/expo/pull/36850) by [@kudo](https://github.com/kudo))
+- Apply [#36674](https://github.com/expo/expo/pull/36674) change to **SQLiteModuleLibSQL.swift**. ([#36850](https://github.com/expo/expo/pull/36850) by [@kudo](https://github.com/kudo)) ([#36674](https://github.com/expo/expo/pull/36674), [#36850](https://github.com/expo/expo/pull/36850) by [@kudo](https://github.com/kudo))
 
 ## 15.2.10 — 2025-05-08
 

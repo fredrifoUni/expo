@@ -1,4 +1,5 @@
-import { NativeSyntheticEvent, StyleProp, ViewStyle } from 'react-native';
+import type { ColorValue } from 'react-native';
+import { type CommonViewModifierProps } from '../types';
 export type SwitchProps = {
     /**
      * Indicates whether the switch is checked.
@@ -20,8 +21,8 @@ export type SwitchProps = {
     /**
      * Picker color. On iOS, it only applies to the `menu` variant.
      */
-    color?: string;
-} & (SwitchSwitchVariantProps | SwitchCheckboxVariantProps | SwitchButtonVariantProps);
+    color?: ColorValue;
+} & (SwitchSwitchVariantProps | SwitchCheckboxVariantProps | SwitchButtonVariantProps) & CommonViewModifierProps;
 export type SwitchSwitchVariantProps = {
     variant?: 'switch';
 };
@@ -32,25 +33,8 @@ export type SwitchButtonVariantProps = {
     variant: 'button';
     elementColors?: undefined;
 };
-type NativeSwitchProps = Omit<SwitchProps, 'onValueChange'> & {
-    onValueChange: (event: NativeSyntheticEvent<{
-        value: boolean;
-    }>) => void;
-};
-/**
- * @hidden
- */
-export declare function transformSwitchProps(props: SwitchProps): NativeSwitchProps;
-/**
- * `<Switch>` component without a host view.
- * You should use this with a `Host` component in ancestor.
- */
-export declare function SwitchPrimitive(props: SwitchProps): import("react").JSX.Element;
 /**
  * Displays a native switch component.
  */
-export declare function Switch(props: SwitchProps & {
-    style?: StyleProp<ViewStyle>;
-}): import("react").JSX.Element;
-export {};
+export declare function Switch(props: SwitchProps): import("react").JSX.Element;
 //# sourceMappingURL=index.d.ts.map

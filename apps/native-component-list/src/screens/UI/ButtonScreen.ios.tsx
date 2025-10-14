@@ -1,4 +1,3 @@
-import { Button } from '@expo/ui/swift-ui';
 import {
   Button as ButtonPrimitive,
   CircularProgress,
@@ -6,9 +5,10 @@ import {
   Image,
   Text,
   VStack,
-} from '@expo/ui/swift-ui-primitives';
+} from '@expo/ui/swift-ui';
+import { fixedSize } from '@expo/ui/swift-ui/modifiers';
 import * as React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 
 import { Page, Section } from '../../components/Page';
 
@@ -23,6 +23,12 @@ export default function ButtonScreen() {
           <Button style={styles.button} variant="default">
             Default
           </Button>
+          <Button style={styles.button} variant="glass">
+            Glass button
+          </Button>
+          <Button style={styles.button} variant="glassProminent">
+            Glass Prominent
+          </Button>
           <Button style={styles.button} variant="bordered">
             Bordered
           </Button>
@@ -34,6 +40,36 @@ export default function ButtonScreen() {
           </Button>
           <Button style={styles.button} variant="plain">
             Plain
+          </Button>
+        </Section>
+        <Section title="Control Size">
+          <Button
+            style={styles.button}
+            controlSize="mini"
+            variant="glassProminent"
+            modifiers={[fixedSize()]}>
+            Mini glass prominent
+          </Button>
+          <Button style={styles.button} controlSize="small" variant="bordered">
+            Small bordered
+          </Button>
+          <Button style={styles.button} controlSize="regular" variant="glass">
+            Regular glass
+          </Button>
+          <Button style={styles.button} controlSize="large" variant="glassProminent">
+            Large
+          </Button>
+          <Button style={styles.button} controlSize="large" variant="glass">
+            Large glass
+          </Button>
+          <Button
+            style={styles.button}
+            controlSize="extraLarge"
+            variant="glassProminent"
+            systemImage="square.and.arrow.up"
+            color="orange"
+            modifiers={[fixedSize()]}>
+            Extra Large (iOS 17+)
           </Button>
         </Section>
         <Section title="Disabled">
@@ -66,6 +102,7 @@ export default function ButtonScreen() {
           <Button style={styles.button} systemImage="heart">
             Heart
           </Button>
+          <Button style={styles.button} systemImage="gear" variant="glass" />
         </Section>
         <Section title="Tinted Buttons">
           <Button style={styles.button} color="#f00f0f">
@@ -87,8 +124,25 @@ export default function ButtonScreen() {
             </ButtonPrimitive>
           </Host>
         </Section>
+        <Section title="interpolated strings">
+          <Button style={styles.button} color="#FF6347">
+            {/* eslint-disable-next-line */}
+            Hello {'world'}
+          </Button>
+        </Section>
       </ScrollView>
     </Page>
+  );
+}
+
+function Button(
+  props: React.ComponentProps<typeof ButtonPrimitive> & { style?: StyleProp<ViewStyle> }
+) {
+  const { style, ...restProps } = props;
+  return (
+    <Host matchContents style={style}>
+      <ButtonPrimitive {...restProps}>{props.children}</ButtonPrimitive>
+    </Host>
   );
 }
 
@@ -96,6 +150,7 @@ const styles = StyleSheet.create({
   button: {
     width: 150,
     margin: 5,
+    marginLeft: 20,
     overflow: 'visible',
   },
   buttonHost: {

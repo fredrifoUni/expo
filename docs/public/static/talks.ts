@@ -1,24 +1,42 @@
 export const TALKS = [
   {
+    title: 'Keynote: streamline React Native development',
+    event: 'App.js Conf 2025',
+    description: 'Charlie Cheever, Jon Samp',
+    videoId: 'lnxanzsP1rM',
+    home: true,
+  },
+  {
+    title: 'Deploy Everywhere with Expo Router',
+    event: 'App.js Conf 2025',
+    description: 'Evan Bacon',
+    videoId: 'GKQ_0VfYweg',
+    home: true,
+  },
+  {
+    title: 'Embracing Native Code and Capabilities',
+    event: 'App.js Conf 2025',
+    description: 'Keith Kurak',
+    videoId: 'TLoHua8bzPg',
+    home: true,
+  },
+  {
     title: 'Keynote: flexibility & iteration speed',
     event: 'App.js Conf 2024',
     description: 'Charlie Cheever, James Ide',
     videoId: 'StTYy9Duk3E',
-    home: true,
   },
   {
     title: 'Getting the most out of Expo Development Builds',
     event: 'App.js Conf 2024',
     description: 'Kadi Kraman',
     videoId: '7J8LRpja9_o',
-    home: true,
   },
   {
     title: 'Fetch Once, Render Everywhere',
     event: 'App.js Conf 2024',
     description: 'Evan Bacon',
     videoId: 'BK2xbPW2uUU',
-    home: true,
   },
   {
     title: 'Launching Desktop Apps to Orbit with React Native',
@@ -90,6 +108,20 @@ export const TALKS = [
 ] as Talk[];
 
 export const PODCASTS = [
+  {
+    title: 'Expo SDK 54, Expo Router v6 & Expo UI Beta for iOS with Beto Moedano',
+    event: 'Rocket Ship #081',
+    description: 'Alberto Moedano',
+    videoId: '1_J4xJk6XSc',
+    link: 'https://podcast.galaxies.dev/episodes/081-expo-sdk-54-expo-router-v6-expo-ui-beta-for-ios-with-beto-moedano',
+  },
+  {
+    title: 'RN Web vs React Strict DOM: Part 2, with Evan Bacon and James Ide',
+    event: 'React Native Radio #340',
+    description: 'Evan Bacon, James Ide',
+    thumbnail: 'rnr-340.jpeg',
+    link: 'https://infinite.red/react-native-radio/rnr-340-rn-web-vs-react-strict-dom-part-2-with-evan-bacon-and-james-ide',
+  },
   {
     title: 'Expo Atlas with Cedric van Putten',
     event: 'React Native Radio #333',
@@ -219,6 +251,16 @@ export const PODCASTS = [
 
 export const LIVE_STREAMS = [
   {
+    title: "What's new in Expo SDK 54?",
+    event: 'Expo Live Stream',
+    videoId: 'KBlbkjqxNbM',
+  },
+  {
+    title: 'Shipping with Expo: How to get your Bolt app to the app stores',
+    event: 'Expo Live Stream',
+    videoId: 'ViU7207_W54',
+  },
+  {
     title: 'How to use Protected Routes in Expo Router V5 for smooth auth',
     event: 'Expo Live Stream',
     videoId: 'XCTaMu0qnFY',
@@ -338,6 +380,86 @@ export const LIVE_STREAMS = [
 ] as Talk[];
 
 export const YOUTUBE_VIDEOS = [
+  {
+    title: 'Liquid Glass Tabs with Expo Router v6 | Native Tabs',
+    event: 'Expo Tutorials',
+    videoId: 'QqNZXdGFl44',
+  },
+  {
+    title: 'Expo UI iOS Liquid Glass Tutorial',
+    event: 'Expo Tutorials',
+    videoId: '2wXYLWz3YEQ',
+  },
+  {
+    title: 'Expo SDK 54: Liquid Glass, Expo UI, Expo Router v6, React 19, Link Previews',
+    event: 'Expo Tutorials',
+    videoId: 'iYh-7WfJTR0',
+  },
+  {
+    title: 'How to upgrade from Expo SDK 53 to SDK 54 in 5 minutes',
+    event: 'Expo Tutorials',
+    videoId: 'QuN63BRRhAM',
+  },
+  {
+    title: 'When to use over the air updates | Three important OTA use cases',
+    event: 'EAS Tutorials',
+    videoId: 'PMRekmaeb1o',
+  },
+  {
+    title: "Top 5 Expo SDK Features You're Not Using",
+    event: 'Expo Tutorials',
+    videoId: 'HQ_xzbq_BnQ',
+  },
+  {
+    title: 'Repack Workflow Demo | Speed up CI builds by ~80%',
+    event: 'EAS Tutorials',
+    videoId: 'peZ36U87k-M',
+  },
+  {
+    title: 'How to Add In-App Subscriptions with RevenueCat + Expo',
+    event: 'Expo Tutorials',
+    videoId: 'R3fLKC-2Qh0',
+  },
+  {
+    title: 'How to build a Custom Expo Module',
+    event: 'Expo Tutorials',
+    videoId: 'zReFsPgUdMs',
+  },
+  {
+    title: 'Speed up your Expo Builds with Remote Build Cache',
+    event: 'Expo Tutorials',
+    videoId: '5SmaC-JQS_k',
+  },
+  {
+    title: 'Build a Local-First Sketch App with Expo, Instant & Reanimated',
+    event: 'Expo Tutorials',
+    videoId: 'DEJIcaGN3vY',
+  },
+  {
+    title: 'How to use Expo Background Tasks',
+    event: 'Expo Tutorials',
+    videoId: '4lFus7TvayI',
+  },
+  {
+    title: 'Building auth and onboarding flows with protected routes',
+    event: 'Expo Tutorials',
+    videoId: 'zHZjJDTTHJg',
+  },
+  {
+    title: 'Golden Workflow: Automate the creation of development builds',
+    event: 'EAS Tutorials',
+    videoId: 'u8MAJ0F18s0',
+  },
+  {
+    title: 'Golden Workflow: Share preview updates with your team',
+    event: 'EAS Tutorials',
+    videoId: 'v_rzRcVSQYQ',
+  },
+  {
+    title: 'Golden Workflow: Deploy your app to production with an automated workflow',
+    event: 'EAS Tutorials',
+    videoId: 'o-peODF6E2o',
+  },
   {
     title: 'How to publish your AI app to the app store | No code needed',
     event: 'Expo Tutorials',

@@ -8,6 +8,7 @@
 #include "../JavaScriptTypedArray.h"
 #include "../JSIContext.h"
 #include "../JavaScriptObject.h"
+#include "../JavaScriptArrayBuffer.h"
 #include "../JavaScriptValue.h"
 #include "../JavaScriptFunction.h"
 #include "../javaclasses/Collections.h"
@@ -219,6 +220,26 @@ bool JavaScriptObjectFrontendConverter::canConvert(
   return value.isObject();
 }
 
+jobject JavaScriptArrayBufferFrontendConverter::convert(
+  jsi::Runtime &rt,
+  JNIEnv *env,
+  const jsi::Value &value
+) const {
+  JSIContext *jsiContext = getJSIContext(rt);
+  return JavaScriptArrayBuffer::newInstance(
+    jsiContext,
+    jsiContext->runtimeHolder->weak_from_this(),
+    std::make_shared<jsi::ArrayBuffer>(value.asObject(rt).getArrayBuffer(rt))
+  ).release();
+}
+
+bool JavaScriptArrayBufferFrontendConverter::canConvert(
+  jsi::Runtime &rt,
+  const jsi::Value &value
+) const {
+  return value.isObject() && value.getObject(rt).isArrayBuffer(rt);
+}
+
 jobject JavaScriptFunctionFrontendConverter::convert(
   jsi::Runtime &rt,
   JNIEnv *env,
@@ -381,6 +402,43 @@ jobject PrimitiveArrayFrontendConverter::convert(
 }
 
 bool PrimitiveArrayFrontendConverter::canConvert(jsi::Runtime &rt, const jsi::Value &value) const {
+  return value.isObject() && value.getObject(rt).isArray(rt);
+}
+
+ArrayFrontendConverter::ArrayFrontendConverter(
+  jni::local_ref<SingleType::javaobject> expectedType
+) {
+  auto parameterExpectedType = expectedType->getFirstParameterType();
+  parameterType = parameterExpectedType->getCombinedTypes();
+  parameterConverter = FrontendConverterProvider::instance()->obtainConverter(
+    parameterExpectedType
+  );
+  javaType = parameterExpectedType->getJClassString();
+}
+
+jobject ArrayFrontendConverter::convert(
+  jsi::Runtime &rt,
+  JNIEnv *env,
+  const jsi::Value &value
+) const {
+  auto jsArray = value.asObject(rt).asArray(rt);
+  size_t size = jsArray.size(rt);
+  auto result = env->NewObjectArray(
+    size,
+    JCacheHolder::get().getOrLoadJClass(env, javaType),
+    nullptr
+  );
+  for (size_t i = 0; i < size; i++) {
+    auto convertedElement = parameterConverter->convert(
+      rt, env, jsArray.getValueAtIndex(rt, i)
+    );
+    env->SetObjectArrayElement(result, i, convertedElement);
+    env->DeleteLocalRef(convertedElement);
+  }
+  return result;
+}
+
+bool ArrayFrontendConverter::canConvert(jsi::Runtime &rt, const jsi::Value &value) const {
   return value.isObject() && value.getObject(rt).isArray(rt);
 }
 
@@ -606,6 +664,34 @@ jobject NullableFrontendConverter::convert(
 ) const {
   if (value.isNull() || value.isUndefined()) {
     return nullptr;
+  }
+
+  return parameterConverter->convert(rt, env, value);
+}
+
+ValueOrUndefinedFrontendConverter::ValueOrUndefinedFrontendConverter(
+  jni::local_ref<SingleType::javaobject> expectedType
+) : parameterConverter(
+  FrontendConverterProvider::instance()->obtainConverter(
+    expectedType->getFirstParameterType()
+  )
+) {}
+
+bool ValueOrUndefinedFrontendConverter::canConvert(
+  jsi::Runtime &rt,
+  const jsi::Value &value
+) const {
+  return value.isUndefined() ||
+         parameterConverter->canConvert(rt, value);
+}
+
+jobject ValueOrUndefinedFrontendConverter::convert(
+  jsi::Runtime &rt,
+  JNIEnv *env,
+  const jsi::Value &value
+) const {
+  if (value.isUndefined()) {
+    return env->NewLocalRef(JCacheHolder::get().jUndefined);
   }
 
   return parameterConverter->convert(rt, env, value);

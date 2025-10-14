@@ -1,24 +1,50 @@
 ---
-title: Tabs
-description: Learn how to use the Tabs layout in Expo Router.
+title: JavaScript tabs
+description: Learn how to use the JavaScript tabs layout (React Navigation bottom tabs) in Expo Router.
+hasVideoLink: true
 ---
 
+import { BookOpen02Icon } from '@expo/styleguide-icons/outline/BookOpen02Icon';
+
+import { BoxLink } from '~/ui/components/BoxLink';
 import { ContentSpotlight } from '~/ui/components/ContentSpotlight';
 import { FileTree } from '~/ui/components/FileTree';
 import { VideoBoxLink } from '~/ui/components/VideoBoxLink';
 
 <VideoBoxLink
   videoId="BElPB4Ai3j0"
-  title="Using a Tab Navigator with Expo Router"
+  title="Using a JavaScript Tab Navigator with Expo Router"
   description="Configure the tab icons, nest navigators, and manage navigation history."
   className="mb-6"
 />
 
 Tabs are a common way to navigate between different sections of an app. Expo Router provides a tabs layout to help you create a tab bar at the bottom of your app. The fastest way to get started is to use a template. See the [quick start installation](/router/installation/#quick-start) to get started.
 
-Continue reading to add tabs to an existing project or to customize your app's tabs.
+## Multiple tab layouts
 
-## Get started
+Expo Router offers three types of tab navigators:
+
+- **JavaScript tabs**: It is implemented with React Navigation's bottom tabs and offers familiar API if you have already used React Navigation.
+- **Native tabs**: It uses a platform's native tab bar and offers native look and feel.
+- **Custom tabs**: It provides headless tab components from `expo-router/ui` to build a fully custom tab layout to achieve complex UI patterns.
+
+This guide covers the **JavaScript tabs** layout. For other tab layouts see:
+
+<BoxLink
+  title="Native tabs"
+  href="/router/advanced/native-tabs/"
+  description="See native tabs if you want to achieve a native look and feel for your tab bar."
+  Icon={BookOpen02Icon}
+/>
+
+<BoxLink
+  title="Custom tabs"
+  href="/router/advanced/custom-tabs/"
+  description="See custom tabs if your app requires a fully custom design that is not possible using system tabs."
+  Icon={BookOpen02Icon}
+/>
+
+## Get started with JavaScript tabs
 
 You can use file-based routing to create a tabs layout. Here's an example file structure:
 
@@ -147,12 +173,12 @@ export default function TabLayout() {
   return (
     <Tabs>
       <Tabs.Screen
-        {/* Name of the dynamic route.*/}
+        // Name of the dynamic route.
         name="[user]"
         options={{
-          {/* Ensure the tab always links to the same href.*/}
+          // Ensure the tab always links to the same href.
           href: '/evanbacon',
-          {/* OR you can use the href object.*/}
+          // OR you can use the href object.
           href: {
             pathname: '/[user]',
             params: {

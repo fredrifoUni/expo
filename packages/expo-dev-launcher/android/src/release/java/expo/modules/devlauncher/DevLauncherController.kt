@@ -6,8 +6,8 @@ import android.net.Uri
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.ReactApplication
+import com.facebook.react.ReactHost
 import com.facebook.react.bridge.ReactContext
-import expo.interfaces.devmenu.ReactHostWrapper
 import expo.modules.devlauncher.launcher.DevLauncherAppEntry
 import expo.modules.devlauncher.launcher.DevLauncherControllerInterface
 import expo.modules.devlauncher.launcher.DevLauncherReactActivityDelegateSupplier
@@ -28,16 +28,13 @@ class DevLauncherController private constructor() : DevLauncherControllerInterfa
   override val mode: Mode
     get() = throw IllegalStateException(DEV_LAUNCHER_IS_NOT_AVAILABLE)
 
-  override val devClientHost: ReactHostWrapper
-    get() = throw IllegalStateException(DEV_LAUNCHER_IS_NOT_AVAILABLE)
-
   override val manifest: Manifest
     get() = throw IllegalStateException(DEV_LAUNCHER_IS_NOT_AVAILABLE)
 
   override val manifestURL: Uri
     get() = throw IllegalStateException(DEV_LAUNCHER_IS_NOT_AVAILABLE)
 
-  override val appHost: ReactHostWrapper
+  override val appHost: ReactHost
     get() = throw IllegalStateException(DEV_LAUNCHER_IS_NOT_AVAILABLE)
 
   override var updatesInterface: UpdatesInterface?
@@ -99,19 +96,23 @@ class DevLauncherController private constructor() : DevLauncherControllerInterfa
       }
 
     @JvmStatic
-    internal fun initialize(context: Context, reactHost: ReactHostWrapper) {
+    internal fun initialize(context: Context, reactHost: ReactHost) {
       check(sInstance == null) { "DevelopmentClientController was initialized." }
       sInstance = DevLauncherController()
     }
 
     @JvmStatic
-    fun initialize(context: Context, reactHost: ReactHostWrapper, launcherClass: Class<*>? = null) {
+    fun initialize(context: Context, reactHost: ReactHost, launcherClass: Class<*>? = null) {
       initialize(context, reactHost)
     }
 
     @JvmStatic
     fun initialize(reactApplication: ReactApplication, additionalPackages: List<*>? = null, launcherClass: Class<*>? = null) {
-      initialize(reactApplication as Context, ReactHostWrapper(reactApplication.reactNativeHost, { reactApplication.reactHost }))
+      val reactHost = reactApplication.reactHost
+      checkNotNull(reactHost) {
+        "DevLauncherController.initialize() was called before reactHost was initialized"
+      }
+      initialize(reactApplication as Context, reactHost)
     }
 
     @JvmStatic

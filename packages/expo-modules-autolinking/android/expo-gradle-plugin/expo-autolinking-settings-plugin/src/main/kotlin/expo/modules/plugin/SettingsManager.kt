@@ -26,13 +26,12 @@ import java.io.File
 
 class SettingsManager(
   val settings: Settings,
+  val projectRoot: File,
   searchPaths: List<String>? = null,
-  ignorePaths: List<String>? = null,
   exclude: List<String>? = null
 ) {
   private val autolinkingOptions = AutolinkingOptions(
     searchPaths,
-    ignorePaths,
     exclude
   )
 
@@ -50,14 +49,14 @@ class SettingsManager(
    * Resolved configuration from `expo-modules-autolinking`.
    */
   private val config by lazy {
-    val command = AutolinkigCommandBuilder()
+    val command = AutolinkingCommandBuilder()
       .command("resolve")
       .useJson()
       .useAutolinkingOptions(autolinkingOptions)
       .build()
 
     val result = settings.providers.exec { env ->
-      env.workingDir(settings.rootDir)
+      env.workingDir(projectRoot.absolutePath)
       env.commandLine(command)
     }.standardOutput.asText.get()
 
@@ -100,10 +99,10 @@ class SettingsManager(
 
     settings.gradle.beforeProject { project ->
       // Adds precompiled artifacts
-      val projectConfig = config.getConfigForProject(project)
-      projectConfig?.aarProjects?.forEach(
-        project::applyAarProject
-      )
+      config.allAarProjects.filter { it.name == project.name }
+        .forEach(
+          project::applyAarProject
+        )
     }
 
     // Defines the required features for the core module
@@ -155,7 +154,7 @@ class SettingsManager(
         }
     }
 
-    settings.gradle.extensions.create("expoGradle", ExpoGradleExtension::class.java, config, autolinkingOptions)
+    settings.gradle.extensions.create("expoGradle", ExpoGradleExtension::class.java, config, autolinkingOptions, projectRoot)
   }
 
   /**

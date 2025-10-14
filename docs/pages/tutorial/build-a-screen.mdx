@@ -1,6 +1,7 @@
 ---
 title: Build a screen
 description: In this tutorial, learn how to use components such as React Native's Pressable and Expo Image to build a screen.
+hasVideoLink: true
 ---
 
 import { Collapsible } from '~/ui/components/Collapsible';
@@ -67,6 +68,8 @@ Stop the development server by pressing <kbd>Ctrl</kbd> + <kbd>c</kbd> in the te
 <Terminal cmd={['$ npx expo install expo-image']} />
 
 The [`npx expo install`](/more/expo-cli/#installation) command will install the library and add it to the project's dependencies in **package.json**.
+
+> **info** **Tip:** Any time we install a new library in our project, stop the development server by pressing <kbd>Ctrl</kbd> + <kbd>c</kbd> in the terminal and then run the installation command. After the installation completes, we can start the development server again by running `npx expo start` from the same terminal window.
 
 The Image component takes the source of an image as its value. The source can be either a [static asset](https://reactnative.dev/docs/images#static-image-resources) or a URL. For example, the source required from **assets/images** directory is static. It can also come from [Network](https://reactnative.dev/docs/images#network-images) as a `uri` property.
 
@@ -323,7 +326,7 @@ import { StyleSheet, View, Pressable, Text } from 'react-native';
 
 type Props = {
   label: string;
-  theme?: 'primary';
+  /* @tutinfo Add theme prop. */theme?: 'primary';/* @end */
 };
 
 export default function Button({ label, /* @tutinfo The prop <CODEtheme</CODE> to detect the button variant. */theme/* @end */ }: Props) {

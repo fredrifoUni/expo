@@ -1,8 +1,9 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  kotlin("jvm") version "1.9.24"
+  kotlin("jvm") version "2.1.20"
   id("java-gradle-plugin")
 }
 
@@ -55,8 +56,8 @@ java {
 }
 
 tasks.withType<KotlinCompile> {
-  kotlinOptions {
-    jvmTarget = JavaVersion.VERSION_11.toString()
+  compilerOptions {
+    jvmTarget.set(JvmTarget.JVM_11)
   }
 }
 

@@ -6,11 +6,51 @@
 
 ### 🎉 New features
 
+- [Android] Add support for MaterialSymbol symbols on Android and Web. ([#39516](https://github.com/expo/expo/pull/39516) by [@aleqsio](https://github.com/aleqsio))
+
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 1.0.7 — 2025-09-11
+
+_This version does not introduce any user-facing changes._
+
+## 1.0.6 — 2025-09-02
+
+_This version does not introduce any user-facing changes._
+
+## 1.0.5 — 2025-08-31
+
+_This version does not introduce any user-facing changes._
+
+## 1.0.4 — 2025-08-27
+
+_This version does not introduce any user-facing changes._
+
+## 1.0.3 — 2025-08-25
+
+_This version does not introduce any user-facing changes._
+
+## 1.0.2 — 2025-08-16
+
+_This version does not introduce any user-facing changes._
+
+## 1.0.1 — 2025-08-15
+
+_This version does not introduce any user-facing changes._
+
+## 1.0.0 — 2025-08-13
+
+### 🐛 Bug fixes
+
+- Suppress `the native view manager isn't exported` warning on Android. ([#38504](https://github.com/expo/expo/pull/38504) by [@lukmccall](https://github.com/lukmccall))
+
+## 0.4.5 - 2025-06-04
+
 ### 🐛 Bug fixes
 
 - Use `processColor` to accept all valid color strings. ([#36914](https://github.com/expo/expo/pull/36914) by [@alanjhughes](https://github.com/alanjhughes))
-
-### 💡 Others
 
 ## 0.4.4 — 2025-04-30
 

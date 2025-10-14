@@ -5,13 +5,15 @@ import android.content.Context
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.MotionEvent
+import com.facebook.react.ReactHost
 import expo.interfaces.devmenu.DevMenuDelegateInterface
 import expo.interfaces.devmenu.DevMenuManagerInterface
 import expo.interfaces.devmenu.DevMenuPreferencesInterface
-import expo.interfaces.devmenu.ReactHostWrapper
 import expo.modules.devmenu.api.DevMenuMetroClient
 import expo.modules.manifests.core.Manifest
 import kotlinx.coroutines.CoroutineScope
+
+const val DEV_MENU_TAG = "[disabled] ExpoDevMenu"
 
 private const val DEV_MENU_IS_NOT_AVAILABLE = "DevMenu isn't available in release builds"
 
@@ -25,7 +27,7 @@ object DevMenuManager : DevMenuManagerInterface {
 
   var registeredCallbacks = arrayListOf<Callback>()
 
-  fun getReactHost(): ReactHostWrapper? {
+  fun getReactHost(): ReactHost? {
     return null
   }
 
@@ -33,7 +35,7 @@ object DevMenuManager : DevMenuManagerInterface {
     throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
   }
 
-  fun getDevSettings(): Bundle {
+  fun getDevSettings(): DevToolsSettings {
     throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
   }
 
@@ -63,17 +65,13 @@ object DevMenuManager : DevMenuManagerInterface {
 
   override fun setDelegate(newDelegate: DevMenuDelegateInterface) = Unit
 
-  override fun initializeWithReactHost(reactHost: ReactHostWrapper) = Unit
+  override fun initializeWithReactHost(reactHost: ReactHost) = Unit
 
   override fun getSettings(): DevMenuPreferencesInterface? {
     throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
   }
 
   fun getMenuPreferences(): Bundle {
-    throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
-  }
-
-  override fun getMenuHost(): ReactHostWrapper {
     throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
   }
 
@@ -101,6 +99,9 @@ object DevMenuManager : DevMenuManagerInterface {
   fun reload() {
     throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
   }
+  fun goToHome() {
+    throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
+  }
   fun togglePerformanceMonitor() {
     throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
   }
@@ -111,6 +112,12 @@ object DevMenuManager : DevMenuManagerInterface {
     throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
   }
   fun toggleFastRefresh() {
+    throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
+  }
+  fun toggleFab() {
+    throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
+  }
+  fun refreshCustomItems() {
     throw IllegalStateException(DEV_MENU_IS_NOT_AVAILABLE)
   }
 }

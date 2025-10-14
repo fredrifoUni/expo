@@ -1,5 +1,7 @@
 import { ReactElement, ReactNode } from 'react';
 import { NativeSyntheticEvent, StyleProp, ViewStyle } from 'react-native';
+import { SubmenuProps } from './Submenu';
+import { ExpoModifier } from '../../types';
 import { ButtonProps } from '../Button';
 import { PickerProps } from '../Picker';
 import { SwitchProps } from '../Switch';
@@ -48,22 +50,10 @@ export type ContextMenuProps = {
      * Optional styles to apply to the `ContextMenu`.
      */
     style?: StyleProp<ViewStyle>;
+    /** Modifiers for the component */
+    modifiers?: ExpoModifier[];
 };
-/**
- * Props of the `Submenu` component.
- */
-export type SubmenuProps = {
-    /**
-     * The button that will be used to expand the submenu. On Android the `text` prop of the `Button` will be used as a section title.
-     */
-    button: ReactElement<ButtonProps>;
-    /**
-     * Children of the submenu. Only `Button`, `Switch`, `Picker` and `Submenu` elements should be used.
-     */
-    children: ReactNode;
-};
-export declare function Submenu(): import("react").JSX.Element;
-export declare function Items(): import("react").JSX.Element;
+export declare function Items(props: ContextMenuContentProps): import("react").JSX.Element;
 export declare namespace Items {
     var tag: string;
 }
@@ -83,4 +73,5 @@ declare namespace ContextMenu {
     var Items: typeof import(".").Items;
 }
 export { ContextMenu };
+export { Submenu } from './Submenu';
 //# sourceMappingURL=index.d.ts.map

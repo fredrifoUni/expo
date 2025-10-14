@@ -86,7 +86,7 @@
     self.shouldPreferUpdatesInterfaceSourceUrl = NO;
 
     self.dependencyProvider = [RCTAppDependencyProvider new];
-    self.reactNativeFactory = [[EXDevLauncherReactNativeFactory alloc] initWithDelegate:self];
+    self.reactNativeFactory = [[EXDevLauncherReactNativeFactory alloc] initWithDelegate:self releaseLevel:[self getReactNativeReleaseLevel]];
   }
   return self;
 }
@@ -252,15 +252,13 @@
   return _errorManager;
 }
 
-- (void)startWithWindow:(UIWindow *)window delegate:(id<EXDevLauncherControllerDelegate>)delegate launchOptions:(NSDictionary *)launchOptions
+- (void)startWithWindow:(UIWindow *)window
 {
   _isStarted = YES;
-  _delegate = delegate;
-  _launchOptions = launchOptions;
   _window = window;
   EXDevLauncherUncaughtExceptionHandler.isInstalled = true;
 
-  if (launchOptions[UIApplicationLaunchOptionsURLKey]) {
+  if (_launchOptions[UIApplicationLaunchOptionsURLKey]) {
     // For deeplink launch, we need the keyWindow for expo-splash-screen to setup correctly.
     [_window makeKeyWindow];
     return;
@@ -310,7 +308,7 @@
 - (void)autoSetupStart:(UIWindow *)window
 {
   if (_delegate != nil) {
-    [self startWithWindow:window delegate:_delegate launchOptions:_launchOptions];
+    [self startWithWindow:window];
   } else {
     @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:@"[EXDevLauncherController autoSetupStart:] was called before autoSetupPrepare:. Make sure you've set up expo-modules correctly in AppDelegate and are using ReactDelegate to create a bridge before calling [super application:didFinishLaunchingWithOptions:]." userInfo:nil];
   }
@@ -323,8 +321,6 @@
   [_appBridge invalidate];
   [self invalidateDevMenuApp];
 
-  self.manifest = nil;
-  self.manifestURL = nil;
   self.networkInterceptor = nil;
 
   [self _applyUserInterfaceStyle:UIUserInterfaceStyleUnspecified];
@@ -343,22 +339,14 @@
   [self _addInitModuleObserver];
 #endif
 
-  UIView *rootView;
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(onAppContentDidAppear)
-                                               name:RCTContentDidAppearNotification
-                                             object:rootView];
+  DevLauncherViewController *swiftUIViewController = [[DevLauncherViewController alloc] init];
 
-  rootView = [self.reactNativeFactory.rootViewFactory viewWithModuleName:@"main"
-                                                               initialProperties:nil
-                                                                   launchOptions:_launchOptions];
-
-  rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
-
-  UIViewController *rootViewController = [self createRootViewController];
-  [self setRootView:rootView toRootViewController:rootViewController];
-  _window.rootViewController = rootViewController;
+  _window.rootViewController = swiftUIViewController;
   [_window makeKeyAndVisible];
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self onAppContentDidAppear];
+  });
 }
 
 - (BOOL)onDeepLink:(NSURL *)url options:(NSDictionary *)options
@@ -639,21 +627,13 @@
  */
 - (void)onAppContentDidAppear
 {
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:RCTContentDidAppearNotification object:nil];
-
   dispatch_async(dispatch_get_main_queue(), ^{
-    #ifdef RCT_NEW_ARCH_ENABLED
-      #define EXPECTED_ROOT_VIEW RCTSurfaceView
-    #else
-      #define EXPECTED_ROOT_VIEW RCTRootContentView
-    #endif
     NSArray<UIView *> *views = [[[self->_window rootViewController] view] subviews];
     for (UIView *view in views) {
-      if (![view isKindOfClass:[EXPECTED_ROOT_VIEW class]]) {
+      if ([NSStringFromClass([view class]) containsString:@"SplashScreen"]) {
         [view removeFromSuperview];
       }
     }
-    #undef EXPECTED_ROOT_VIEW
   });
 }
 
@@ -706,10 +686,28 @@
   NSString *appVersion = [self getFormattedAppVersion];
   NSString *appName = [[NSBundle mainBundle] objectForInfoDictionaryKey: @"CFBundleDisplayName"] ?: [[NSBundle mainBundle] objectForInfoDictionaryKey: @"CFBundleExecutable"];
 
+  NSString *sdkVersion = nil;
+  if (self.manifest != nil) {
+    NSDictionary *expoConfig = [self.manifest expoClientConfigRootObject];
+    id sdk = expoConfig[@"sdkVersion"];
+    if ([sdk isKindOfClass:[NSString class]]) {
+      sdkVersion = (NSString *)sdk;
+    } else {
+      NSDictionary *rawManifest = [self.manifest rawManifestJSON];
+      id sdkFromManifest = rawManifest[@"sdkVersion"];
+      if ([sdkFromManifest isKindOfClass:[NSString class]]) {
+        sdkVersion = (NSString *)sdkFromManifest;
+      }
+    }
+  }
+
   [buildInfo setObject:appName forKey:@"appName"];
   [buildInfo setObject:appIcon forKey:@"appIcon"];
   [buildInfo setObject:appVersion forKey:@"appVersion"];
   [buildInfo setObject:runtimeVersion forKey:@"runtimeVersion"];
+  if (sdkVersion) {
+    [buildInfo setObject:sdkVersion forKey:@"sdkVersion"];
+  }
 
   return buildInfo;
 }
@@ -717,11 +715,14 @@
 -(NSString *)getAppIcon
 {
   NSString *appIcon = @"";
-  NSString *appIconName = [[[[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIcons"] objectForKey:@"CFBundlePrimaryIcon"] objectForKey:@"CFBundleIconFiles"]  lastObject];
+  NSString *appIconName = nil;
+  @try {
+    appIconName = [[[[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIcons"] objectForKey:@"CFBundlePrimaryIcon"] objectForKey:@"CFBundleIconFiles"]  lastObject];
+  } @catch(NSException *_e) {}
 
   if (appIconName != nil) {
     NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
-    NSString *appIconPath = [[resourcePath stringByAppendingString:appIconName] stringByAppendingString:@".png"];
+    NSString *appIconPath = [[resourcePath stringByAppendingPathComponent:appIconName] stringByAppendingString:@".png"];
     appIcon = [@"file://" stringByAppendingString:appIconPath];
   }
 
@@ -736,9 +737,30 @@
   return appVersion;
 }
 
+-(RCTReleaseLevel)getReactNativeReleaseLevel
+{
+//  @TODO: Read this value from the main react-native factory instance on 0.82
+  NSString *releaseLevelString = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ReactNativeReleaseLevel"];
+  RCTReleaseLevel releaseLevel = Stable;
+  if ([releaseLevelString isKindOfClass:[NSString class]]) {
+    NSString *lower = [releaseLevelString lowercaseString];
+    if ([lower isEqualToString:@"canary"]) {
+      releaseLevel = Canary;
+    } else if ([lower isEqualToString:@"experimental"]) {
+      releaseLevel = Experimental;
+    } else if ([lower isEqualToString:@"stable"]) {
+      releaseLevel = Stable;
+    }
+  }
+
+  return releaseLevel;
+}
+
 -(void)copyToClipboard:(NSString *)content {
+#if !TARGET_OS_TV
   UIPasteboard *clipboard = [UIPasteboard generalPasteboard];
   clipboard.string = (content ?: @"");
+#endif
 }
 
 - (void)setDevMenuAppBridge
@@ -771,17 +793,30 @@
 
   // the project url field is added to app.json.updates when running `eas update:configure`
   // the `u.expo.dev` determines that it is the modern manifest protocol
+  NSURL *updateURL = _updatesInterface ? _updatesInterface.updateURL : nil;
   NSString *projectUrl = @"";
   if (_updatesInterface) {
-    projectUrl = [constants valueForKeyPath:@"manifest.updates.url"];
+    projectUrl = [[self.manifest updatesInfo] valueForKey:@"url"] ?: @"";
+    if (projectUrl.length == 0 && updateURL) {
+      projectUrl = updateURL.absoluteString ?: @"";
+    }
   }
 
-  NSURL *url = [NSURL URLWithString:projectUrl];
+  NSURL *url = projectUrl.length > 0 ? [NSURL URLWithString:projectUrl] : updateURL;
 
   BOOL isModernManifestProtocol = [[url host] isEqualToString:@"u.expo.dev"] || [[url host] isEqualToString:@"staging-u.expo.dev"];
   BOOL expoUpdatesInstalled = EXDevLauncherController.sharedInstance.updatesInterface != nil;
 
-  NSString *appId = [constants valueForKeyPath:@"manifest.extra.eas.projectId"] ?: @"";
+  NSString *appId = [constants valueForKeyPath:@"manifest.extra.eas.projectId"] ?: [self.manifest easProjectId];
+  if (appId.length == 0 && updateURL) {
+    NSString *possibleAppId = updateURL.lastPathComponent ?: @"";
+    if (possibleAppId.length == 0 && updateURL.pathComponents.count > 0) {
+      possibleAppId = updateURL.pathComponents.lastObject ?: @"";
+    }
+    if (possibleAppId.length > 0 && ![possibleAppId isEqualToString:@"/"]) {
+      appId = possibleAppId;
+    }
+  }
   BOOL hasAppId = appId.length > 0;
 
   BOOL usesEASUpdates = isModernManifestProtocol && expoUpdatesInstalled && hasAppId;
@@ -824,6 +859,16 @@
     }
   }
   return nil;
+}
+
+- (UIViewController *)createRootViewController
+{
+  return [[DevLauncherViewController alloc] init];
+}
+
+- (void)setRootView:(UIView *)rootView toRootViewController:(UIViewController *)rootViewController
+{
+  rootViewController.view = rootView;
 }
 
 @end

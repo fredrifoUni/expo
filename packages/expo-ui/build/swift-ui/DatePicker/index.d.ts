@@ -1,5 +1,5 @@
-import { StyleProp, ViewStyle } from 'react-native';
-import { ViewEvent } from '../../types';
+import type { ColorValue } from 'react-native';
+import { type CommonViewModifierProps } from '../types';
 export type IOSVariant = 'wheel' | 'automatic' | 'graphical' | 'compact';
 export type DisplayedComponents = 'date' | 'hourAndMinute' | 'dateAndTime';
 export type DateTimePickerProps = {
@@ -30,27 +30,10 @@ export type DateTimePickerProps = {
     /**
      * The tint color to use on the picker elements.
      */
-    color?: string;
-};
-type NativeDatePickerProps = Omit<DateTimePickerProps, 'variant' | 'onDateSelected'> & {
-    variant?: IOSVariant;
-} & ViewEvent<'onDateSelected', {
-    date: Date;
-}>;
-/**
- * @hidden
- */
-export declare function transformDateTimePickerProps(props: DateTimePickerProps): NativeDatePickerProps;
-/**
- * `<DateTimePicker>` component without a host view.
- * You should use this with a `Host` component in ancestor.
- */
-export declare function DateTimePickerPrimitive(props: DateTimePickerProps): import("react").JSX.Element;
+    color?: ColorValue;
+} & CommonViewModifierProps;
 /**
  * Renders a `DateTimePicker` component.
  */
-export declare function DateTimePicker(props: DateTimePickerProps & {
-    style?: StyleProp<ViewStyle>;
-}): import("react").JSX.Element;
-export {};
+export declare function DateTimePicker(props: DateTimePickerProps): import("react").JSX.Element;
 //# sourceMappingURL=index.d.ts.map

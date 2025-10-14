@@ -1,6 +1,8 @@
 import { LinkBase, mergeClasses } from '@expo/styleguide';
+import { PlaySquareDuotoneIcon } from '@expo/styleguide-icons/duotone/PlaySquareDuotoneIcon';
 import { AlertTriangleIcon } from '@expo/styleguide-icons/outline/AlertTriangleIcon';
 import { ArrowUpRightIcon } from '@expo/styleguide-icons/outline/ArrowUpRightIcon';
+import { PlaySquareIcon } from '@expo/styleguide-icons/outline/PlaySquareIcon';
 import { AlertTriangleSolidIcon } from '@expo/styleguide-icons/solid/AlertTriangleSolidIcon';
 import { useRouter } from 'next/compat/router';
 import { useEffect, useRef, type PropsWithChildren } from 'react';
@@ -69,6 +71,12 @@ export const SidebarLink = ({ info, className, children }: SidebarLinkProps) => 
         )}
       />
       {children}
+      {info.hasVideoLink && !isSelected && (
+        <PlaySquareIcon className="icon-xs ml-1.5 text-icon-secondary" />
+      )}
+      {info.hasVideoLink && isSelected && (
+        <PlaySquareDuotoneIcon className="icon-xs ml-1.5 text-palette-blue11" />
+      )}
       {info.isDeprecated && !isSelected && (
         <AlertTriangleIcon className="icon-xs ml-1.5 !text-icon-warning" />
       )}
@@ -95,6 +103,28 @@ export const SidebarLink = ({ info, className, children }: SidebarLinkProps) => 
               : 'border-palette-purple10 bg-none text-palette-purple11 dark:border-palette-purple9 dark:text-palette-purple10'
           )}>
           ALPHA
+        </div>
+      )}
+      {info.isBeta && (
+        <div
+          className={mergeClasses(
+            '-mt-px ml-2 inline-flex h-[17px] items-center rounded-full border border-palette-purple10 px-[5px] text-[10px] font-semibold leading-none text-palette-white',
+            isSelected
+              ? 'bg-palette-purple10 text-palette-white dark:text-palette-black'
+              : 'border-palette-purple10 bg-none text-palette-purple11 dark:border-palette-purple9 dark:text-palette-purple10'
+          )}>
+          BETA
+        </div>
+      )}
+      {info.isPreview && (
+        <div
+          className={mergeClasses(
+            '-mt-px ml-2 inline-flex h-[17px] items-center rounded-full border border-palette-purple10 px-[5px] text-[10px] font-semibold leading-none text-palette-white',
+            isSelected
+              ? 'bg-palette-purple10 text-palette-white dark:text-palette-black'
+              : 'border-palette-purple10 bg-none text-palette-purple11 dark:border-palette-purple9 dark:text-palette-purple10'
+          )}>
+          PREVIEW
         </div>
       )}
       {isExternal && (

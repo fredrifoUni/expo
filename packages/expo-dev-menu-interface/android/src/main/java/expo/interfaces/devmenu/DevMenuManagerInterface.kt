@@ -3,6 +3,7 @@ package expo.interfaces.devmenu
 import android.app.Activity
 import android.view.KeyEvent
 import android.view.MotionEvent
+import com.facebook.react.ReactHost
 import kotlinx.coroutines.CoroutineScope
 
 interface DevMenuManagerInterface {
@@ -46,18 +47,13 @@ interface DevMenuManagerInterface {
   /**
    * Initializes the dev menu manager to work with react host.
    */
-  fun initializeWithReactHost(reactHost: ReactHostWrapper)
+  fun initializeWithReactHost(reactHost: ReactHost)
 
   /**
    * @return a instance of [DevMenuPreferencesInterface] that keeps all settings for current dev menu delegate,
    * or `null` if delegate wasn't provided.
    */
   fun getSettings(): DevMenuPreferencesInterface?
-
-  /**
-   * @return the dev menu application host.
-   */
-  fun getMenuHost(): ReactHostWrapper
 
   /**
    * Synchronizes [ReactInstanceManager] from delegate with one saved in [DevMenuManger].

@@ -10,6 +10,7 @@
 import type { RouteNode } from './Route';
 import { getContextKey, matchGroupName } from './matchers';
 import { sortRoutes } from './sortRoutes';
+import { shouldLinkExternally } from './utils/url';
 
 // TODO: Share these types across cli, server, router, etc.
 export type ExpoRouterServerManifestV1Route<TRegex = string> = {
@@ -33,9 +34,27 @@ export type ExpoRouterServerManifestV1Route<TRegex = string> = {
   methods?: string[];
 };
 
+export type ExpoRouterServerManifestV1Middleware = {
+  /**
+   * Path to the module that contains the middleware function as a default export.
+   *
+   * @example _expo/functions/+middleware.js
+   */
+  file: string;
+};
+
 export type ExpoRouterServerManifestV1<TRegex = string> = {
   /**
-   * Rewrites. These occur first
+   * Middleware function that runs before any route matching.
+   * Only allowed at the root level and requires web.output: "server".
+   */
+  middleware?: ExpoRouterServerManifestV1Middleware;
+  /**
+   * Headers to be applied to all responses from the server.
+   */
+  headers?: Record<string, string | string[]>;
+  /**
+   * Rewrites. After middleware has processed and regular routing resumes, these occur first.
    */
   rewrites: ExpoRouterServerManifestV1Route<TRegex>[];
   /**
@@ -82,9 +101,19 @@ function uniqueBy<T>(arr: T[], key: (item: T) => string): T[] {
   });
 }
 
+// TODO(@hassankhan): ENG-16575
+type FlatNodeTuple = [contextKey: string, absoluteRoute: string, node: RouteNode];
+
+type GetServerManifestOptions = {
+  headers?: Record<string, string | string[]>;
+};
+
 // Given a nested route tree, return a flattened array of all routes that can be matched.
-export function getServerManifest(route: RouteNode): ExpoRouterServerManifestV1 {
-  function getFlatNodes(route: RouteNode, parentRoute: string = ''): [string, string, RouteNode][] {
+export function getServerManifest(
+  route: RouteNode,
+  options: GetServerManifestOptions | undefined
+): ExpoRouterServerManifestV1 {
+  function getFlatNodes(route: RouteNode, parentRoute: string = ''): FlatNodeTuple[] {
     // Use a recreated route instead of contextKey because we duplicate nodes to support array syntax.
     const absoluteRoute = [parentRoute, route.route].filter(Boolean).join('/');
 
@@ -97,9 +126,9 @@ export function getServerManifest(route: RouteNode): ExpoRouterServerManifestV1 
     // copies should be rendered. However, an API route is always the same regardless of parent segments.
     let key: string;
     if (route.type.includes('api')) {
-      key = getContextKey(route.contextKey).replace(/\/index$/, '') ?? '/';
+      key = getNormalizedContextKey(route.contextKey);
     } else {
-      key = getContextKey(absoluteRoute).replace(/\/index$/, '') ?? '/';
+      key = getNormalizedContextKey(absoluteRoute);
     }
     return [[key, '/' + absoluteRoute, route]];
   }
@@ -128,9 +157,15 @@ export function getServerManifest(route: RouteNode): ExpoRouterServerManifestV1 
     ([path]) => path
   )
     .map((redirect) => {
-      redirect[1] =
-        flat.find(([, , route]) => route.contextKey === redirect[2].destinationContextKey)?.[0] ??
-        '/';
+      // TODO(@hassankhan): ENG-16577
+      // For external redirects, use `destinationContextKey` as the destination URL
+      if (shouldLinkExternally(redirect[2].destinationContextKey!)) {
+        redirect[1] = redirect[2].destinationContextKey!;
+      } else {
+        redirect[1] =
+          flat.find(([, , route]) => route.contextKey === redirect[2].destinationContextKey)?.[0] ??
+          '/';
+      }
 
       return redirect;
     })
@@ -152,13 +187,25 @@ export function getServerManifest(route: RouteNode): ExpoRouterServerManifestV1 
   const standardRoutes = otherRoutes.filter(([, , route]) => !isNotFoundRoute(route));
   const notFoundRoutes = otherRoutes.filter(([, , route]) => isNotFoundRoute(route));
 
-  return {
+  const manifest: ExpoRouterServerManifestV1 = {
     apiRoutes: getMatchableManifestForPaths(apiRoutes),
     htmlRoutes: getMatchableManifestForPaths(standardRoutes),
     notFoundRoutes: getMatchableManifestForPaths(notFoundRoutes),
     redirects: getMatchableManifestForPaths(redirects),
     rewrites: getMatchableManifestForPaths(rewrites),
   };
+
+  if (route.middleware) {
+    manifest.middleware = {
+      file: route.middleware.contextKey,
+    };
+  }
+
+  if (options?.headers) {
+    manifest.headers = options.headers;
+  }
+
+  return manifest;
 }
 
 function getMatchableManifestForPaths(
@@ -170,6 +217,7 @@ function getMatchableManifestForPaths(
       absoluteRoute,
       node.contextKey
     );
+
     if (node.generated) {
       matcher.generated = true;
     }
@@ -331,4 +379,8 @@ export function parseParameter(param: string) {
   }
 
   return { name, repeat, optional };
+}
+
+function getNormalizedContextKey(contextKey: string): string {
+  return getContextKey(contextKey).replace(/\/index$/, '') ?? '/';
 }

@@ -38,6 +38,8 @@ jest.mock('../icons/withAndroidIcons', () => {
     setIconAsync() {},
   };
 });
+const NotificationsPlugin = require('../unversioned/expo-notifications/withAndroidNotifications');
+NotificationsPlugin.withNotificationIcons = jest.fn((config) => config);
 
 function getLargeConfig(): ExportedConfig {
   // A very extensive Expo Config.
@@ -367,7 +369,9 @@ describe('built-in plugins', () => {
         'android/app/debug.keystore',
         'android/app/proguard-rules.pro',
         'android/app/src/debug/AndroidManifest.xml',
+        'android/app/src/debugOptimized/AndroidManifest.xml',
         'android/app/src/main/AndroidManifest.xml',
+        'android/build/reports/problems/problems-report.html',
         'android/app/src/main/java/com/bacon/todo/MainActivity.kt',
         'android/app/src/main/java/com/bacon/todo/MainApplication.kt',
         'android/app/src/main/res/drawable/ic_launcher_background.xml',
@@ -382,6 +386,8 @@ describe('built-in plugins', () => {
         'android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp',
         'android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp',
         'android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp',
+        'android/app/src/main/res/values-b+en/strings.xml',
+        'android/app/src/main/res/values-b+es/strings.xml',
         'android/app/src/main/res/values/colors.xml',
         'android/app/src/main/res/values/strings.xml',
         'android/app/src/main/res/values/styles.xml',
@@ -505,6 +511,7 @@ describe('built-in plugins', () => {
 
     // Test the written files...
     const after = getDirFromFS(vol.toJSON(), projectRoot);
+    delete after['android/build/reports/problems/problems-report.html'];
 
     expect(Object.keys(after)).toEqual([
       'node_modules/react-native-maps/package.json',
@@ -513,6 +520,7 @@ describe('built-in plugins', () => {
       'ios/HelloWorld/HelloWorld-Bridging-Header.h',
       'ios/HelloWorld/Images.xcassets/AppIcon.appiconset/Contents.json',
       'ios/HelloWorld/Images.xcassets/Contents.json',
+      'ios/HelloWorld/Images.xcassets/SplashScreenLegacy.imageset/Contents.json',
       'ios/HelloWorld/Info.plist',
       'ios/HelloWorld/SplashScreen.storyboard',
       'ios/HelloWorld/Supporting/Expo.plist',
@@ -528,6 +536,7 @@ describe('built-in plugins', () => {
       'android/app/debug.keystore',
       'android/app/proguard-rules.pro',
       'android/app/src/debug/AndroidManifest.xml',
+      'android/app/src/debugOptimized/AndroidManifest.xml',
       'android/app/src/main/AndroidManifest.xml',
       'android/app/src/main/java/com/helloworld/MainActivity.kt',
       'android/app/src/main/java/com/helloworld/MainApplication.kt',

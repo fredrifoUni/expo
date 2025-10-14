@@ -6,11 +6,88 @@
 
 ### 🎉 New features
 
+- [next] Add exif support ([#39992](https://github.com/expo/expo/pull/39992) by [@Wenszel](https://github.com/Wenszel))
+- [next] Add `Album.get(title)` ([#39717](https://github.com/expo/expo/pull/39717) by [@Wenszel](https://github.com/Wenszel))
+
+### 🐛 Bug fixes
+
+- [next][iOS] Convert `id` to URI format ([#39920](https://github.com/expo/expo/pull/39920) by [@Wenszel](https://github.com/Wenszel))
+- [next][android] Fix `delete()` throwing security exception ([#39914](https://github.com/expo/expo/pull/39914) by [@Wenszel](https://github.com/Wenszel))
+- [next][android] Change default root directory to Pictures ([#39716](https://github.com/expo/expo/pull/39716) by [@Wenszel](https://github.com/Wenszel))
+- [next] Fix `asset.getModificationTime` to return milliseconds ([#39715](https://github.com/expo/expo/pull/39715) by [@Wenszel](https://github.com/Wenszel))
+
+### 💡 Others
+
+- [next] Add test screens ([#39951](https://github.com/expo/expo/pull/39951) by [@Wenszel](https://github.com/Wenszel))
+- [next] Add documentation ([#39754](https://github.com/expo/expo/pull/39754) by [@Wenszel](https://github.com/Wenszel))
+
+## 18.2.0 — 2025-09-16
+
+### 🎉 New features
+
+- [next] Add Query ([#39559](https://github.com/expo/expo/pull/39559) by [@Wenszel](https://github.com/Wenszel))
+
+## 18.1.1 — 2025-09-10
+
+### 💡 Others
+
+- Extracted the read permission check from `FileSystemUtilities` ([#39210](https://github.com/expo/expo/pull/39210) by [@kosmydel](https://github.com/kosmydel))
+
+## 18.1.0 — 2025-09-08
+
+### 🎉 New features
+
+- Add MediaLibrary@Next. ([#38835](https://github.com/expo/expo/pull/38835) by [@Wenszel](https://github.com/wenszel))
+
+## 18.0.6 — 2025-09-02
+
+### 💡 Others
+
+- Change Constants to Constant/Property. ([#38926](https://github.com/expo/expo/pull/38926) by [@jakex7](https://github.com/jakex7))
+
+## 18.0.5 — 2025-08-31
+
+_This version does not introduce any user-facing changes._
+
+## 18.0.4 — 2025-08-27
+
+_This version does not introduce any user-facing changes._
+
+## 18.0.3 — 2025-08-25
+
+_This version does not introduce any user-facing changes._
+
+## 18.0.2 — 2025-08-16
+
+_This version does not introduce any user-facing changes._
+
+## 18.0.1 — 2025-08-15
+
+_This version does not introduce any user-facing changes._
+
+## 18.0.0 — 2025-08-13
+
+### 🛠 Breaking changes
+
+- [Android] Fix `getAssetsAsync` loading performance, add `resolveWithFullInfo` option to control whether to load full EXIF data for images. This is a breaking change for Android apps, as it might break the orientation of images in some cases. ([#37957](https://github.com/expo/expo/pull/37957) by [@kosmydel](https://github.com/kosmydel)).
+
+### 🎉 New features
+
+- [iOS] Add support for filtering assets by media subtype. by [@clarkg](https://github.com/clarkg) ([#36756](https://github.com/expo/expo/pull/36756) by [@clarkg](https://github.com/clarkg))
+
+### 🐛 Bug fixes
+
+- [iOS] Fix tvOS compilation errors. ([#38085](https://github.com/expo/expo/pull/38085) by [@douglowder](https://github.com/douglowder))
+
+### 💡 Others
+
+- [Android] Migrate to coroutines. ([#38193](https://github.com/expo/expo/pull/38193) by [@Wenszel](http://github.com/wenszel))
+
+## 17.1.7 - 2025-06-04
+
 ### 🐛 Bug fixes
 
 - [Android] Fix `deleteAssetsAsync` not working on android 11 or above ([#33211](https://github.com/expo/expo/pull/33211) by [@Zeeshan404](https://github.com/Zeeshan404))
-
-### 💡 Others
 
 ## 17.1.6 — 2025-04-30
 
@@ -37,7 +114,9 @@ _This version does not introduce any user-facing changes._
 
 ## 17.1.1 — 2025-04-09
 
-_This version does not introduce any user-facing changes._
+### 💡 Others
+
+- [Android] Add `granularPermissions` option to config plugin. ([#36142](https://github.com/expo/expo/pull/36142) by [@bang9](https://github.com/bang9))
 
 ## 17.1.0 — 2025-04-04
 

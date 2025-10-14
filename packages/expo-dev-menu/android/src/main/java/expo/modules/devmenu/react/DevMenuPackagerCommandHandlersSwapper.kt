@@ -1,12 +1,12 @@
 package expo.modules.devmenu.react
 
 import android.util.Log
+import com.facebook.react.ReactHost
 import com.facebook.react.devsupport.DevServerHelper
 import com.facebook.react.devsupport.DevSupportManagerBase
 import com.facebook.react.devsupport.interfaces.DevSupportManager
 import com.facebook.react.packagerconnection.JSPackagerClient
 import com.facebook.react.packagerconnection.RequestHandler
-import expo.interfaces.devmenu.ReactHostWrapper
 import expo.modules.devmenu.DevMenuManager
 import expo.modules.devmenu.helpers.getPrivateDeclaredFieldValue
 import expo.modules.devmenu.helpers.setPrivateDeclaredFieldValue
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 class DevMenuPackagerCommandHandlersSwapper {
   fun swapPackagerCommandHandlers(
-    reactHost: ReactHostWrapper,
+    reactHost: ReactHost,
     handlers: Map<String, RequestHandler>
   ) {
     try {
@@ -28,7 +28,7 @@ class DevMenuPackagerCommandHandlersSwapper {
 
       val currentCommandHandlers: Map<String, RequestHandler>? =
         DevSupportManagerBase::class.java.getPrivateDeclaredFieldValue(
-          "mCustomPackagerCommandHandlers",
+          "customPackagerCommandHandlers",
           devSupportManager
         )
 
@@ -36,7 +36,7 @@ class DevMenuPackagerCommandHandlersSwapper {
       newCommandHandlers.putAll(handlers)
 
       DevSupportManagerBase::class.java.setPrivateDeclaredFieldValue(
-        "mCustomPackagerCommandHandlers",
+        "customPackagerCommandHandlers",
         devSupportManager,
         newCommandHandlers
       )
@@ -60,7 +60,7 @@ class DevMenuPackagerCommandHandlersSwapper {
    * The final solution is to spin a background task that monitors if the client is present.
    */
   private fun swapCurrentCommandHandlers(
-    reactHost: ReactHostWrapper,
+    reactHost: ReactHost,
     handlers: Map<String, RequestHandler>
   ) {
     DevMenuManager.coroutineScope.launch {
@@ -70,27 +70,27 @@ class DevMenuPackagerCommandHandlersSwapper {
 
           val devServerHelper: DevServerHelper =
             DevSupportManagerBase::class.java.getPrivateDeclaredFieldValue(
-              "mDevServerHelper",
+              "devServerHelper",
               devSupportManager
             )
 
           val jsPackagerClient: JSPackagerClient? =
             DevServerHelper::class.java.getPrivateDeclaredFieldValue(
-              "mPackagerClient",
+              "packagerClient",
               devServerHelper
             )
 
           if (jsPackagerClient != null) {
             val currentCommandHandlers: Map<String, RequestHandler>? =
               JSPackagerClient::class.java.getPrivateDeclaredFieldValue(
-                "mRequestHandlers",
+                "requestHandlers",
                 jsPackagerClient
               )
 
             val newCommandHandlers = currentCommandHandlers?.toMutableMap() ?: mutableMapOf()
             newCommandHandlers.putAll(handlers)
             JSPackagerClient::class.java.setPrivateDeclaredFieldValue(
-              "mRequestHandlers",
+              "requestHandlers",
               jsPackagerClient,
               newCommandHandlers
             )
