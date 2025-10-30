@@ -108,21 +108,6 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
       field = value
     }
 
-  /**
-   * HACK: Using Dialog for presenting the player in fullscreen instead of Activity.
-   * This is needed as some Ad breaks fail to render with Activity based fullscreen logic
-   *
-   * Issue (with activity fullscreen):
-   * - Start video with IMA ads.
-   * - While the first ad is playing, enter fullscreen.
-   * - That ad finishes and content resumes normally.
-   * - But on the next ad break:
-   *   ❌ No ad is rendered on the screen
-   *   ✅ Content video is paused for the duration of the Ad segment
-   */
-  private val useFullscreenDialog = BuildConfig.useInteractiveMediaAds
-  private var fullscreenPlayerDialog: FullscreenPlayerDialog? = null
-
   var autoEnterPiP: Boolean by IgnoreSameSet(false) { new, _ ->
     applyPiPParams(currentActivity, new, calculateCurrentPipAspectRatio())
   }
@@ -231,39 +216,6 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
     // Set before starting to avoid entering PiP unintentionally
     isInFullscreen = true
 
-    if(useFullscreenDialog){ enterFullscreenDialog() }
-    else { enterFullscreenActivity() }
-
-    onFullscreenEnter(Unit)
-    applyPiPParams(currentActivity, false, calculateCurrentPipAspectRatio())
-  }
-
-  /**
-   * NOTE: This method should only be called by [enterFullscreen].
-   */
-  private fun enterFullscreenDialog(){
-    fullscreenPlayerDialog = FullscreenPlayerDialog(context, playerView, ::exitFullscreen)
-    fullscreenPlayerDialog?.show()
-  }
-
-  /**
-   * NOTE: This method should only be called by [exitFullscreen].
-   */
-  private fun exitFullscreenDialog() {
-    val dialog = fullscreenPlayerDialog ?: return
-    dialog.dismiss()
-
-    // Move playerView back to normal view
-    val playerViewParent = (playerView.parent as? ViewGroup)
-    playerViewParent?.removeView(playerView)
-    addView(playerView, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
-    fullscreenPlayerDialog = null
-  }
-
-  /**
-   * NOTE: This method should only be called by [enterFullscreen].
-   */
-  private fun enterFullscreenActivity() {
     val intent = Intent(context, FullscreenPlayerActivity::class.java)
     intent.putExtra(VideoManager.INTENT_PLAYER_KEY, videoViewId)
     intent.putExtra(FullscreenPlayerActivity.INTENT_FULLSCREEN_OPTIONS_KEY, fullscreenOptions)
@@ -278,6 +230,9 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
       @Suppress("DEPRECATION")
       currentActivity.overridePendingTransition(0, 0)
     }
+
+    onFullscreenEnter(Unit)
+    applyPiPParams(currentActivity, false, calculateCurrentPipAspectRatio())
   }
 
   fun attachPlayer() {
@@ -292,20 +247,11 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
     // Fullscreen uses a different PlayerView instance, because of that we need to manually update the non-fullscreen player icon after exiting
     val fullScreenButton: ImageButton = playerView.findViewById(androidx.media3.ui.R.id.exo_fullscreen)
     fullScreenButton.setImageResource(androidx.media3.ui.R.drawable.exo_icon_fullscreen_enter)
-
-    if(useFullscreenDialog){ exitFullscreenDialog() }
-    else { exitFullscreenActivity() }
+    attachPlayer()
 
     onFullscreenExit(Unit)
     isInFullscreen = false
     applyPiPParams(currentActivity, autoEnterPiP, calculateCurrentPipAspectRatio())
-  }
-
-  /**
-   * NOTE: This method should only be called by [exitFullscreen].
-   */
-  private fun exitFullscreenActivity() {
-    attachPlayer()
   }
 
   fun enterPictureInPicture() {
