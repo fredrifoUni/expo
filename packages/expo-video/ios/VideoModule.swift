@@ -160,6 +160,10 @@ public final class VideoModule: Module {
       Property("playing") { player -> Bool in
         return player.isPlaying
       }
+        
+      Property("playingAd") { player -> Bool in
+        return player.isPlayingAd
+      }
 
       Property("muted") { player -> Bool in
         return player.isMuted

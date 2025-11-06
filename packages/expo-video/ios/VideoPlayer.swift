@@ -35,6 +35,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
     }
   }
   private(set) var isPlaying = false
+  var isPlayingAd: Bool { adsManager?.isPlayingAd == true }
   private(set) var status: PlayerStatus = .idle
 
   var playbackRate: Float = 1.0 {
@@ -329,7 +330,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
     VideoManager.shared.setAppropriateAudioSessionOrWarn()
       
     // Prevent video from starting when ad is actively playing.
-    if newIsPlaying && adsManager?.isPlayingAd == true {
+    if newIsPlaying && isPlayingAd {
       log.warn("VideoPlayer: Prevented video resume because an ad is currently playing.")
       ref.pause()
     }

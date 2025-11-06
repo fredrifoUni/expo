@@ -11,6 +11,11 @@ export declare class VideoPlayer extends SharedObject<VideoPlayerEvents> {
      */
     readonly playing: boolean;
     /**
+     * Boolean value whether the player is currently playing.
+     * > Use `play` and `pause` methods to control the playback.
+     */
+    readonly playingAd: boolean;
+    /**
      * Determines whether the player should automatically replay after reaching the end of the video.
      * @default false
      */
@@ -276,7 +281,7 @@ export type VideoThumbnailOptions = {
  * - `error`: The player has encountered an error while loading or playing the video.
  */
 export type VideoPlayerStatus = 'idle' | 'loading' | 'readyToPlay' | 'error';
-export type VideoSourceObject = {
+export type VideoSource = string | number | null | {
     /**
      * The URI of the video.
      *
@@ -325,7 +330,6 @@ export type VideoSourceObject = {
      */
     contentType?: ContentType;
 };
-export type VideoSource = string | number | null | VideoSourceObject;
 /**
  * Contains information about any errors that the player encountered during the playback
  */

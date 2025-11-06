@@ -78,6 +78,13 @@ class VideoModule : Module() {
           ref.playing
         }
 
+      Property("playingAd")
+        .get { ref: VideoPlayer ->
+          runBlocking(appContext.mainQueue.coroutineContext) {
+            ref.player.isPlayingAd
+          }
+        }
+
       Property("muted")
         .get { ref: VideoPlayer ->
           ref.muted
