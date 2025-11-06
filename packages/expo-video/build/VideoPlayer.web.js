@@ -34,6 +34,7 @@ export default class VideoPlayerWeb extends globalThis.expo.SharedObject {
     _mountedVideos = new Set();
     _audioNodes = new Set();
     playing = false;
+    playingAd = false;
     _muted = false;
     _volume = 1;
     _loop = false;

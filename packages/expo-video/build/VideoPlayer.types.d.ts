@@ -11,7 +11,7 @@ export declare class VideoPlayer extends SharedObject<VideoPlayerEvents> {
      */
     readonly playing: boolean;
     /**
-     * Boolean value whether the player is currently playing.
+     * Boolean value whether the player is currently playing an advertisement.
      * > Use `play` and `pause` methods to control the playback.
      */
     readonly playingAd: boolean;
