@@ -160,6 +160,14 @@ class VideoAdsManagerIMA: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate,
         print("AdsManager Event: " + event.typeString)
         
         switch event.type {
+          case IMAAdEventType.ALL_ADS_COMPLETED:
+            hasMoreAds = false
+            
+            // Trigger video complete if video has finished
+            if(isContentCompleteCalled) {
+              self.delegate?.postrollAdFinished(self)
+            }
+            break
           case IMAAdEventType.LOADED:
             // Queue ads when they are ready
             hasMoreAds = true
@@ -171,13 +179,10 @@ class VideoAdsManagerIMA: NSObject, IMAAdsLoaderDelegate, IMAAdsManagerDelegate,
               enterFullscreen()
             }
             break
-          case IMAAdEventType.ALL_ADS_COMPLETED:
-            hasMoreAds = false
-            
-            // Trigger video complete if video has finished
-            if(isContentCompleteCalled) {
-              self.delegate?.postrollAdFinished(self)
-            }
+          case IMAAdEventType.TAPPED:
+            // Since we don't have player Controls for Ads we need to
+            // always trigger `resume` when the IMA player is pressed
+            adsManager.resume()
             break
           default:
             break
