@@ -29,6 +29,14 @@ export const VideoScreens = [
     },
   },
   {
+    name: 'Advertisement',
+    route: 'video/advertisement',
+    options: {},
+    getComponent() {
+      return optionalRequire(() => require('./VideoAdvertisementScreen'));
+    },
+  },
+  {
     name: 'Changing VideoPlayer output view',
     route: 'video/player_prop',
     options: {},

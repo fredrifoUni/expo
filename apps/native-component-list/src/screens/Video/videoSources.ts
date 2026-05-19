@@ -22,7 +22,7 @@ export const seekOptimizedSource: VideoSource = {
 };
 
 // Fallback: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
-const bigBuckBunnySource: VideoSource = {
+const bigBuckBunnySource: VideoSource & object = {
   uri: 'https://expo-test-media.com/big_buck_bunny/bbb_720p.mp4',
   metadata: {
     title: 'Big Buck Bunny',
@@ -32,7 +32,7 @@ const bigBuckBunnySource: VideoSource = {
 };
 
 // Fallback: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4
-const elephantsDreamSource: VideoSource = {
+const elephantsDreamSource: VideoSource & object = {
   uri: 'https://expo-test-media.com/elephants_dream/ed_720p.mp4',
   metadata: {
     title: 'Elephants Dream',
@@ -42,7 +42,7 @@ const elephantsDreamSource: VideoSource = {
 };
 
 // Fallback https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/hls/TearsOfSteel.m3u8
-export const hlsSource: VideoSource = {
+export const hlsSource: VideoSource & object = {
   uri: 'https://expo-test-media.com/tos_hls/master.m3u8',
   metadata: {
     title: 'Tears Of Steel',
@@ -61,7 +61,7 @@ export const dashSource: VideoSource = {
   },
 };
 
-export const nullSource: VideoSource = {
+export const nullSource: VideoSource & object = {
   metadata: {
     title: 'Null Source',
     artist: '-',
@@ -129,6 +129,7 @@ const videoLabels: string[] = [
   'Null Source',
   'Audio Track',
 ];
+
 const videoSources: VideoSource[] = [
   bigBuckBunnySource,
   elephantsDreamSource,

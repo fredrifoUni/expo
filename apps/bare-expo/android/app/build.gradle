@@ -3,6 +3,7 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
+Boolean useInteractiveMediaAds = findProperty("expo.video.useInteractiveMediaAds") == "true"
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -136,6 +137,11 @@ android {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
 
+    compileOptions {
+        // Required by IMA SDK v3.37.0+
+        if (useInteractiveMediaAds) { coreLibraryDesugaringEnabled = true }
+    }
+
     externalNativeBuild {
         cmake {
             path "src/main/jni/CMakeLists.txt"
@@ -164,6 +170,9 @@ android {
 }
 
 dependencies {
+    // Required by IMA SDK v3.37.0+
+    if (useInteractiveMediaAds) { coreLibraryDesugaring('com.android.tools:desugar_jdk_libs:2.1.5')}
+
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
