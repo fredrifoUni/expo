@@ -11,6 +11,11 @@ export declare class VideoPlayer extends SharedObject<VideoPlayerEvents> {
      */
     readonly playing: boolean;
     /**
+     * Boolean value whether the player is currently playing an advertisement.
+     * > Use `play` and `pause` methods to control the playback.
+     */
+    readonly playingAd: boolean;
+    /**
      * Determines whether the player should automatically replay after reaching the end of the video.
      * @default false
      */
@@ -304,6 +309,12 @@ export type VideoSourceObject = {
      */
     uri?: string;
     /**
+     * Specifies the DRM options which will be used by the player while loading the video.
+     */
+    advertisement?: {
+        googleIMA?: GoogleIMA;
+    };
+    /**
      * The asset ID of a local video asset, acquired with the `require` function.
      * This property is exclusive with the `uri` property. When both are present, the `assetId` will be ignored.
      */
@@ -319,13 +330,6 @@ export type VideoSourceObject = {
      * @platform ios
      */
     metadata?: VideoMetadata;
-    /**
-     * Specifies headers sent with the video request.
-     * > For DRM license headers use the `headers` field of [`DRMOptions`](#drmoptions).
-     * @platform android
-     * @platform ios
-     */
-    headers?: Record<string, string>;
     /**
      * Specifies whether the player should use caching for the video.
      * > Due to platform limitations, the cache cannot be used with HLS video sources on iOS. Caching DRM-protected videos is not supported on Android and iOS.
@@ -381,6 +385,15 @@ export type VideoMetadata = {
  * - iOS supports FairPlay.
  */
 export type DRMType = 'clearkey' | 'fairplay' | 'playready' | 'widevine';
+/**
+ * Specifies the IMA configuration which will be used with the loaded video.
+ * @platform android
+ * @platform ios
+ */
+export type GoogleIMA = {
+    adTagUri: string;
+    id?: string;
+};
 /**
  * Specifies DRM options which will be used by the player while loading the video.
  */
