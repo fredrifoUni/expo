@@ -387,7 +387,6 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     // Run on global scope (not appContext.mainQueue) so that reloading doesn't cancel the release process
     // https://github.com/expo/expo/blob/cdf592a7fea56fc01b0149e9b2e5dbd294bcdc4c/packages/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt#L277-L279
     GlobalScope.launch(Dispatchers.Main) {
-      currentPlayerView.set(null)
       firstFrameEventGenerator.release()
       player.removeListener(playerListener)
       player.removeAnalyticsListener(analyticsListener)
@@ -424,14 +423,14 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     currentVideoView = videoView
 
     // Prepare videoPlayer
-    if (!isReadyToLoad && playerView !== null) { prepareToLoad() }
+    if (!isReadyToLoad && currentVideoView?.playerView !== null) { prepareToLoad() }
   }
 
   fun prepare() {
     if(!isReadyToLoad) { return }
 
     // Ensure there is a playerView attached to the video player
-    val playerView = currentPlayerView.get()
+    val playerView = currentVideoView?.playerView
     if(playerView === null) { return }
 
     availableVideoTracks = listOf()
