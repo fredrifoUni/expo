@@ -6,11 +6,36 @@ plugins {
 group = 'host.exp.exponent'
 version = '56.1.1'
 
+Boolean useInteractiveMediaAds = findProperty("expo.video.useInteractiveMediaAds") == "true"
+
 android {
   namespace "expo.modules.video"
   defaultConfig {
     versionCode 1
     versionName '56.1.1'
+
+    // Add Proguard rules to compiler
+    // Prevents reflection based classes from being removed during compilation
+    consumerProguardFiles("proguard-rules.pro")
+
+    // Add constants to the generated BuildConfig class so that it's accessible in Kotlin and Java files
+    buildConfigField("boolean", "useInteractiveMediaAds", "${useInteractiveMediaAds}")
+
+    sourceSets {
+      main {
+        // Conditionally include the IMA specific files in the compiler output
+        if (useInteractiveMediaAds) {
+          java.srcDirs += "plugins/interactiveMediaAds"
+        } else {
+          java.exclude "plugins/interactiveMediaAds/**"
+        }
+      }
+    }
+  }
+
+  compileOptions {
+    // Required by IMA SDK v3.37.0+
+    if(useInteractiveMediaAds){ coreLibraryDesugaringEnabled = true }
   }
 }
 
@@ -25,6 +50,14 @@ dependencies {
   implementation "androidx.media3:media3-exoplayer-hls:${androidxMedia3Version}"
   implementation "androidx.media3:media3-ui:${androidxMedia3Version}"
   implementation "androidx.media3:media3-datasource-okhttp:${androidxMedia3Version}"
+
+  // Load optional plugin dependencies
+  if(useInteractiveMediaAds){
+    implementation "androidx.media3:media3-exoplayer-ima:${androidxMedia3Version}"
+    
+    // Required by IMA SDK v3.37.0+
+    coreLibraryDesugaring('com.android.tools:desugar_jdk_libs:2.1.5')
+  }
 
   def fragment_version = "1.8.9"
   implementation "androidx.fragment:fragment:$fragment_version"

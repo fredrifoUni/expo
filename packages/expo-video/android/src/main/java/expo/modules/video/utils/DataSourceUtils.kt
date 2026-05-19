@@ -10,7 +10,6 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.source.MediaSource
 import expo.modules.video.records.VideoSource
 import expo.modules.video.managers.VideoManager
 import okhttp3.OkHttpClient
@@ -53,20 +52,20 @@ fun buildCacheDataSourceFactory(context: Context, videoSource: VideoSource): Dat
   }
 }
 
-fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Factory): MediaSource.Factory {
+fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Factory): DefaultMediaSourceFactory {
   return DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)
 }
 
 @OptIn(UnstableApi::class)
-fun buildExpoVideoMediaSource(context: Context, videoSource: VideoSource): MediaSource {
+fun buildExpoVideoMediaSource(context: Context, videoSource: VideoSource): DefaultMediaSourceFactory {
   val dataSourceFactory = if (videoSource.useCaching) {
     buildCacheDataSourceFactory(context, videoSource)
   } else {
     buildBaseDataSourceFactory(context, videoSource)
   }
+
   val mediaSourceFactory = buildMediaSourceFactory(context, dataSourceFactory)
-  val mediaItem = videoSource.toMediaItem(context)
-  return mediaSourceFactory.createMediaSource(mediaItem)
+  return mediaSourceFactory
 }
 
 private fun getApplicationName(context: Context): String {
