@@ -3,34 +3,105 @@
 import SwiftUI
 import ExpoModulesCore
 
-final class SectionProps: ExpoSwiftUI.ViewProps, CommonViewModifierProps {
-  @Field var fixedSize: Bool?
-  @Field var frame: FrameOptions?
-  @Field var padding: PaddingOptions?
-  @Field var testID: String?
-  @Field var modifiers: ModifierArray?
-
+final class SectionProps: UIBaseViewProps {
   @Field var title: String?
+  @Field var isExpanded: Bool?
+  var onIsExpandedChange = EventDispatcher()
 }
 
 internal struct SectionView: ExpoSwiftUI.View {
   @ObservedObject var props: SectionProps
+  @State private var isExpanded: Bool = true
+
+  var body: some View {
+    if #available(iOS 17.0, macOS 14.0, tvOS 17.0, *), let propIsExpanded = props.isExpanded {
+      collapsibleSection
+        .onAppear {
+          isExpanded = props.isExpanded ?? true
+        }
+        .onChange(of: props.isExpanded) { newValue in
+          if let newValue {
+            isExpanded = newValue
+          }
+        }
+        .onChange(of: isExpanded) { newValue in
+          if propIsExpanded != newValue {
+            props.onIsExpandedChange(["isExpanded": newValue])
+          }
+        }
+    } else {
+      regularSection
+    }
+  }
 
   @ViewBuilder
-  private var section: some View {
+  private var regularSection: some View {
     if let title = props.title, !title.isEmpty {
-      Section(header: Text(title).textCase(nil)) {
-        Children()
+      if let footerView {
+        Section {
+          contentChildren
+        } header: {
+          Text(title)
+        } footer: {
+          footerView
+        }
+      } else {
+        Section(title) {
+          contentChildren
+        }
+      }
+    } else if let headerView, let footerView {
+      Section {
+        contentChildren
+      } header: {
+        headerView
+      } footer: {
+        footerView
+      }
+    } else if let headerView {
+      Section {
+        contentChildren
+      } header: {
+        headerView
+      }
+    } else if let footerView {
+      Section {
+        contentChildren
+      } footer: {
+        footerView
       }
     } else {
       Section {
-        Children()
+        contentChildren
       }
     }
   }
 
-  var body: some View {
-    section
-      .modifier(CommonViewModifiers(props: props))
+  @available(iOS 17.0, macOS 14.0, tvOS 17.0, *)
+  @ViewBuilder
+  private var collapsibleSection: some View {
+    if let title = props.title, !title.isEmpty {
+      Section(title, isExpanded: $isExpanded) {
+        contentChildren
+      }
+    } else {
+      Section(isExpanded: $isExpanded) {
+        contentChildren
+      } header: {
+        headerView
+      }
+    }
+  }
+  
+  private var contentChildren: SlotView? {
+    props.children?.slot("content")
+  }
+
+  private var headerView: SlotView? {
+    props.children?.slot("header")
+  }
+
+  private var footerView: SlotView? {
+    props.children?.slot("footer")
   }
 }

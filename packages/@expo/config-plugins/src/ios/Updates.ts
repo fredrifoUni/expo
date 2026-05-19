@@ -1,12 +1,12 @@
-import { ExpoConfig } from '@expo/config-types';
+import type { ExpoConfig } from '@expo/config-types';
 
 import { createBuildPodfilePropsConfigPlugin } from './BuildProperties';
-import { ExpoPlist } from './IosConfig.types';
-import { ConfigPlugin } from '../Plugin.types';
+import type { ExpoPlist } from './IosConfig.types';
+import type { ConfigPlugin } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
 import { withPlugins } from '../plugins/withPlugins';
+import type { ExpoConfigUpdates } from '../utils/Updates';
 import {
-  ExpoConfigUpdates,
   getDisableAntiBrickingMeasures,
   getExpoUpdatesPackageVersion,
   getRuntimeVersionNullableAsync,
@@ -16,6 +16,7 @@ import {
   getUpdatesRequestHeaders,
   getUpdatesEnabled,
   getUpdatesTimeout,
+  getUpdatesBsdiffPatchSupportEnabled,
   getUpdatesUseEmbeddedUpdate,
   getUpdateUrl,
 } from '../utils/Updates';
@@ -32,6 +33,7 @@ export enum Config {
   CODE_SIGNING_CERTIFICATE = 'EXUpdatesCodeSigningCertificate',
   CODE_SIGNING_METADATA = 'EXUpdatesCodeSigningMetadata',
   DISABLE_ANTI_BRICKING_MEASURES = 'EXUpdatesDisableAntiBrickingMeasures',
+  ENABLE_BSDIFF_PATCH_SUPPORT = 'EXUpdatesEnableBsdiffPatchSupport',
 }
 
 // when making changes to this config plugin, ensure the same changes are also made in eas-cli and build-tools
@@ -137,6 +139,8 @@ export async function setUpdatesConfigAsync(
   } else {
     delete newExpoPlist[Config.DISABLE_ANTI_BRICKING_MEASURES];
   }
+
+  newExpoPlist[Config.ENABLE_BSDIFF_PATCH_SUPPORT] = getUpdatesBsdiffPatchSupportEnabled(config);
 
   return await setVersionsConfigAsync(projectRoot, config, newExpoPlist);
 }

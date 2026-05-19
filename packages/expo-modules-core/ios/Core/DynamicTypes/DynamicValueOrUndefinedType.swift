@@ -1,10 +1,12 @@
 // Copyright 2021-present 650 Industries. All rights reserved.
 
+import ExpoModulesJSI
+
 internal struct DynamicValueOrUndefinedType<InnerType: AnyArgument>: AnyDynamicType {
   let innerType: InnerType.Type = InnerType.self
   let dynamicInnerType: AnyDynamicType = InnerType.getDynamicType()
 
-  func wraps<InnerType>(_ type: InnerType.Type) -> Bool {
+  func wraps<AnyInnerType>(_ type: AnyInnerType.Type) -> Bool {
     return innerType == type
   }
 
@@ -16,8 +18,8 @@ internal struct DynamicValueOrUndefinedType<InnerType: AnyArgument>: AnyDynamicT
     if jsValue.isUndefined() {
       return ValueOrUndefined<InnerType>.undefined
     }
-
-    return try dynamicInnerType.cast(jsValue: jsValue, appContext: appContext)
+    let unwrapped = try dynamicInnerType.cast(jsValue: jsValue, appContext: appContext) as! InnerType
+    return ValueOrUndefined<InnerType>.value(unwrapped: unwrapped)
   }
 
   func cast<ValueType>(_ value: ValueType, appContext: AppContext) throws -> Any {
@@ -38,8 +40,8 @@ internal struct DynamicValueOrUndefinedType<InnerType: AnyArgument>: AnyDynamicT
   }
 
   func castToJS<ValueType>(_ value: ValueType, appContext: AppContext) throws -> JavaScriptValue {
-    if let jaValue = value as? JavaScriptValue {
-      return jaValue
+    if let jsValue = value as? JavaScriptValue {
+      return jsValue
     }
     return try dynamicInnerType.castToJS(value, appContext: appContext)
   }

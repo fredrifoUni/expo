@@ -8,6 +8,7 @@ import { RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-
 
 import * as ContactUtils from './ContactUtils';
 import ContactsList from './ContactsList';
+import { BodyText } from '../../components/BodyText';
 import Button from '../../components/Button';
 import HeaderContainerRight from '../../components/HeaderContainerRight';
 import HeaderIconButton from '../../components/HeaderIconButton';
@@ -158,6 +159,15 @@ function ContactsView({ navigation }: Props) {
     setRefreshing(false);
   };
 
+  const checkContactsAsync = React.useCallback(async () => {
+    try {
+      const hasContactsResult = await Contacts.hasContactsAsync();
+      alert(`Has contacts: ${hasContactsResult}`);
+    } catch (error) {
+      alert(`Error checking contacts: ${error}`);
+    }
+  }, []);
+
   const changeAccess = React.useCallback(async () => {
     await Contacts.presentAccessPickerAsync();
     await loadAsync({}, true);
@@ -210,10 +220,18 @@ function ContactsView({ navigation }: Props) {
 
                 setSelectedContact(contact);
               }}>
-              <Text>Select a contact</Text>
+              <BodyText>Select a contact</BodyText>
             </TouchableOpacity>
 
             {selectedContact && <MonoText>{JSON.stringify(selectedContact, null, 2)}</MonoText>}
+
+            <View style={styles.infoSection}>
+              <TouchableOpacity onPress={checkContactsAsync} style={styles.infoButton}>
+                <Text style={styles.infoButtonText}>
+                  Check if contacts exist (hasContactsAsync)
+                </Text>
+              </TouchableOpacity>
+            </View>
           </>
         )}
       />
@@ -235,5 +253,23 @@ const styles = StyleSheet.create({
   },
   changeAccessButton: {
     margin: 15,
+  },
+  infoSection: {
+    marginTop: 20,
+    marginBottom: 10,
+    padding: 15,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+  },
+  infoButton: {
+    backgroundColor: Colors.tintColor,
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+  infoButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });

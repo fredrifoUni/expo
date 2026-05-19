@@ -1,11 +1,15 @@
+import { ImmutableHeaders } from '../ImmutableRequest';
 export { StatusError } from './error';
-/** Returns the current request's origin URL.
+/** Returns the current request's URL.
  *
- * This typically returns the request's `Origin` header, which contains the
- * request origin URL or defaults to `null`.
+ * This typically returns the request's URL, or on certain platform,
+ * the origin of the request. This does not use the `Origin` header
+ * in development as it may contain an untrusted value.
  * @returns A request origin
  */
 export declare function origin(): string | null;
+/** Returns an immutable copy of the current request's headers. */
+export declare function requestHeaders(): ImmutableHeaders;
 /** Returns the request's environment, if the server runtime supports this.
  *
  * In EAS Hosting, the returned environment name is the
@@ -35,4 +39,13 @@ export declare function runTask(fn: () => Promise<unknown>): void;
  *
  * @param fn - A task function to execute after the request handler has finished.
  */
-export declare function deferTask(fn: () => Promise<unknown>): void;
+export declare function deferTask(fn: () => Promise<unknown> | void): void;
+/** Sets headers on the `Response` the current request handler will return.
+ *
+ * This only updates the headers once the request handler has finished and resolved a `Response`.
+ * It will either receive a set of `Headers` or an equivalent object containing headers, which will
+ * be merged into the response's headers once it's returned.
+ *
+ * @param updateHeaders - A `Headers` object, a record of headers, or a function that receives `Headers` to be updated or can return a `Headers` object that will be merged into the response headers.
+ */
+export declare function setResponseHeaders(updateHeaders: Headers | Record<string, string | string[]> | ((headers: Headers) => Headers | void)): void;

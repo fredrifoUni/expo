@@ -7,7 +7,7 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.NativeMap
 import expo.modules.core.interfaces.DoNotStrip
 import expo.modules.kotlin.AppContext
-import expo.modules.kotlin.RuntimeContext
+import expo.modules.kotlin.runtime.Runtime
 import expo.modules.kotlin.classcomponent.ClassDefinitionData
 import expo.modules.kotlin.jni.Destructible
 import expo.modules.kotlin.jni.ExpectedType
@@ -44,6 +44,7 @@ class JSDecoratorsBridgingObject(jniDeallocator: JNIDeallocator) : Destructible 
     takesOwner: Boolean,
     enumerable: Boolean,
     desiredTypes: Array<ExpectedType>,
+    cppReturnType: Int,
     body: JNIFunctionBody
   )
 
@@ -78,6 +79,7 @@ class JSDecoratorsBridgingObject(jniDeallocator: JNIDeallocator) : Destructible 
   external fun registerClass(
     name: String,
     prototypeDecorator: JSDecoratorsBridgingObject,
+    constructorDecorator: JSDecoratorsBridgingObject,
     takesOwner: Boolean,
     ownerClass: Class<*>?,
     isSharedRef: Boolean,
@@ -97,13 +99,13 @@ class JSDecoratorsBridgingObject(jniDeallocator: JNIDeallocator) : Destructible 
     )
   }
 
-  override fun deallocate() {
+  @Throws(Throwable::class)
+  protected fun finalize() {
     mHybridData.resetNative()
   }
 
-  @Throws(Throwable::class)
-  protected fun finalize() {
-    deallocate()
+  override fun getHybridDataForJNIDeallocator(): HybridData {
+    return mHybridData
   }
 
   fun ObjectDefinitionData.exportConstants() {
@@ -153,7 +155,7 @@ class JSDecoratorsBridgingObject(jniDeallocator: JNIDeallocator) : Destructible 
 
   fun List<ClassDefinitionData>.exportClasses(
     appContext: AppContext,
-    runtimeContext: RuntimeContext
+    runtime: Runtime
   ) {
     if (isEmpty()) {
       return
@@ -161,17 +163,18 @@ class JSDecoratorsBridgingObject(jniDeallocator: JNIDeallocator) : Destructible 
 
     trace("Attaching classes") {
       forEach { classDefinition ->
-        classDefinition.exportClass(appContext, runtimeContext)
+        classDefinition.exportClass(appContext, runtime)
       }
     }
   }
 
   fun ClassDefinitionData.exportClass(
     appContext: AppContext,
-    runtimeContext: RuntimeContext
+    runtime: Runtime
   ) {
     trace("Attaching class $name") {
-      val prototypeDecorator = JSDecoratorsBridgingObject(runtimeContext.jniDeallocator)
+      val prototypeDecorator = JSDecoratorsBridgingObject(runtime.deallocator)
+      val constructorDecorator = JSDecoratorsBridgingObject(runtime.deallocator)
 
       prototypeDecorator.apply {
         objectDefinition.exportConstants()
@@ -179,12 +182,17 @@ class JSDecoratorsBridgingObject(jniDeallocator: JNIDeallocator) : Destructible 
         objectDefinition.exportProperties(appContext)
       }
 
+      constructorDecorator.apply {
+        exportStaticFunctions(name, appContext)
+      }
+
       val constructor = constructor
-      val ownerClass = (constructor.ownerType?.classifier as? kotlin.reflect.KClass<*>)?.java
+      val ownerClass = constructor.ownerType?.jClass
 
       registerClass(
         name,
         prototypeDecorator,
+        constructorDecorator,
         constructor.takesOwner,
         ownerClass,
         isSharedRef,
@@ -194,21 +202,34 @@ class JSDecoratorsBridgingObject(jniDeallocator: JNIDeallocator) : Destructible 
     }
   }
 
+  fun ClassDefinitionData.exportStaticFunctions(objectName: String, appContext: AppContext) {
+    val staticFunctions = staticFunctions
+    if (!staticFunctions.hasNext()) {
+      return
+    }
+
+    trace("Attaching static functions") {
+      staticFunctions.forEach { staticFunction ->
+        staticFunction.attachToJSObject(appContext, this@JSDecoratorsBridgingObject, objectName)
+      }
+    }
+  }
+
   fun Map<String, ViewManagerDefinition>.exportViewPrototypes(
     modulesName: String,
     appContext: AppContext,
-    runtimeContext: RuntimeContext
+    runtime: Runtime
   ) {
     if (isEmpty()) {
       return
     }
 
     trace("Attaching view prototypes") {
-      val viewPrototypesDecorator = JSDecoratorsBridgingObject(runtimeContext.jniDeallocator)
+      val viewPrototypesDecorator = JSDecoratorsBridgingObject(runtime.deallocator)
 
       for ((key, definition) in this) {
         viewPrototypesDecorator.apply {
-          definition.exportViewPrototype(modulesName, key, appContext, runtimeContext)
+          definition.exportViewPrototype(modulesName, key, appContext, runtime)
         }
       }
 
@@ -220,7 +241,7 @@ class JSDecoratorsBridgingObject(jniDeallocator: JNIDeallocator) : Destructible 
     moduleName: String,
     viewKey: String,
     appContext: AppContext,
-    runtimeContext: RuntimeContext
+    runtime: Runtime
   ) {
     val functions = asyncFunctions
     if (functions.isEmpty()) {
@@ -228,7 +249,7 @@ class JSDecoratorsBridgingObject(jniDeallocator: JNIDeallocator) : Destructible 
     }
 
     trace("Attaching view prototype for $name") {
-      val prototype = JSDecoratorsBridgingObject(runtimeContext.jniDeallocator)
+      val prototype = JSDecoratorsBridgingObject(runtime.deallocator)
 
       functions.forEach { function ->
         function.attachToJSObject(appContext, prototype, name)

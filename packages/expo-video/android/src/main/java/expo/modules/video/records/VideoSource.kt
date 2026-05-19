@@ -19,8 +19,10 @@ import expo.modules.video.enums.ContentType
 import java.io.Serializable
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import expo.modules.video.interfaces.AdManager
+import expo.modules.kotlin.types.OptimizedRecord
 
 @OptIn(UnstableApi::class)
+@OptimizedRecord
 class VideoSource(
   @Field var uri: Uri? = null,
   @Field var advertisement: Advertisement? = null,

@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ImmutableRequest = void 0;
+exports.ImmutableRequest = exports.ImmutableHeaders = void 0;
 exports.assertRuntimeFetchAPISupport = assertRuntimeFetchAPISupport;
 const getHeadersConstructor = () => {
     if (typeof Headers !== 'undefined') {
@@ -40,6 +40,7 @@ class ImmutableHeaders extends getHeadersConstructor() {
         this.#throwImmutableError();
     }
 }
+exports.ImmutableHeaders = ImmutableHeaders;
 /**
  * An immutable version of the Fetch API's [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object which prevents mutations to the request body and headers.
  */
@@ -98,13 +99,12 @@ class ImmutableRequest {
     #throwImmutableBodyError() {
         throw new Error('This operation is not allowed on immutable requests.');
     }
-    /**
-     * The request body is not accessible in immutable requests.
-     */
-    // @ts-expect-error This ensures JavaScript users cannot mutate the request body
-    // eslint-disable-next-line getter-return
+    /** The request body is not accessible in immutable requests. */
     get body() {
-        this.#throwImmutableBodyError();
+        // NOTE(@kitten): `new Request(req.url, req)` may internally access `req.body` to copy the request
+        // We can pretend it is `null`. Marking `bodyUsed` makes no sense here as it manipulates the subsequent
+        // code paths, but pretending there was no body should be safe
+        return null;
     }
     async arrayBuffer() {
         this.#throwImmutableBodyError();

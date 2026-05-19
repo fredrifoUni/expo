@@ -14,5 +14,10 @@ export interface ContentUnavailableViewProps extends CommonViewModifierProps {
      */
     description?: string;
 }
-export declare function ContentUnavailableView(props: ContentUnavailableViewProps): import("react").JSX.Element;
+/**
+ * Displays a native Swift UI ContentUnavailableView.
+ * @platform ios 17.0+
+ * @platform tvos 17.0+
+ */
+export declare function ContentUnavailableView(props: ContentUnavailableViewProps): import("react/jsx-runtime").JSX.Element;
 //# sourceMappingURL=index.d.ts.map

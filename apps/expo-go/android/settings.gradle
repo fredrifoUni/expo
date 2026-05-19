@@ -33,19 +33,16 @@ expoAutolinking.searchPaths = [
 ]
 expoAutolinking.exclude = [
   'expo-module-template',
-  'expo-module-template-local',
   'react-native-reanimated',
-  'expo-dev-menu-interface',
-  'expo-dev-menu',
   'expo-dev-launcher',
   'expo-dev-client',
   'expo-maps',
   'expo-network-addons',
   'expo-splash-screen',
-  'expo-blob',
-  '@expo/ui',
   'expo-mesh-gradient',
-  '@expo/app-integrity'
+  '@expo/app-integrity',
+  '@expo/home',
+  'expo-widgets'
 ]
 
 expoAutolinking.useExpoModules()
@@ -58,7 +55,6 @@ apply from: new File(rootDir, "versioning_linking.gradle")
 includeBuild(new File(rootDir, "../../../react-native-lab/react-native/packages/gradle-plugin").toString())
 
 include ':expoview'
-include ':tools'
 
 include(":packages")
 project(":packages").projectDir = file("$rootDir/../../../react-native-lab/react-native/packages") // Gradle 9 require us to include this

@@ -1,4 +1,4 @@
-import { Android, ExpoConfig, IOS } from '@expo/config-types';
+import type { Android, ExpoConfig, IOS } from '@expo/config-types';
 import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
 import fs from 'fs';
 import { boolish } from 'getenv';
@@ -143,6 +143,15 @@ export function getUpdatesUseEmbeddedUpdate(config: Pick<ExpoConfigUpdates, 'upd
     return config.updates.useEmbeddedUpdate;
   }
 
+  return true;
+}
+
+export function getUpdatesBsdiffPatchSupportEnabled(
+  config: Pick<ExpoConfigUpdates, 'updates'>
+): boolean {
+  if (config.updates?.enableBsdiffPatchSupport !== undefined) {
+    return config.updates.enableBsdiffPatchSupport;
+  }
   return true;
 }
 

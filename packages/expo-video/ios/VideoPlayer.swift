@@ -11,6 +11,8 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
   lazy var subtitles: VideoPlayerSubtitles = VideoPlayerSubtitles(owner: self)
   private var dangerousPropertiesStore = DangerousPropertiesStore()
   lazy var audioTracks: VideoPlayerAudioTracks = VideoPlayerAudioTracks(owner: self)
+  lazy var seeker: VideoPlayerSeeker = VideoPlayerSeeker(player: self)
+  private var tracksLoadingTask: Task<(), Never>?
 
       
   var adsManager: VideoAdsManager? {
@@ -67,7 +69,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
         return
       }
 
-      ref.seek(to: timeToSeek, toleranceBefore: .zero, toleranceAfter: .zero)
+      seeker.seek(to: timeToSeek)
     }
   }
 
@@ -203,6 +205,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
     VideoManager.shared.unregister(videoPlayer: self)
 
     videoSourceLoader.cancelCurrentTask()
+    tracksLoadingTask?.cancel()
 
     // We have to replace from the main thread because of KVOs (see comment in VideoSourceLoader).
     // Moreover, in this case we have to keep a strong reference to AVPlayer and remove its item
@@ -366,6 +369,11 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
       
     // Handle video end logic or wait for ads to complete
     if !shouldShowPostRoll { onVideoAndAdsCompleted() }
+    safeEmit(event: "playToEnd")
+    if loop {
+      seeker.seek(to: .zero)
+      self.ref.play()
+    }
   }
     
   func onVideoAndAdsCompleted() {
@@ -394,29 +402,20 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
     // Prepare Ads for the new content
     // TODO: This should be called conditionally even though the stub class handles it properly.
     adsManager?.prepareAds(player: player, videoPlayerItem: playerItem as? VideoPlayerItem, videoView: videoView)
-      
-    // This event means that a new player item has been loaded so the subtitle tracks should change
-    let oldTracks = subtitles.availableSubtitleTracks
-    self.subtitles.onNewPlayerItemLoaded(playerItem: playerItem)
-    let payload = SubtitleTracksChangedEventPayload(
-      availableSubtitleTracks: subtitles.availableSubtitleTracks,
-      oldAvailableSubtitleTracks: oldTracks
-    )
-    safeEmit(event: "availableSubtitleTracksChange", payload: payload)
-
-    // Handle audio tracks
-    let oldAudioTracks = audioTracks.availableAudioTracks
-    self.audioTracks.onNewPlayerItemLoaded(playerItem: playerItem)
-    let audioPayload = AudioTracksChangedEventPayload(
-      availableAudioTracks: audioTracks.availableAudioTracks,
-      oldAvailableAudioTracks: oldAudioTracks
-    )
-    safeEmit(event: "availableAudioTracksChange", payload: audioPayload)
-
-    Task {
+    
+    // Loading tracks requires doing some long tasks, this callback can be called from the main thread
+    // Which could cause hangs
+    tracksLoadingTask?.cancel()
+    tracksLoadingTask = Task {
+      let audioPayload = await self.audioTracks.onNewPlayerItemLoaded(playerItem: playerItem)
+      let subtitlesChangePayload = await self.subtitles.onNewPlayerItemLoaded(playerItem: playerItem)
       let videoPlayerItem: VideoPlayerItem? = playerItem as? VideoPlayerItem
-      // Those properties will be already loaded 99.9% of time, so the event delay should be almost 0
+
       availableVideoTracks = await videoPlayerItem?.videoTracks ?? []
+
+      guard !Task.isCancelled else {
+        return
+      }
 
       let videoSourceLoadedPayload = VideoSourceLoadedEventPayload(
         videoSource: videoPlayerItem?.videoSource,
@@ -425,7 +424,10 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
         availableSubtitleTracks: subtitles.availableSubtitleTracks,
         availableAudioTracks: audioTracks.availableAudioTracks
       )
+
       safeEmit(event: "sourceLoad", payload: videoSourceLoadedPayload)
+      safeEmit(event: "availableSubtitleTracksChange", payload: subtitlesChangePayload)
+      safeEmit(event: "availableAudioTracksChange", payload: audioPayload)
     }
   }
 
@@ -457,7 +459,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
 
   func safeEmit(event: String, payload: Record? = nil) {
     if self.appContext != nil {
-      self.emit(event: event, arguments: payload?.toDictionary(appContext: appContext))
+      self.emit(event: event, payload: payload?.toDictionary(appContext: appContext))
     }
   }
     

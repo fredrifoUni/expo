@@ -55,14 +55,16 @@ describe('exports static', () => {
       expect(html.querySelector('[data-testid="styled-text"]')?.textContent).toEqual('Hello World');
     });
 
-    ['other', 'welcome-to-the-universe'].forEach((post) => {
-      it(`can serve up statically generated html for post: ${post}`, async () => {
+    ['other', 'welcome-to-the-universe'].forEach((post) => {});
+    it.each([{ post: 'other' }, { post: 'welcome-to-the-universe' }])(
+      `can serve up statically generated html for post: $post`,
+      async ({ post }) => {
         const html = getHtml(await server.fetchAsync(`/${post}`).then((res) => res.text()));
         expect(html.querySelector('[data-testid="post-text"]')?.textContent).toEqual(
           `Post: ${post}`
         );
-      });
-    });
+      }
+    );
 
     it(`gets a 404`, async () => {
       expect(await server.fetchAsync('/missing-route').then((res) => res.status)).toBe(404);
@@ -159,7 +161,7 @@ describe('exports static', () => {
       .querySelectorAll('script')
       .filter((script) => !!script.attributes.src)
       .forEach((script) => {
-        const jsBundle = fs.readFileSync(path.join(outputDir, script.attributes.src), 'utf8');
+        const jsBundle = fs.readFileSync(path.join(outputDir, script.attributes.src ?? ''), 'utf8');
 
         // Ensure the bundle is valid
         expect(jsBundle).toMatch('__BUNDLE_START_TIME__');
@@ -195,8 +197,8 @@ describe('exports static', () => {
       return link.attributes.as !== 'font';
     });
     expect(links.length).toBe(
-      // Global CSS, CSS Module, Vaul Modal CSS (and entry point)
-      6
+      // Global CSS, CSS Module
+      4
     );
 
     const linkStrings = links.map((l) => l.toString());
@@ -209,13 +211,6 @@ describe('exports static', () => {
         ),
         expect.stringMatching(
           /<link rel="stylesheet" href="\/_expo\/static\/css\/global-(?<md5>[0-9a-fA-F]{32})\.css">/
-        ),
-        // Modal CSS module extracted from Vaul modal
-        expect.stringMatching(
-          /<link rel="preload" href="\/_expo\/static\/css\/modal\.module-(?<md5>[0-9a-fA-F]{32})\.css" as="style">/
-        ),
-        expect.stringMatching(
-          /<link rel="stylesheet" href="\/_expo\/static\/css\/modal\.module-(?<md5>[0-9a-fA-F]{32})\.css">/
         ),
         // Example test CSS module (preload + stylesheet)
         expect.stringMatching(
@@ -232,14 +227,14 @@ describe('exports static', () => {
     expect(globalPreload).toBeDefined();
     if (globalPreload) {
       expect(
-        fs.readFileSync(path.join(outputDir, globalPreload.attributes.href), 'utf-8')
+        fs.readFileSync(path.join(outputDir, globalPreload.attributes.href ?? ''), 'utf-8')
       ).toMatchInlineSnapshot(`"div{background:#0ff}"`);
     }
 
     // CSS Module
     expect(
-      fs.readFileSync(path.join(outputDir, links[3].attributes.href), 'utf-8')
-    ).toMatchInlineSnapshot(`"div{background:#0ff}"`);
+      fs.readFileSync(path.join(outputDir, links[2]?.attributes.href ?? ''), 'utf-8')
+    ).toMatchInlineSnapshot(`".HPV33q_text{color:#1e90ff}"`);
 
     const styledHtml = await getPageHtml(outputDir, 'styled.html');
 
@@ -256,16 +251,16 @@ describe('exports static', () => {
 
     const links = indexHtml.querySelectorAll('html > head > link[as="font"]');
     expect(links.length).toBe(1);
-    expect(links[0].attributes.href).toBe(
+    expect(links[0]?.attributes.href).toBe(
       '/assets/__e2e__/static-rendering/sweet.7c9263d3cffcda46ff7a4d9c00472c07.ttf'
     );
 
-    expect(links[0].toString()).toMatch(
+    expect(links[0]?.toString()).toMatch(
       /<link rel="preload" href="\/assets\/__e2e__\/static-rendering\/sweet\.[a-zA-Z0-9]{32}\.ttf" as="font" crossorigin="" >/
     );
 
     expect(
-      fs.readFileSync(path.join(outputDir, links[0].attributes.href.replace(/\?.*$/, '')), 'utf-8')
+      fs.readFileSync(path.join(outputDir, links[0]?.attributes.href?.replace(/\?.*$/, '') ?? ''), 'utf-8')
     ).toBeDefined();
 
     // Ensure the font is used

@@ -10,7 +10,9 @@ function setupRuntime() {
             enumerable: true,
             configurable: true,
             get() {
-                return scope_1.scopeRef.current?.getStore()?.origin || 'null';
+                // NOTE(@kitten): By convention, this property must be a string, and runtimes typically
+                // choose to stringify "null" when the value is not available
+                return scope_1.scopeRef.current?.getStore()?.origin ?? 'null';
             },
         });
     }
@@ -40,14 +42,19 @@ function createRequestScope(scopeDefinition, makeRequestAPISetup) {
         scope_1.scopeRef.current = scopeDefinition;
         const setup = makeRequestAPISetup(...args);
         const { waitUntil = defaultWaitUntil } = setup;
+        const deferredTasks = [];
+        const responseHeadersUpdates = [];
         const scope = {
             ...setup,
             origin: setup.origin,
             environment: setup.environment,
+            requestHeaders: setup.requestHeaders,
             waitUntil,
             deferTask: setup.deferTask,
+            setResponseHeaders(updateHeaders) {
+                responseHeadersUpdates.push(updateHeaders);
+            },
         };
-        const deferredTasks = [];
         if (!scope.deferTask) {
             scope.deferTask = function deferTask(fn) {
                 deferredTasks.push(fn);
@@ -61,15 +68,57 @@ function createRequestScope(scopeDefinition, makeRequestAPISetup) {
                     : await run(...args);
         }
         catch (error) {
-            if (error != null && error instanceof Error && 'status' in error) {
+            if (error != null && error instanceof Response && !error.bodyUsed) {
+                result = error;
+            }
+            else if (error != null && error instanceof Error && 'status' in error) {
                 return (0, error_1.errorToResponse)(error);
             }
             else {
                 throw error;
             }
         }
-        if (deferredTasks.length) {
-            deferredTasks.forEach((fn) => waitUntil(fn()));
+        // Recreate the response with mutable headers, since the original response
+        // may have an immutable headers guard (like from `Response.redirect()`)
+        result = new Response(result.body, {
+            ...result,
+            status: result.status,
+            statusText: result.statusText,
+            headers: result.headers,
+            // Cloudflare-specific response properties
+            cf: result.cf,
+            webSocket: result.webSocket,
+        });
+        deferredTasks.forEach((fn) => {
+            const maybePromise = fn();
+            if (maybePromise != null)
+                waitUntil(maybePromise);
+        });
+        for (const updateHeaders of responseHeadersUpdates) {
+            let headers = result.headers;
+            if (typeof updateHeaders === 'function') {
+                headers = updateHeaders(result.headers) || headers;
+            }
+            else if (updateHeaders instanceof Headers) {
+                headers = updateHeaders;
+            }
+            else if (typeof updateHeaders === 'object' && updateHeaders) {
+                for (const headerName in updateHeaders) {
+                    if (Array.isArray(updateHeaders[headerName])) {
+                        for (const headerValue of updateHeaders[headerName]) {
+                            headers.append(headerName, headerValue);
+                        }
+                    }
+                    else if (updateHeaders[headerName] != null) {
+                        headers.set(headerName, updateHeaders[headerName]);
+                    }
+                }
+            }
+            if (headers !== result.headers) {
+                for (const [headerName, headerValue] of headers) {
+                    result.headers.set(headerName, headerValue);
+                }
+            }
         }
         return result;
     };

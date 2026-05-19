@@ -2,9 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StatusError = void 0;
 exports.origin = origin;
+exports.requestHeaders = requestHeaders;
 exports.environment = environment;
 exports.runTask = runTask;
 exports.deferTask = deferTask;
+exports.setResponseHeaders = setResponseHeaders;
+const ImmutableRequest_1 = require("../ImmutableRequest");
 const scope_1 = require("./scope");
 function enforcedRequestScope() {
     const scope = scope_1.scopeRef.current?.getStore();
@@ -24,14 +27,20 @@ function assertSupport(name, v) {
 }
 var error_1 = require("./error");
 Object.defineProperty(exports, "StatusError", { enumerable: true, get: function () { return error_1.StatusError; } });
-/** Returns the current request's origin URL.
+/** Returns the current request's URL.
  *
- * This typically returns the request's `Origin` header, which contains the
- * request origin URL or defaults to `null`.
+ * This typically returns the request's URL, or on certain platform,
+ * the origin of the request. This does not use the `Origin` header
+ * in development as it may contain an untrusted value.
  * @returns A request origin
  */
 function origin() {
     return assertSupport('origin()', enforcedRequestScope().origin);
+}
+/** Returns an immutable copy of the current request's headers. */
+function requestHeaders() {
+    const headers = assertSupport('requestHeaders', enforcedRequestScope().requestHeaders);
+    return new ImmutableRequest_1.ImmutableHeaders(headers);
 }
 /** Returns the request's environment, if the server runtime supports this.
  *
@@ -68,5 +77,16 @@ function runTask(fn) {
  */
 function deferTask(fn) {
     assertSupport('deferTask()', enforcedRequestScope().deferTask)(fn);
+}
+/** Sets headers on the `Response` the current request handler will return.
+ *
+ * This only updates the headers once the request handler has finished and resolved a `Response`.
+ * It will either receive a set of `Headers` or an equivalent object containing headers, which will
+ * be merged into the response's headers once it's returned.
+ *
+ * @param updateHeaders - A `Headers` object, a record of headers, or a function that receives `Headers` to be updated or can return a `Headers` object that will be merged into the response headers.
+ */
+function setResponseHeaders(updateHeaders) {
+    assertSupport('setResponseHeaders()', enforcedRequestScope().setResponseHeaders)(updateHeaders);
 }
 //# sourceMappingURL=api.js.map

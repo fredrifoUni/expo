@@ -1,3 +1,4 @@
+import { ImmutableHeaders } from '../ImmutableRequest';
 import { type RequestAPI, scopeRef } from './scope';
 
 function enforcedRequestScope(): RequestAPI {
@@ -24,14 +25,21 @@ function assertSupport<T>(name: string, v: T | undefined): T {
 
 export { StatusError } from './error';
 
-/** Returns the current request's origin URL.
+/** Returns the current request's URL.
  *
- * This typically returns the request's `Origin` header, which contains the
- * request origin URL or defaults to `null`.
+ * This typically returns the request's URL, or on certain platform,
+ * the origin of the request. This does not use the `Origin` header
+ * in development as it may contain an untrusted value.
  * @returns A request origin
  */
 export function origin(): string | null {
   return assertSupport('origin()', enforcedRequestScope().origin);
+}
+
+/** Returns an immutable copy of the current request's headers. */
+export function requestHeaders(): ImmutableHeaders {
+  const headers = assertSupport('requestHeaders', enforcedRequestScope().requestHeaders);
+  return new ImmutableHeaders(headers);
 }
 
 /** Returns the request's environment, if the server runtime supports this.
@@ -69,6 +77,23 @@ export function runTask(fn: () => Promise<unknown>): void {
  *
  * @param fn - A task function to execute after the request handler has finished.
  */
-export function deferTask(fn: () => Promise<unknown>): void {
+export function deferTask(fn: () => Promise<unknown> | void): void {
   assertSupport('deferTask()', enforcedRequestScope().deferTask)(fn);
+}
+
+/** Sets headers on the `Response` the current request handler will return.
+ *
+ * This only updates the headers once the request handler has finished and resolved a `Response`.
+ * It will either receive a set of `Headers` or an equivalent object containing headers, which will
+ * be merged into the response's headers once it's returned.
+ *
+ * @param updateHeaders - A `Headers` object, a record of headers, or a function that receives `Headers` to be updated or can return a `Headers` object that will be merged into the response headers.
+ */
+export function setResponseHeaders(
+  updateHeaders:
+    | Headers
+    | Record<string, string | string[]>
+    | ((headers: Headers) => Headers | void)
+): void {
+  assertSupport('setResponseHeaders()', enforcedRequestScope().setResponseHeaders)(updateHeaders);
 }

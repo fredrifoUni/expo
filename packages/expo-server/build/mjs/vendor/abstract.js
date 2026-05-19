@@ -1,6 +1,7 @@
 import { ImmutableRequest } from '../ImmutableRequest';
 import { getRedirectRewriteLocation, isResponse, parseParams } from '../utils/matchers';
 import { shouldRunMiddleware } from '../utils/middleware';
+const LOADER_PREFIX = '/_expo/loaders';
 /** Internal errors class to indicate that the server has failed
  * @remarks
  * This should be thrown for unexpected errors, so they show up as crashes.
@@ -18,12 +19,10 @@ export class ExpoError extends Error {
 function noopBeforeResponse(responseInit, _route) {
     return responseInit;
 }
-export function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, handleRouteError, getMiddleware, beforeErrorResponse = noopBeforeResponse, beforeResponse = noopBeforeResponse, beforeHTMLResponse = noopBeforeResponse, beforeAPIResponse = noopBeforeResponse, }) {
+export function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, getMiddleware, getLoaderData, beforeErrorResponse = noopBeforeResponse, beforeResponse = noopBeforeResponse, beforeHTMLResponse = noopBeforeResponse, beforeAPIResponse = noopBeforeResponse, }) {
     let manifest = null;
     return async function handler(request) {
-        if (!manifest) {
-            manifest = await getRoutesManifest();
-        }
+        manifest = await getRoutesManifest();
         return requestHandler(request, manifest);
     };
     async function requestHandler(incomingRequest, manifest) {
@@ -41,19 +40,17 @@ export function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, 
         let request = incomingRequest;
         let url = new URL(request.url);
         if (manifest.middleware) {
-            try {
-                const middleware = await getMiddleware(manifest.middleware);
-                if (shouldRunMiddleware(request, middleware)) {
-                    const middlewareResponse = await middleware.default(new ImmutableRequest(request));
-                    if (middlewareResponse instanceof Response) {
-                        return middlewareResponse;
-                    }
-                    // If middleware returns undefined/void, continue to route matching
+            const middleware = await getMiddleware(manifest.middleware);
+            // Pass the route a loader endpoint resolves to, so matchers can't be bypassed via `/_expo/loaders/...`.
+            const effectivePathname = url.pathname.startsWith(LOADER_PREFIX + '/')
+                ? url.pathname.slice(LOADER_PREFIX.length).replace(/\/index$/, '/')
+                : url.pathname;
+            if (shouldRunMiddleware(request, middleware, effectivePathname)) {
+                const middlewareResponse = await middleware.default(new ImmutableRequest(request));
+                if (middlewareResponse instanceof Response) {
+                    return middlewareResponse;
                 }
-            }
-            catch (error) {
-                // Shows RedBox in development
-                return handleRouteError(error);
+                // If middleware returns undefined/void, continue to route matching
             }
         }
         if (manifest.redirects) {
@@ -76,24 +73,33 @@ export function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, 
                     continue;
                 }
                 // Replace URL and Request with rewrite target
-                url = getRedirectRewriteLocation(url, request, route);
+                url = new URL(getRedirectRewriteLocation(url, request, route), url);
                 request = new Request(url, request);
             }
         }
-        // First, test static routes
+        // First, test static routes and loader data requests
         if (request.method === 'GET' || request.method === 'HEAD') {
+            const isLoaderRequest = url.pathname.startsWith(LOADER_PREFIX + '/');
+            const matchedPath = isLoaderRequest
+                ? url.pathname.slice(LOADER_PREFIX.length).replace(/\/index$/, '/')
+                : url.pathname;
             for (const route of manifest.htmlRoutes) {
-                if (!route.namedRegex.test(url.pathname)) {
+                if (!route.namedRegex.test(matchedPath)) {
                     continue;
                 }
-                try {
-                    const html = await getHtml(request, route);
-                    return respondHTML(html, route);
+                // Handle loader data requests for client-side navigation
+                if (isLoaderRequest) {
+                    if (!route.loader) {
+                        continue; // Route matched but has no loader
+                    }
+                    // Create a request with the actual route path so `parseParams()` works correctly
+                    // NOTE(@hassankhan): Relocate the request rewriting logic from here
+                    url.pathname = matchedPath;
+                    const loaderRequest = new Request(url, request);
+                    return createResponseFrom('api', route, await getLoaderData(loaderRequest, route));
                 }
-                catch (error) {
-                    // Shows RedBox in development
-                    return handleRouteError(error);
-                }
+                const html = await getHtml(request, route);
+                return respondHTML(html, route);
             }
         }
         // Next, test API routes
@@ -101,14 +107,8 @@ export function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, 
             if (!route.namedRegex.test(url.pathname)) {
                 continue;
             }
-            try {
-                const mod = await getApiRoute(route);
-                return await respondAPI(mod, request, route);
-            }
-            catch (error) {
-                // Shows RedBox in development
-                return handleRouteError(error);
-            }
+            const mod = await getApiRoute(route);
+            return await respondAPI(mod, request, route);
         }
         // Finally, test 404 routes
         if (request.method === 'GET' || request.method === 'HEAD') {
@@ -146,16 +146,15 @@ export function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, 
         let modifiedResponseInit = responseInit;
         // Apply user-defined headers, if provided
         if (manifest?.headers) {
-            for (const [key, value] of Object.entries(manifest.headers)) {
-                if (Array.isArray(value)) {
-                    // For arrays, append each value separately (important for Set-Cookie)
-                    value.forEach((v) => modifiedResponseInit.headers.append(key, v));
-                }
-                else {
-                    // Don't override existing headers
-                    if (!modifiedResponseInit.headers.has(key)) {
-                        modifiedResponseInit.headers.set(key, value);
+            for (const headerName in manifest.headers) {
+                if (Array.isArray(manifest.headers[headerName])) {
+                    for (const headerValue of manifest.headers[headerName]) {
+                        modifiedResponseInit.headers.append(headerName, headerValue);
                     }
+                }
+                else if (manifest.headers[headerName] != null &&
+                    !modifiedResponseInit.headers.has(headerName)) {
+                    modifiedResponseInit.headers.set(headerName, manifest.headers[headerName]);
                 }
             }
         }
@@ -167,11 +166,17 @@ export function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, 
             modifiedResponseInit = beforeAPIResponse(modifiedResponseInit, callbackRoute);
         }
         // Second to last is error response callback
-        if (originalStatus && originalStatus > 399) {
+        if (typeof originalStatus === 'number' &&
+            (originalStatus === 0 /* Response.error() */ || originalStatus > 399)) {
             modifiedResponseInit = beforeErrorResponse(modifiedResponseInit, callbackRoute);
         }
         // Generic before response callback last
         modifiedResponseInit = beforeResponse(modifiedResponseInit, callbackRoute);
+        if (originalStatus === 0) {
+            // Response.error() results in status 0, which will cause new Response() to fail.
+            // We convert it to 500 only if originally 0, if cbs set the values to 0, we don't protect against it.
+            modifiedResponseInit.status = 500;
+        }
         return new Response(bodyInit, modifiedResponseInit);
     }
     function createResponseFrom(routeType = null, route, response) {
@@ -196,6 +201,14 @@ export function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, 
         if (isResponse(html)) {
             // Only used for development errors
             return html;
+        }
+        if (html != null) {
+            return createResponse('notFoundHtml', route, html, {
+                status: 404,
+                headers: new Headers({
+                    'Content-Type': 'text/html',
+                }),
+            });
         }
         throw new ExpoError(`HTML route file ${route.page}.html could not be loaded`);
     }
@@ -236,6 +249,14 @@ export function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, 
             // Only used for development error responses
             return html;
         }
+        if (html != null) {
+            return createResponse('html', route, html, {
+                status: 200,
+                headers: new Headers({
+                    'Content-Type': 'text/html',
+                }),
+            });
+        }
         throw new ExpoError(`HTML route file ${route.page}.html could not be loaded`);
     }
     function respondRedirect(url, request, route) {
@@ -249,7 +270,10 @@ export function createRequestHandler({ getRoutesManifest, getHtml, getApiRoute, 
         else {
             status = route.permanent ? 308 : 307;
         }
-        return Response.redirect(target, status);
+        return new Response(null, {
+            status,
+            headers: { Location: target },
+        });
     }
 }
 //# sourceMappingURL=abstract.js.map
