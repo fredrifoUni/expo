@@ -32,6 +32,11 @@ android {
       }
     }
   }
+
+  compileOptions {
+    // Required by IMA SDK v3.37.0+
+    if(useInteractiveMediaAds){ coreLibraryDesugaringEnabled = true }
+  }
 }
 
 dependencies {
@@ -49,6 +54,9 @@ dependencies {
   // Load optional plugin dependencies
   if(useInteractiveMediaAds){
     implementation "androidx.media3:media3-exoplayer-ima:${androidxMedia3Version}"
+    
+    // Required by IMA SDK v3.37.0+
+    coreLibraryDesugaring('com.android.tools:desugar_jdk_libs:2.1.5')
   }
 
   def fragment_version = "1.8.9"
