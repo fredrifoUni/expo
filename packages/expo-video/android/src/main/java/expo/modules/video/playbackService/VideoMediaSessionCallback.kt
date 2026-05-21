@@ -39,8 +39,8 @@ class VideoMediaSessionCallback : MediaSession.Callback {
 
   override fun onCustomCommand(session: MediaSession, controller: MediaSession.ControllerInfo, customCommand: SessionCommand, args: Bundle): ListenableFuture<SessionResult> {
     when (customCommand.customAction) {
-      ExpoVideoPlaybackService.SEEK_FORWARD_COMMAND -> session.player.seekTo(session.player.currentPosition + ExpoVideoPlaybackService.SEEK_INTERVAL_MS)
-      ExpoVideoPlaybackService.SEEK_BACKWARD_COMMAND -> session.player.seekTo(session.player.currentPosition - ExpoVideoPlaybackService.SEEK_INTERVAL_MS)
+      ExpoVideoPlaybackService.SEEK_FORWARD_COMMAND -> session.player.seekTo(session.player.contentPosition + ExpoVideoPlaybackService.SEEK_INTERVAL_MS)
+      ExpoVideoPlaybackService.SEEK_BACKWARD_COMMAND -> session.player.seekTo(session.player.contentPosition - ExpoVideoPlaybackService.SEEK_INTERVAL_MS)
     }
     return super.onCustomCommand(session, controller, customCommand, args)
   }

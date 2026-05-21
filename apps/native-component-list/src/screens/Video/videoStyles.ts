@@ -1,6 +1,10 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  consoleBox: {
+    alignSelf: 'stretch',
+    padding: 10,
+  },
   contentContainer: {
     flex: 1,
     alignItems: 'center',

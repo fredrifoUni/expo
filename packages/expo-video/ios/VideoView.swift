@@ -4,11 +4,19 @@ import AVKit
 import ExpoModulesCore
 
 public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
+  // TODO: Admanager should be created conditionally even though the stub class handles it properly
+  lazy var adsManager = VideoAdsManagerBuilder.create()
   lazy var playerViewController = OrientationAVPlayerViewController(delegate: self)
 
   weak var player: VideoPlayer? {
+    // Pass class instances to the VideoPlayer
     didSet {
       playerViewController.player = player?.ref
+
+      // Pass the VideoPlayer instance to the Ad manager
+      adsManager.player = player
+      player?.adsManager = adsManager
+      player?.videoView = self
     }
   }
 
@@ -90,6 +98,21 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     self.isFullscreen = false
     #endif
   }
+    
+  // Refreshes and reattaches the player view with updated layout bounds
+  func refreshPlayerViewLayout() {
+      // Temporarily remove the view from the UI to ensure proper re-render
+      playerViewController.view.removeFromSuperview()
+
+      // Set the frame bounds
+      playerViewController.view.frame = bounds
+
+      // Ensure the player controls are re-rendered with the correct bounds
+      playerViewController.endAppearanceTransition()
+
+      // Re-attach the view to the UI
+      addSubview(playerViewController.view)
+  }
 
   func startPictureInPicture() throws {
     try playerViewController.startPictureInPicture()
@@ -131,6 +154,12 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     _ playerViewController: AVPlayerViewController,
     willBeginFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator
   ) {
+
+    // The ad player launches in fullscreen independently from AVPlayer.
+    coordinator.animate(alongsideTransition: nil) { _ in
+      self.adsManager.isContentFullscreen = true
+    }
+    
     onFullscreenEnter()
   }
 
@@ -138,6 +167,9 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
     _ playerViewController: AVPlayerViewController,
     willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator
   ) {
+    // Immediately exit the fullscreen Ad view
+    self.adsManager.isContentFullscreen = false
+      
     // Platform's behavior is to pause the player when exiting the fullscreen mode.
     // It seems better to continue playing, so we resume the player once the dismissing animation finishes.
     let wasPlaying = player?.isPlaying ?? false
@@ -151,6 +183,13 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
 
       if !context.isCancelled {
         self.onFullscreenExit()
+
+        #if os(tvOS)
+        self.isFullscreen = false
+        #endif
+          
+        // Ensure player view reappears when exiting fullscreen after an Ad was shown
+        self.refreshPlayerViewLayout()
       }
     }
   }

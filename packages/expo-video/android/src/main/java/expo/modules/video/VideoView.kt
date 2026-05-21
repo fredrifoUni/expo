@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.util.Log
+import android.util.Rational
 import android.view.accessibility.CaptioningManager
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -13,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.media3.common.Tracks
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.PlayerView.FullscreenButtonClickListener
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.EventDispatcher
@@ -43,6 +46,8 @@ import java.util.UUID
 class SurfaceVideoView(context: Context, appContext: AppContext) : VideoView(context, appContext)
 class TextureVideoView(context: Context, appContext: AppContext) : VideoView(context, appContext, true)
 
+private const val LOG_TAG = "VideoView"
+
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 open class VideoView(context: Context, appContext: AppContext, useTextureView: Boolean = false) : ExpoView(context, appContext), VideoPlayerListener {
   val videoViewId: String = UUID.randomUUID().toString()
@@ -57,7 +62,13 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
   // We can get an event after PiP has started, that's when we should resume playback
   var wasAutoPaused: Boolean = false
   var isInFullscreen: Boolean = false
-    private set
+    private set(value) {
+      field = value
+
+      // Ensure player controls are always synced with fullscreen state
+      playerView.setFullscreenButtonState(value)
+    }
+
   var currentTrackHasSubtitles = false
     private set
   var showsAudioTracksButton = false
@@ -152,10 +163,18 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
       field = value
     }
 
+  private val fullscreenButtonClickListener = FullscreenButtonClickListener { isFullscreen ->
+    if (isFullscreen) {
+      enterFullscreen()
+    } else {
+      exitFullscreen()
+    }
+  }
+
   var allowsFullscreen: Boolean = true
     set(value) {
       if (value) {
-        playerView.setFullscreenButtonClickListener { enterFullscreen() }
+        playerView.setFullscreenButtonClickListener(fullscreenButtonClickListener)
       } else {
         playerView.setFullscreenButtonClickListener(null)
         // Setting listener to null should hide the button, but judging by ExoPlayer source code
@@ -169,7 +188,7 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
     set(value) {
       field = value
       if (value.enable) {
-        playerView.setFullscreenButtonClickListener { enterFullscreen() }
+        playerView.setFullscreenButtonClickListener(fullscreenButtonClickListener)
       } else {
         playerView.setFullscreenButtonClickListener(null)
         playerView.setFullscreenButtonVisibility(false)
@@ -186,7 +205,7 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
 
   init {
     VideoManager.registerVideoView(this)
-    playerView.setFullscreenButtonClickListener { enterFullscreen() }
+    playerView.setFullscreenButtonClickListener(fullscreenButtonClickListener)
     // The prop `useNativeControls` prop is sometimes applied after the view is created, and sometimes there is a visible
     // flash of controls event when they are set to off. Initially we set it to `false` and apply it in `onAttachedToWindow` to avoid this.
     this.playerView.useController = false
@@ -217,6 +236,13 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
   }
 
   fun enterFullscreen() {
+    if (isInFullscreen) {
+      return
+    }
+
+    // Set before starting to avoid entering PiP unintentionally
+    isInFullscreen = true
+
     val intent = Intent(context, FullscreenPlayerActivity::class.java)
     intent.putExtra(VideoManager.INTENT_PLAYER_KEY, videoViewId)
     intent.putExtra(FullscreenPlayerActivity.INTENT_FULLSCREEN_OPTIONS_KEY, fullscreenOptions)
@@ -231,6 +257,7 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
       @Suppress("DEPRECATION")
       currentActivity.overridePendingTransition(0, 0)
     }
+
     onFullscreenEnter(Unit)
     pipParams = pipParams.copy(blocksAppFromEntering = true)
   }
@@ -240,10 +267,15 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
   }
 
   fun exitFullscreen() {
+    if (!isInFullscreen) {
+      return
+    }
+
     // Fullscreen uses a different PlayerView instance, because of that we need to manually update the non-fullscreen player icon after exiting
     val fullScreenButton: ImageButton = playerView.findViewById(androidx.media3.ui.R.id.exo_fullscreen)
     fullScreenButton.setImageResource(androidx.media3.ui.R.drawable.exo_icon_fullscreen_enter)
     attachPlayer()
+
     onFullscreenExit(Unit)
     isInFullscreen = false
     pipParams = pipParams.copy(blocksAppFromEntering = false)

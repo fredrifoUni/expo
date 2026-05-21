@@ -1,10 +1,10 @@
 import { requestPermissionsAsync, getAssetsAsync, getAssetInfoAsync } from 'expo-media-library';
-import { VideoSource } from 'expo-video';
+import { VideoSource, VideoSourceObject } from 'expo-video';
 const localVideoId: VideoSource = require('../../../assets/videos/ace.mp4') as number;
 const seekOptimizedVideoId: VideoSource =
   require('../../../assets/videos/tola_seek_optimized.mov') as number;
 
-const localVideoSource: VideoSource = {
+const localVideoSource: VideoSourceObject = {
   assetId: localVideoId,
   metadata: {
     title: 'Cute Doggo',
@@ -12,7 +12,7 @@ const localVideoSource: VideoSource = {
   },
 };
 
-export const seekOptimizedSource: VideoSource = {
+export const seekOptimizedSource: VideoSourceObject = {
   assetId: seekOptimizedVideoId,
   metadata: {
     title: 'Tola running (seek optimized)',
@@ -22,7 +22,7 @@ export const seekOptimizedSource: VideoSource = {
 };
 
 // Fallback: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
-const bigBuckBunnySource: VideoSource = {
+const bigBuckBunnySource: VideoSourceObject = {
   uri: 'https://expo-test-media.com/big_buck_bunny/bbb_720p.mp4',
   metadata: {
     title: 'Big Buck Bunny',
@@ -32,7 +32,7 @@ const bigBuckBunnySource: VideoSource = {
 };
 
 // Fallback: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4
-const elephantsDreamSource: VideoSource = {
+const elephantsDreamSource: VideoSourceObject = {
   uri: 'https://expo-test-media.com/elephants_dream/ed_720p.mp4',
   metadata: {
     title: 'Elephants Dream',
@@ -42,7 +42,7 @@ const elephantsDreamSource: VideoSource = {
 };
 
 // Fallback https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/hls/TearsOfSteel.m3u8
-export const hlsSource: VideoSource = {
+export const hlsSource: VideoSourceObject = {
   uri: 'https://expo-test-media.com/tos_hls/master.m3u8',
   metadata: {
     title: 'Tears Of Steel',
@@ -52,7 +52,7 @@ export const hlsSource: VideoSource = {
 };
 
 // Fallback: https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/dash/TearsOfSteel.mpd
-export const dashSource: VideoSource = {
+export const dashSource: VideoSourceObject = {
   uri: 'https://expo-test-media.com/tos_dash/manifest.mpd',
   metadata: {
     title: 'Tears Of Steel',
@@ -61,7 +61,7 @@ export const dashSource: VideoSource = {
   },
 };
 
-export const nullSource: VideoSource = {
+export const nullSource: VideoSourceObject = {
   metadata: {
     title: 'Null Source',
     artist: '-',
@@ -129,6 +129,7 @@ const videoLabels: string[] = [
   'Null Source',
   'Audio Track',
 ];
+
 const videoSources: VideoSource[] = [
   bigBuckBunnySource,
   elephantsDreamSource,

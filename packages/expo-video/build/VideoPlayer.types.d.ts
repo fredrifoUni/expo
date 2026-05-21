@@ -11,6 +11,11 @@ export declare class VideoPlayer extends SharedObject<VideoPlayerEvents> {
      */
     readonly playing: boolean;
     /**
+     * Boolean value whether the player is currently playing an advertisement.
+     * > Use `play` and `pause` methods to control the playback.
+     */
+    readonly playingAd: boolean;
+    /**
      * Determines whether the player should automatically replay after reaching the end of the video.
      * @default false
      */
@@ -296,6 +301,12 @@ export type VideoPlayerStatus = 'idle' | 'loading' | 'readyToPlay' | 'error';
 export type VideoSource = string | number | null | VideoSourceObject;
 export type VideoSourceObject = {
     /**
+     * Specifies advertisement configuration options used by the player.
+     */
+    advertisement?: {
+        googleIMA?: GoogleIMA;
+    };
+    /**
      * The URI of the video.
      *
      * On iOS, `PHAsset` URIs are supported, but can only be loaded using the [`replaceAsync`](#replaceasyncsource) method or the default [`VideoPlayer`](#videoplayer) constructor.
@@ -381,6 +392,15 @@ export type VideoMetadata = {
  * - iOS supports FairPlay.
  */
 export type DRMType = 'clearkey' | 'fairplay' | 'playready' | 'widevine';
+/**
+ * Specifies the IMA configuration which will be used with the loaded video.
+ * > **Note**: The `supportsInteractiveMediaAds` configuration property needs to be set to true
+ * @platform android
+ * @platform ios
+ */
+export type GoogleIMA = {
+    adTagUrl: string;
+};
 /**
  * Specifies DRM options which will be used by the player while loading the video.
  */
