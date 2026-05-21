@@ -412,7 +412,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
       return
     }
 
-    // Initialize ad manager and prepare pla
+    // Initialize ad manager and prepare player
     adManager.initializeAds(player)
     isReadyToLoad = true
     prepare()

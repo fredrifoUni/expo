@@ -20,15 +20,15 @@ android {
 
     // Add constants to the generated BuildConfig class so that it's accessible in Kotlin and Java files
     buildConfigField("boolean", "useInteractiveMediaAds", "${useInteractiveMediaAds}")
+  }
 
-    sourceSets {
-      main {
-        // Conditionally include the IMA specific files in the compiler output
-        if (useInteractiveMediaAds) {
-          java.srcDirs += "plugins/interactiveMediaAds"
-        } else {
-          java.exclude "plugins/interactiveMediaAds/**"
-        }
+  sourceSets {
+    main {
+      // Conditionally include the IMA specific files in the compiler output
+      if (useInteractiveMediaAds) {
+        java.srcDirs += "plugins/interactiveMediaAds"
+      } else {
+        java.exclude "plugins/interactiveMediaAds/**"
       }
     }
   }
