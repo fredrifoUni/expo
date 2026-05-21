@@ -372,7 +372,7 @@ export type VideoSource = string | number | null | VideoSourceObject;
 
 export type VideoSourceObject = {
   /**
-   * Specifies the DRM options which will be used by the player while loading the video.
+   * Specifies advertisement configuration options used by the player.
    */
   advertisement?: {
     googleIMA?: GoogleIMA;
@@ -476,12 +476,12 @@ export type DRMType = 'clearkey' | 'fairplay' | 'playready' | 'widevine';
 
 /**
  * Specifies the IMA configuration which will be used with the loaded video.
+ * > **Note**: The `supportsInteractiveMediaAds` configuration property needs to be set to true
  * @platform android
  * @platform ios
  */
 export type GoogleIMA = {
-  adTagUri: string;
-  id?: string;
+  adTagUrl: string;
 };
 
 /**

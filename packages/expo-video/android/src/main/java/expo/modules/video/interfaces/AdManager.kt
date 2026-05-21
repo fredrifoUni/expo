@@ -16,7 +16,7 @@ interface AdManager {
 
   companion object {
     fun injectAdsToMediaItemBuilder(mediaBuilder: MediaItem.Builder, advertisement: Advertisement?) {
-      advertisement?.googleIMA?.adTagUri?.let {
+      advertisement?.googleIMA?.adTagUrl?.let {
         mediaBuilder.setAdsConfiguration(
           AdsConfiguration.Builder(it.toUri()).build()
         )

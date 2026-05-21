@@ -17,14 +17,14 @@ export default function VideoAdvertisementScreen() {
   const ref = useRef<VideoView>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus | null>(null);
-  const playerStatusFormated = JSON.stringify(playerStatus ?? {}, null, 2);
+  const playerStatusFormatted = JSON.stringify(playerStatus ?? {}, null, 2);
 
   const player = useVideoPlayer(
     {
       ...bigBuckBunnySource,
       advertisement: {
         googleIMA: {
-          adTagUri: SAMPLE_ADS.preMidPost,
+          adTagUrl: SAMPLE_ADS.preMidPost,
         },
       },
     },
@@ -72,7 +72,7 @@ export default function VideoAdvertisementScreen() {
       <ScrollView style={styles.controlsContainer}>
         <Button style={styles.button} title="Enter Fullscreen" onPress={toggleFullscreen} />
         <Button style={styles.button} title="Refresh Player Status" onPress={refreshPlayerStatus} />
-        <ConsoleBox style={styles.consoleBox}>playerStatus: {playerStatusFormated}</ConsoleBox>
+        <ConsoleBox style={styles.consoleBox}>playerStatus: {playerStatusFormatted}</ConsoleBox>
       </ScrollView>
     </View>
   );

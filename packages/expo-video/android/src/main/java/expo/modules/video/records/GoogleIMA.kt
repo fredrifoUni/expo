@@ -5,6 +5,5 @@ import expo.modules.kotlin.records.Record
 import java.io.Serializable
 
 class GoogleIMA(
-  @Field var adTagUri: String? = null,
-  @Field var id: String? = null,
+  @Field var adTagUrl: String? = null,
 ) : Record, Serializable
