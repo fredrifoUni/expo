@@ -19,25 +19,27 @@ import kotlinx.coroutines.launch
 
 private const val LOG_TAG = "AdManager"
 
-class AdManagerIMA(val context: Context, val appContext: AppContext?): AdManager {
+class AdManagerIMA(val context: Context, val appContext: AppContext?) : AdManager {
   private val adsLoader = buildAdsLoader()
   private var isAdManagerInitialized = false
   private var player: ExoPlayer? = null
 
   override fun initializeAds(player: ExoPlayer) {
-    if(isAdManagerInitialized){ return }
+    if (isAdManagerInitialized) {
+      return
+    }
 
     isAdManagerInitialized = true
     adsLoader.setPlayer(player)
     this.player = player
-    Log.d(LOG_TAG, "Player is configured to display Ads")
+    Log.d(LOG_TAG, "Ad manager was configured for the player")
   }
 
   override fun setLocalAdInsertionComponents(mediaSourceBuilder: DefaultMediaSourceFactory?, playerView: PlayerView) {
     mediaSourceBuilder?.setLocalAdInsertionComponents({ _ -> adsLoader }, playerView)
   }
 
-  override fun dispose(){
+  override fun dispose() {
     isAdManagerInitialized = false
 
     appContext?.mainQueue?.launch {
@@ -58,11 +60,11 @@ class AdManagerIMA(val context: Context, val appContext: AppContext?): AdManager
 
   private fun buildAdEventListener(): AdEvent.AdEventListener {
     return AdEvent.AdEventListener { event ->
-      Log.d(LOG_TAG, "Received AD Event: ${event.type}")
+      Log.d(LOG_TAG, "Ad event received: ${event.type}")
 
-      if(event.type == AdEvent.AdEventType.TAPPED){
+      if (event.type == AdEvent.AdEventType.TAPPED) {
         // HACK: Fix bug where exoplayer is paused without accessible player controls
-        if(this.player?.isPlaying == false){
+        if (this.player?.isPlaying == false) {
           this.player?.play()
         }
       }
@@ -71,7 +73,7 @@ class AdManagerIMA(val context: Context, val appContext: AppContext?): AdManager
 
   private fun buildAdErrorListener(): AdErrorEvent.AdErrorListener {
     return AdErrorEvent.AdErrorListener { errorEvent ->
-      Log.e(LOG_TAG, "Received AD Error: ${errorEvent.error.message}")
+      Log.e(LOG_TAG, "Ad error: ${errorEvent.error.message}")
     }
   }
 

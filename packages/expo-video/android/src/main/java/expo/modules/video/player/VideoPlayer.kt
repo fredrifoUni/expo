@@ -94,7 +94,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     }
 
   private var adManager = AdManagerFactory.create(context, appContext)
-  
+
   internal val firstFrameEventGenerator: FirstFrameEventGenerator
   val serviceConnection = PlaybackServiceConnection(WeakReference(this), appContext)
   var mediaSession: MediaSession = buildBasicMediaSession(context, player)
@@ -390,7 +390,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   override fun close() {
     isReadyToLoad = false
     adManager.dispose()
-    
+
     // Releases the listeners from VideoPlayerKeepAwake
     keepScreenOnWhilePlaying = false
 
@@ -423,10 +423,20 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   override fun sharedObjectDidRelease() {
     super.sharedObjectDidRelease()
     close()
-    super.sharedObjectDidRelease()
   }
 
-  private fun prepareToLoad(){
+  private fun prepareWithAds() {
+    // It has already been prepared
+    if (isReadyToLoad) {
+      return
+    }
+
+    // Ensure there is a playerView attached to the video player
+    if (currentVideoView?.playerView == null) {
+      return
+    }
+
+    // Initialize ad manager and prepare pla
     adManager.initializeAds(player)
     isReadyToLoad = true
     prepare()
@@ -447,15 +457,19 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     currentVideoView = videoView
 
     // Prepare videoPlayer
-    if (!isReadyToLoad && currentVideoView?.playerView !== null) { prepareToLoad() }
+    prepareWithAds()
   }
 
   fun prepare() {
-    if(!isReadyToLoad) { return }
+    if (!isReadyToLoad) {
+      return
+    }
 
     // Ensure there is a playerView attached to the video player
     val playerView = currentVideoView?.playerView
-    if(playerView === null) { return }
+    if (playerView === null) {
+      return
+    }
 
     availableVideoTracks = listOf()
     currentVideoTrack = null
