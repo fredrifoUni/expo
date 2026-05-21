@@ -20,7 +20,7 @@ export type WithExpoVideoOptions = {
 
 const withExpoVideo: ConfigPlugin<WithExpoVideoOptions> = (
   config,
-  { supportsBackgroundPlayback, supportsInteractiveMediaAds = false, supportsPictureInPicture } = {}
+  { supportsBackgroundPlayback, supportsInteractiveMediaAds, supportsPictureInPicture } = {}
 ) => {
   if (supportsInteractiveMediaAds) {
     withPodfileProperties(config, (config) => {

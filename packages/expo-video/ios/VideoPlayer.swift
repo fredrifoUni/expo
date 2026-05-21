@@ -397,7 +397,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
   func onLoadedPlayerItem(player: AVPlayer, playerItem: AVPlayerItem?) {
     // Prepare Ads for the new content
     let videoPlayerItem = playerItem as? VideoPlayerItem
-    let adTagUrl = videoPlayerItem?.videoSource.advertisement?.googleIMA?.adTagUri
+    let adTagUrl = videoPlayerItem?.videoSource.advertisement?.googleIMA?.adTagUrl
     if let adTagUrl, let adsManager, let videoView {
       adsManager.prepareAds(adTagUrl: adTagUrl, player: player, videoView: videoView)
     }

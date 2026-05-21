@@ -301,6 +301,12 @@ export type VideoPlayerStatus = 'idle' | 'loading' | 'readyToPlay' | 'error';
 export type VideoSource = string | number | null | VideoSourceObject;
 export type VideoSourceObject = {
     /**
+     * Specifies advertisement configuration options used by the player.
+     */
+    advertisement?: {
+        googleIMA?: GoogleIMA;
+    };
+    /**
      * The URI of the video.
      *
      * On iOS, `PHAsset` URIs are supported, but can only be loaded using the [`replaceAsync`](#replaceasyncsource) method or the default [`VideoPlayer`](#videoplayer) constructor.
@@ -308,12 +314,6 @@ export type VideoSourceObject = {
      * This property is exclusive with the `assetId` property. When both are present, the `assetId` will be ignored.
      */
     uri?: string;
-    /**
-     * Specifies the DRM options which will be used by the player while loading the video.
-     */
-    advertisement?: {
-        googleIMA?: GoogleIMA;
-    };
     /**
      * The asset ID of a local video asset, acquired with the `require` function.
      * This property is exclusive with the `uri` property. When both are present, the `assetId` will be ignored.
@@ -330,6 +330,13 @@ export type VideoSourceObject = {
      * @platform ios
      */
     metadata?: VideoMetadata;
+    /**
+     * Specifies headers sent with the video request.
+     * > For DRM license headers use the `headers` field of [`DRMOptions`](#drmoptions).
+     * @platform android
+     * @platform ios
+     */
+    headers?: Record<string, string>;
     /**
      * Specifies whether the player should use caching for the video.
      * > Due to platform limitations, the cache cannot be used with HLS video sources on iOS. Caching DRM-protected videos is not supported on Android and iOS.
@@ -387,12 +394,12 @@ export type VideoMetadata = {
 export type DRMType = 'clearkey' | 'fairplay' | 'playready' | 'widevine';
 /**
  * Specifies the IMA configuration which will be used with the loaded video.
+ * > **Note**: The `supportsInteractiveMediaAds` configuration property needs to be set to true
  * @platform android
  * @platform ios
  */
 export type GoogleIMA = {
-    adTagUri: string;
-    id?: string;
+    adTagUrl: string;
 };
 /**
  * Specifies DRM options which will be used by the player while loading the video.

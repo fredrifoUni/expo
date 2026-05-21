@@ -386,7 +386,6 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
   }
 
   override fun onAttachedToWindow() {
-    Log.d("IMA", "onAttachedToWindow")
     super.onAttachedToWindow()
 
     // Set up listener for accessibility caption changes when attached to window
