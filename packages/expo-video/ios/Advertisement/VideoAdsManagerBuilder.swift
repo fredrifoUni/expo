@@ -3,35 +3,35 @@ import AVFoundation
 
 // Create aliases to avoid conditional imports in other files
 #if canImport(GoogleInteractiveMediaAds)
-import GoogleInteractiveMediaAds
-public typealias AdDisplayContainer = IMAAdDisplayContainer
+  import GoogleInteractiveMediaAds
+  public typealias AdDisplayContainer = IMAAdDisplayContainer
 #else
-public protocol AdDisplayContainer {}
+  public protocol AdDisplayContainer {}
 #endif
 
 protocol VideoAdsManagerDelegate: AnyObject {
-    func postrollAdFinished(_ manager: VideoAdsManager)
+  func postrollAdFinished(_ manager: VideoAdsManager)
 }
 
 protocol VideoAdsManager: AnyObject {
-    var player: VideoPlayer? { get set }
-    var isPlayingAd: Bool { get set}
-    var isContentFullscreen: Bool { get set }
-    var hasMoreAds: Bool { get set }
-    var delegate: VideoAdsManagerDelegate? { get set }
+  var player: VideoPlayer? { get set }
+  var isPlayingAd: Bool { get set }
+  var isContentFullscreen: Bool { get set }
+  var hasMoreAds: Bool { get set }
+  var delegate: VideoAdsManagerDelegate? { get set }
 
-    func prepareAds(player: AVPlayer, videoPlayerItem: VideoPlayerItem?, videoView: VideoView?)
-    func requestAds(adDisplayContainer: AdDisplayContainer, adTagUri: String)
-    func contentDidFinishPlaying()
-    func cleanup()
+  func prepareAds(adTagUrl: String, player: AVPlayer, videoView: VideoView)
+  func requestAds(adDisplayContainer: AdDisplayContainer, adTagUrl: String)
+  func contentDidFinishPlaying()
+  func cleanup()
 }
 
 class VideoAdsManagerBuilder {
-    static func create() -> VideoAdsManager {
-        #if canImport(GoogleInteractiveMediaAds)
-        return VideoAdsManagerIMA()
-        #else
-        return VideoAdsManagerStub()
-        #endif
-    }
+  static func create() -> VideoAdsManager {
+    #if canImport(GoogleInteractiveMediaAds)
+      return VideoAdsManagerIMA()
+    #else
+      return VideoAdsManagerStub()
+    #endif
+  }
 }

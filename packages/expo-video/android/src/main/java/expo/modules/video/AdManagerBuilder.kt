@@ -11,20 +11,21 @@ private const val LOG_TAG = "AdManagerFactory"
 // reflection-based dynamic loading of IMA plugin
 object AdManagerFactory {
   fun create(context: Context, appContext: AppContext?): AdManager {
-    if (BuildConfig.useInteractiveMediaAds) {
-      try {
-        val adManagerIMA = Class.forName("expo.plugins.interactiveMediaAds.AdManagerIMA")
-          .getConstructor(Context::class.java, AppContext::class.java)
-          .newInstance(context, appContext) as AdManager
-
-        Log.d(LOG_TAG, "Successfully loaded IMA Ad Plugin.")
-        return adManagerIMA
-      } catch (e: Throwable) {
-        Log.e(LOG_TAG, "Failed to load IMA Ad Plugin: $e")
-      }
+    if (!BuildConfig.useInteractiveMediaAds) {
+      Log.d(LOG_TAG, "IMA Ad plugin is not in use.")
+      return AdManagerStub()
     }
 
-    Log.d(LOG_TAG, "IMA Ad plugin is not in use.")
-    return AdManagerStub()
+    try {
+      val adManagerIMA = Class.forName("expo.plugins.interactiveMediaAds.AdManagerIMA")
+        .getConstructor(Context::class.java, AppContext::class.java)
+        .newInstance(context, appContext) as AdManager
+
+      Log.d(LOG_TAG, "Successfully loaded IMA Ad Plugin.")
+      return adManagerIMA
+    } catch (e: Throwable) {
+      Log.e(LOG_TAG, "Failed to load IMA Ad Plugin: $e")
+      return AdManagerStub()
+    }
   }
 }

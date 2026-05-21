@@ -369,19 +369,15 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
       
     // Handle video end logic or wait for ads to complete
     if !shouldShowPostRoll { onVideoAndAdsCompleted() }
-    safeEmit(event: "playToEnd")
-    if loop {
-      seeker.seek(to: .zero)
-      self.ref.play()
-    }
   }
-    
+
+  // Raised when video and Ads have completed
   func onVideoAndAdsCompleted() {
       safeEmit(event: "playToEnd")
     
       if loop {
-        ref.seek(to: .zero)
-        ref.play()
+        seeker.seek(to: .zero)
+        self.ref.play()
       }
     }
 
@@ -400,8 +396,11 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
 
   func onLoadedPlayerItem(player: AVPlayer, playerItem: AVPlayerItem?) {
     // Prepare Ads for the new content
-    // TODO: This should be called conditionally even though the stub class handles it properly.
-    adsManager?.prepareAds(player: player, videoPlayerItem: playerItem as? VideoPlayerItem, videoView: videoView)
+    let videoPlayerItem = playerItem as? VideoPlayerItem
+    let adTagUrl = videoPlayerItem?.videoSource.advertisement?.googleIMA?.adTagUri
+    if let adTagUrl, let adsManager, let videoView {
+      adsManager.prepareAds(adTagUrl: adTagUrl, player: player, videoView: videoView)
+    }
     
     // Loading tracks requires doing some long tasks, this callback can be called from the main thread
     // Which could cause hangs

@@ -164,14 +164,17 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
     }
 
   private val fullscreenButtonClickListener = FullscreenButtonClickListener { isFullscreen ->
-      if(isFullscreen) { enterFullscreen() }
-      else { exitFullscreen() }
+    if (isFullscreen) {
+      enterFullscreen()
+    } else {
+      exitFullscreen()
+    }
   }
 
   var allowsFullscreen: Boolean = true
     set(value) {
       if (value) {
-        playerView.setFullscreenButtonClickListener (fullscreenButtonClickListener)
+        playerView.setFullscreenButtonClickListener(fullscreenButtonClickListener)
       } else {
         playerView.setFullscreenButtonClickListener(null)
         // Setting listener to null should hide the button, but judging by ExoPlayer source code
@@ -202,7 +205,7 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
 
   init {
     VideoManager.registerVideoView(this)
-    playerView.setFullscreenButtonClickListener (fullscreenButtonClickListener)
+    playerView.setFullscreenButtonClickListener(fullscreenButtonClickListener)
     // The prop `useNativeControls` prop is sometimes applied after the view is created, and sometimes there is a visible
     // flash of controls event when they are set to off. Initially we set it to `false` and apply it in `onAttachedToWindow` to avoid this.
     this.playerView.useController = false
@@ -233,7 +236,9 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
   }
 
   fun enterFullscreen() {
-    if(isInFullscreen){ return }
+    if (isInFullscreen) {
+      return
+    }
     Log.d(LOG_TAG, "enterFullscreen")
 
     // Set before starting to avoid entering PiP unintentionally
@@ -264,7 +269,9 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
   }
 
   fun exitFullscreen() {
-    if(!isInFullscreen){ return }
+    if (!isInFullscreen) {
+      return
+    }
     Log.d(LOG_TAG, "exitFullscreen")
 
     // Fullscreen uses a different PlayerView instance, because of that we need to manually update the non-fullscreen player icon after exiting

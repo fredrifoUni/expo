@@ -4,6 +4,7 @@ import AVKit
 import ExpoModulesCore
 
 public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
+  // TODO: Admanager should be created conditionally even though the stub class handles it properly
   lazy var adsManager = VideoAdsManagerBuilder.create()
   lazy var playerViewController = OrientationAVPlayerViewController(delegate: self)
 
