@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const BuildProperties_1 = require("@expo/config-plugins/build/android/BuildProperties");
 const Permissions_1 = require("@expo/config-plugins/build/android/Permissions");
 const config_plugins_1 = require("expo/config-plugins");
-const withExpoVideo = (config, { supportsBackgroundPlayback, supportsInteractiveMediaAds = false, supportsPictureInPicture } = {}) => {
+const withExpoVideo = (config, { supportsBackgroundPlayback, supportsInteractiveMediaAds, supportsPictureInPicture } = {}) => {
     if (supportsInteractiveMediaAds) {
         (0, config_plugins_1.withPodfileProperties)(config, (config) => {
             config.modResults.useInteractiveMediaAds = supportsInteractiveMediaAds.toString();
