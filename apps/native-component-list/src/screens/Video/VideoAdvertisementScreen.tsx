@@ -1,5 +1,5 @@
-import { useVideoPlayer, VideoView } from 'expo-video';
-import React, { useCallback, useRef, useState } from 'react';
+import { useVideoPlayer, VideoSourceObject, VideoView } from 'expo-video';
+import { useCallback, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { SAMPLE_ADS } from './VideoAdvertisementSources';
@@ -19,21 +19,20 @@ export default function VideoAdvertisementScreen() {
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus | null>(null);
   const playerStatusFormatted = JSON.stringify(playerStatus ?? {}, null, 2);
 
-  const player = useVideoPlayer(
-    {
-      ...bigBuckBunnySource,
-      advertisement: {
-        googleIMA: {
-          adTagUrl: SAMPLE_ADS.preMidPost,
-        },
+  const videoSource: VideoSourceObject = {
+    ...bigBuckBunnySource,
+    advertisement: {
+      googleIMA: {
+        adTagUrl: SAMPLE_ADS.preMidPost,
       },
     },
-    (player) => {
-      player.loop = false;
-      player.showNowPlayingNotification = false;
-      player.play();
-    }
-  );
+  };
+
+  const player = useVideoPlayer(videoSource, (player) => {
+    player.loop = false;
+    player.showNowPlayingNotification = false;
+    player.play();
+  });
 
   const refreshPlayerStatus = () => {
     setPlayerStatus({
@@ -43,30 +42,29 @@ export default function VideoAdvertisementScreen() {
   };
 
   const toggleFullscreen = useCallback(() => {
-    if (!isFullscreen) {
-      ref.current?.enterFullscreen();
-    } else {
-      ref.current?.exitFullscreen();
+    const current = ref.current;
+    if (current) {
+      if (!isFullscreen) {
+        ref.current?.enterFullscreen();
+      } else {
+        ref.current?.exitFullscreen();
+      }
     }
-  }, [player]);
-
-  const onFullscreenEnter = () => {
-    console.log('Entered Fullscreen');
-    setIsFullscreen(true);
-  };
-
-  const onFullscreenExit = () => {
-    console.log('Exited Fullscreen');
-    setIsFullscreen(false);
-  };
+  }, [player, isFullscreen]);
 
   return (
     <View style={styles.contentContainer}>
       <VideoView
         ref={ref}
         player={player}
-        onFullscreenEnter={onFullscreenEnter}
-        onFullscreenExit={onFullscreenExit}
+        onFullscreenEnter={() => {
+          console.log('Entered Fullscreen');
+          setIsFullscreen(true);
+        }}
+        onFullscreenExit={() => {
+          console.log('Exited Fullscreen');
+          setIsFullscreen(false);
+        }}
         style={styles.video}
       />
       <ScrollView style={styles.controlsContainer}>

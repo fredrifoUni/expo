@@ -245,7 +245,6 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
     if (isInFullscreen) {
       return
     }
-    Log.d(LOG_TAG, "enterFullscreen")
 
     // Set before starting to avoid entering PiP unintentionally
     isInFullscreen = true
@@ -270,7 +269,6 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
   }
 
   fun attachPlayer() {
-    Log.d(LOG_TAG, "attachPlayer")
     videoPlayer?.changeVideoView(this)
   }
 
@@ -278,7 +276,6 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
     if (!isInFullscreen) {
       return
     }
-    Log.d(LOG_TAG, "exitFullscreen")
 
     // Fullscreen uses a different PlayerView instance, because of that we need to manually update the non-fullscreen player icon after exiting
     val fullScreenButton: ImageButton = playerView.findViewById(androidx.media3.ui.R.id.exo_fullscreen)
