@@ -12,6 +12,8 @@ export type {
   VideoViewProps,
   SurfaceType,
   ButtonOptions,
+  TransportBarCustomMenuItem,
+  CustomMenuItemPressedEventPayload,
 } from './VideoView.types';
 export type { VideoThumbnail } from './VideoThumbnail';
 

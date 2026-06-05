@@ -78,4 +78,9 @@ internal struct IsExternalPlaybackActiveEventPayload: Record {
   @Field var oldIsExternalPlaybackActive: Bool? = nil
 }
 
+internal struct CustomMenuItemPressedPayload: Record {
+  @Field
+  var id: String = ""
+}
+
 // swiftlint:enable redundant_optional_initialization

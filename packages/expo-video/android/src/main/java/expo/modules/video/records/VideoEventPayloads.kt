@@ -77,3 +77,7 @@ class VideoSourceLoadedEventPayload(
   @Field val availableSubtitleTracks: List<SubtitleTrack>,
   @Field val availableAudioTracks: List<AudioTrack>
 ) : VideoEventPayload
+
+class CustomMenuItemPressedPayload(
+  @Field val id: String
+) : VideoEventPayload

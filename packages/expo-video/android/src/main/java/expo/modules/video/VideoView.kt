@@ -30,7 +30,9 @@ import expo.modules.video.listeners.VideoPlayerListener
 import expo.modules.video.listeners.VideoViewListener
 import expo.modules.video.records.AudioTrack
 import expo.modules.video.records.ButtonOptions
+import expo.modules.video.records.CustomMenuItemPressedPayload
 import expo.modules.video.records.SubtitleTrack
+import expo.modules.video.records.TransportBarCustomMenuItem
 import expo.modules.video.records.VideoSource
 import expo.modules.video.records.VideoTrack
 import expo.modules.video.records.FullscreenOptions
@@ -57,6 +59,7 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
   val onFullscreenEnter by EventDispatcher<Unit>()
   val onFullscreenExit by EventDispatcher<Unit>()
   val onFirstFrameRender by EventDispatcher<Unit>()
+  val onCustomMenuItemPressed by EventDispatcher<CustomMenuItemPressedPayload>()
 
   // In some situations we can't detect if the view will enter PiP, in that case the playback will be paused
   // We can get an event after PiP has started, that's when we should resume playback
@@ -86,6 +89,14 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
     set(value) {
       field = value
       applyButtonSettings()
+    }
+
+  var transportBarCustomMenuItems: List<TransportBarCustomMenuItem>? = null
+    set(value) {
+      field = value
+      updateTransportBarCustomMenuItems(playerView, value) { id ->
+        onCustomMenuItemPressed(CustomMenuItemPressedPayload(id))
+      }
     }
 
   private var listeners = mutableListOf<WeakReference<VideoViewListener>>()

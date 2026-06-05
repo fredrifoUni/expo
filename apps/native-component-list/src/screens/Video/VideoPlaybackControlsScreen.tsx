@@ -1,12 +1,14 @@
 import Slider from '@react-native-community/slider';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { useVideoPlayer, VideoAirPlayButton, VideoView } from 'expo-video';
-import React, { useCallback } from 'react';
+import type { TransportBarCustomMenuItem } from 'expo-video';
+import React, { useCallback, useRef, useState } from 'react';
 import { Platform, ScrollView, Text, View } from 'react-native';
 
 import { bigBuckBunnySource } from './videoSources';
 import { styles } from './videoStyles';
 import Button from '../../components/Button';
+import { E2EKeyValueBox } from '../../components/E2EKeyValueBox';
 import TitledSwitch from '../../components/TitledSwitch';
 
 const playbackRates: number[] = [0.25, 0.5, 1, 1.5, 2, 16];
@@ -17,6 +19,24 @@ export default function VideoPlaybackControlsScreen() {
   const [preservePitch, setPreservePitch] = React.useState(true);
   const [volume, setVolume] = React.useState(1);
   const [requiresLinearPlayback, setRequiresLinearPlayback] = React.useState(false);
+
+  const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
+  const [menuEventHistory, setMenuEventHistory] = useState<Record<number, string>>({});
+  const menuEventCount = useRef(0);
+
+  const transportBarCustomMenuItems: TransportBarCustomMenuItem[] = [
+    {
+      id: 'thumbsUp',
+      icon: isLiked ? 'hand.thumbsup.fill' : 'hand.thumbsup',
+      title: 'Like',
+    },
+    {
+      id: 'thumbsDown',
+      icon: isDisliked ? 'hand.thumbsdown.fill' : 'hand.thumbsdown',
+      title: 'Dislike',
+    },
+  ];
 
   const [useDefaultControls, setUseDefaultControls] = React.useState(true);
   const [showNext, setShowNext] = React.useState(true);
@@ -97,8 +117,29 @@ export default function VideoPlaybackControlsScreen() {
                 showBottomBar,
               }
         }
+        transportBarCustomMenuItems={
+          Platform.OS === 'ios' || Platform.OS === 'android'
+            ? transportBarCustomMenuItems
+            : undefined
+        }
+        onCustomMenuItemPressed={({ nativeEvent }) => {
+          const idx = menuEventCount.current++;
+          const idx2 = menuEventCount.current++;
+          setMenuEventHistory((prev) => ({ ...prev, [idx]: `Pressed a: ${JSON.stringify(nativeEvent)}` }));
+          setMenuEventHistory((prev) => ({ ...prev, [idx2]: `Pressed: ${nativeEvent.id}` }));
+          if (nativeEvent.id === 'thumbsUp') {
+            setIsLiked((prev) => !prev);
+          } else if (nativeEvent.id === 'thumbsDown') {
+            setIsDisliked((prev) => !prev);
+          }
+        }}
       />
       <ScrollView style={styles.controlsContainer}>
+        <E2EKeyValueBox
+          title="Custom Menu Item Pressed History"
+          style={{ margin: 10, alignSelf: 'stretch' }}
+          entries={menuEventHistory}
+        />
         <Button style={styles.button} title="Toggle" onPress={togglePlayer} />
         <Button style={styles.button} title="Seek by 10 seconds" onPress={seekBy} />
         <Button style={styles.button} title="Replay" onPress={replay} />

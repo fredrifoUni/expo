@@ -136,6 +136,22 @@ export interface VideoViewProps extends ViewProps {
   allowsVideoFrameAnalysis?: boolean;
 
   /**
+   * An array of custom menu items to display in the transport bar of the video player.
+   * Each item appears as a button and triggers the `onCustomMenuItemPressed` callback when selected.
+   * The icon is updated whenever this prop changes, so toggle state can be managed in JS by
+   * passing a different `icon` value on re-render.
+   * @platform tvos 15.0+
+   */
+  transportBarCustomMenuItems?: TransportBarCustomMenuItem[];
+
+  /**
+   * A callback invoked when a custom menu item in the transport bar is pressed.
+   * @platform ios 16.0+
+   * @platform tvos
+   */
+  onCustomMenuItemPressed?: (event: CustomMenuItemPressedEventPayload) => void;
+
+  /**
    * A callback to call after the video player enters fullscreen mode.
    */
   onFullscreenEnter?: () => void;
@@ -241,6 +257,44 @@ export type ButtonOptions = {
    * @default true
    */
   showBottomBar?: boolean;
+};
+
+/**
+ * Describes a custom menu item displayed in the transport bar of the video player.
+ * Maps to a `UIAction` in the `AVPlayerViewController`'s `transportBarCustomMenuItems` on iOS/tvOS.
+ * @platform ios
+ * @platform tvos
+ */
+export type TransportBarCustomMenuItem = {
+  /**
+   * A unique identifier for the menu item. This id is passed back in the
+   * `onCustomMenuItemPressed` event when the item is selected.
+   */
+  id: string;
+
+  /**
+   * The icon name for this menu item. On iOS, this is an SF Symbol name (e.g. `'hand.thumbsup.fill'`).
+   * On Android, dots in the name are replaced with underscores to resolve a PNG drawable from the
+   * app's resources (e.g. `'hand.thumbsup.fill'` resolves to `hand_thumbsup_fill.png`).
+   */
+  icon: string;
+
+  /**
+   * The title text displayed for this menu item.
+   */
+  title: string;
+};
+
+/**
+ * Data delivered with the `onCustomMenuItemPressed` event.
+ * @platform ios
+ * @platform tvos
+ */
+export type CustomMenuItemPressedEventPayload = {
+  /**
+   * The `id` of the menu item that was pressed.
+   */
+  id: string;
 };
 
 /**

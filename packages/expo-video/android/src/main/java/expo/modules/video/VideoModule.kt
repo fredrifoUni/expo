@@ -23,6 +23,7 @@ import expo.modules.video.records.SubtitleTrack
 import expo.modules.video.records.AudioTrack
 import expo.modules.video.records.ScrubbingModeOptions
 import expo.modules.video.records.SeekTolerance
+import expo.modules.video.records.TransportBarCustomMenuItem
 import expo.modules.video.records.VideoSource
 import expo.modules.video.records.VideoThumbnailOptions
 import expo.modules.video.utils.runWithPiPMisconfigurationSoftHandling
@@ -396,7 +397,8 @@ private inline fun <reified T : VideoView> ViewDefinitionBuilder<T>.VideoViewCom
     "onPictureInPictureStop",
     "onFullscreenEnter",
     "onFullscreenExit",
-    "onFirstFrameRender"
+    "onFirstFrameRender",
+    "onCustomMenuItemPressed"
   )
   Prop("player") { view: T, player: VideoPlayer? ->
     view.videoPlayer = player
@@ -420,6 +422,9 @@ private inline fun <reified T : VideoView> ViewDefinitionBuilder<T>.VideoViewCom
   }
   Prop("buttonOptions") { view: T, buttonOptions: ButtonOptions? ->
     view.buttonOptions = buttonOptions ?: ButtonOptions()
+  }
+  Prop("transportBarCustomMenuItems") { view: T, items: List<TransportBarCustomMenuItem>? ->
+    view.transportBarCustomMenuItems = items
   }
   Prop("useExoShutter") { view: T, useExoShutter: Boolean? ->
     view.useExoShutter = useExoShutter

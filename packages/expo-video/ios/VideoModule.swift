@@ -33,7 +33,8 @@ public final class VideoModule: Module {
         "onPictureInPictureStop",
         "onFullscreenEnter",
         "onFullscreenExit",
-        "onFirstFrameRender"
+        "onFirstFrameRender",
+        "onCustomMenuItemPressed"
       )
 
       Prop("player") { (view, player: VideoPlayer?) in
@@ -107,6 +108,14 @@ public final class VideoModule: Module {
             view.playerViewController.allowsVideoFrameAnalysis = true
             view.playerViewController.allowsVideoFrameAnalysis = false
           }
+        }
+        #endif
+      }
+
+      Prop("transportBarCustomMenuItems") { (view, items: [TransportBarCustomMenuItem]?) in
+        #if os(tvOS)
+        if #available(tvOS 15.0, *) {
+          view.updateTransportBarCustomMenuItems(items)
         }
         #endif
       }
