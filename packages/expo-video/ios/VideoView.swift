@@ -45,6 +45,7 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   let onFullscreenEnter = EventDispatcher()
   let onFullscreenExit = EventDispatcher()
   let onFirstFrameRender = EventDispatcher()
+  let onCustomMenuItemPressed = EventDispatcher()
 
   var firstFrameObserver: NSKeyValueObservation?
 
