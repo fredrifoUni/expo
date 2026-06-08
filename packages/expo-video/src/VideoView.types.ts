@@ -1,4 +1,4 @@
-import type { ViewProps } from 'react-native';
+import type { NativeSyntheticEvent, ViewProps } from 'react-native';
 
 import type { VideoPlayer } from './VideoPlayer.types';
 
@@ -290,12 +290,12 @@ export type TransportBarCustomMenuItem = {
  * @platform ios
  * @platform tvos
  */
-export type CustomMenuItemPressedEventPayload = {
+export type CustomMenuItemPressedEventPayload = NativeSyntheticEvent<{
   /**
    * The `id` of the menu item that was pressed.
    */
   id: string;
-};
+}>;
 
 /**
  * Describes the orientation of the video in fullscreen mode. Available values are:

@@ -124,9 +124,7 @@ export default function VideoPlaybackControlsScreen() {
         }
         onCustomMenuItemPressed={({ nativeEvent }) => {
           const idx = menuEventCount.current++;
-          const idx2 = menuEventCount.current++;
-          setMenuEventHistory((prev) => ({ ...prev, [idx]: `Pressed a: ${JSON.stringify(nativeEvent)}` }));
-          setMenuEventHistory((prev) => ({ ...prev, [idx2]: `Pressed: ${nativeEvent.id}` }));
+          setMenuEventHistory((prev) => ({ ...prev, [idx]: `Pressed: ${nativeEvent.id}` }));
           if (nativeEvent.id === 'thumbsUp') {
             setIsLiked((prev) => !prev);
           } else if (nativeEvent.id === 'thumbsDown') {
