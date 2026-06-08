@@ -16,7 +16,8 @@ internal fun VideoView.updateTransportBarCustomMenuItems(
   items: List<TransportBarCustomMenuItem>?,
   onItemPressed: (String) -> Unit
 ) {
-  val basicControls = playerView.findViewById<LinearLayout>(androidx.media3.ui.R.id.exo_extra_controls)
+  // Breaks when using exo_extra_controls. Unable to update that button for some reason
+  val basicControls = playerView.findViewById<LinearLayout>(androidx.media3.ui.R.id.exo_basic_controls)
     ?: return
 
   val newItems = items ?: emptyList()
