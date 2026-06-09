@@ -363,6 +363,11 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
   func onPlayedToEnd(player: AVPlayer) {
     // Checking for queued Ads
     let shouldShowPostRoll: Bool = adsManager?.hasMoreAds ?? false
+
+    // Hide the overlay when video ended
+    #if os(tvOS)
+    videoView?.upNextOverlayView?.hide()
+    #endif
       
     // Let the Ad manager know the video has finished
     adsManager?.contentDidFinishPlaying()
@@ -388,6 +393,11 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManager
     )
     safeEmit(event: "sourceChange", payload: payload)
     newVideoPlayerItem?.preferredForwardBufferDuration = bufferOptions.preferredForwardBufferDuration
+    
+    // Hide overlay when new video starts
+    #if os(tvOS)
+    videoView?.upNextOverlayView?.hide()
+    #endif
   }
 
   func onTimeUpdate(player: AVPlayer, timeUpdate: TimeUpdate) {

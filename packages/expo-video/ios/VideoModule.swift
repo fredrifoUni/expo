@@ -119,6 +119,16 @@ public final class VideoModule: Module {
         }
         #endif
       }
+      #if os(tvOS)
+      Prop("contentProposal") { (view, proposal: ContentProposalRecord?) in
+        view.contentProposalRecord = proposal
+        if proposal != nil {
+          view.setupContentProposal()
+        } else {
+          view.teardownContentProposal()
+        }
+      }
+      #endif
 
       AsyncFunction("enterFullscreen") { view in
         view.enterFullscreen()
