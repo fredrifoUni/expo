@@ -108,6 +108,7 @@ class FullscreenPlayerActivity : Activity(), VideoManagerListener {
       playerView.setTimeBarInteractive(requiresLinearPlayback)
     }
     playerView.setShowSubtitleButton(videoView.buttonOptions.showSubtitles ?: videoView.currentTrackHasSubtitles)
+    videoView.applyTransportBarCustomMenuItemsToPlayerView(playerView)
 
     // Configure subtitle view to fix sizing issues with embedded styles (same as VideoView)
     SubtitleUtils.configureSubtitleView(playerView, this)

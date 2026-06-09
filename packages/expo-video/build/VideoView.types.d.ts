@@ -1,4 +1,4 @@
-import type { ViewProps } from 'react-native';
+import type { NativeSyntheticEvent, ViewProps } from 'react-native';
 import type { VideoPlayer } from './VideoPlayer.types';
 /**
  * Describes how a video should be scaled to fit in a container.
@@ -120,6 +120,20 @@ export interface VideoViewProps extends ViewProps {
      */
     allowsVideoFrameAnalysis?: boolean;
     /**
+     * An array of custom menu items to display in the transport bar of the video player.
+     * Each item appears as a button and triggers the `onCustomMenuItemPressed` callback when selected.
+     * The icon is updated whenever this prop changes, so toggle state can be managed in JS by
+     * passing a different `icon` value on re-render.
+     * @platform tvos 15.0+
+     */
+    transportBarCustomMenuItems?: TransportBarCustomMenuItem[];
+    /**
+     * A callback invoked when a custom menu item in the transport bar is pressed.
+     * @platform ios 16.0+
+     * @platform tvos
+     */
+    onCustomMenuItemPressed?: (event: CustomMenuItemPressedEventPayload) => void;
+    /**
      * A callback to call after the video player enters fullscreen mode.
      */
     onFullscreenEnter?: () => void;
@@ -133,6 +147,13 @@ export interface VideoViewProps extends ViewProps {
      * > **Note:** This event may also be called during playback when the current video track changes (for example when the player switches video quality).
      */
     onFirstFrameRender?: () => void;
+    /**
+     * Configuration for the content proposal overlay shown before the video ends.
+     * The overlay appears `showAtRemainingTime` seconds before the end and displays the title and optional image.
+     * On tvOS, when the countdown expires the video auto-advances.
+     * @platform tvos android
+     */
+    contentProposal?: ContentProposal;
     /**
      * Determines whether the player should use the default ExoPlayer shutter that covers the `VideoView` before the first video frame is rendered.
      * Setting this property to `false` makes the Android behavior the same as iOS.
@@ -164,6 +185,19 @@ export interface VideoViewProps extends ViewProps {
      */
     useAudioNodePlayback?: boolean;
 }
+/**
+ * Configures the content proposal overlay shown before the video ends.
+ * The overlay appears `showAtRemainingTime` seconds before the end, displaying the title and optional image.
+ * @platform tvos android
+ */
+export type ContentProposal = {
+    /** Title displayed in the content proposal overlay. */
+    title: string;
+    /** Remote URL of the preview image shown in the overlay. */
+    imageUrl?: string;
+    /** Seconds before the end of the video when the overlay should appear. */
+    showAtRemainingTime: number;
+};
 /**
  * Configuration for controlling the visibility of player control buttons.
  *
@@ -220,6 +254,40 @@ export type ButtonOptions = {
      */
     showBottomBar?: boolean;
 };
+/**
+ * Describes a custom menu item displayed in the transport bar of the video player.
+ * Maps to a `UIAction` in the `AVPlayerViewController`'s `transportBarCustomMenuItems` on iOS/tvOS.
+ * @platform ios
+ * @platform tvos
+ */
+export type TransportBarCustomMenuItem = {
+    /**
+     * A unique identifier for the menu item. This id is passed back in the
+     * `onCustomMenuItemPressed` event when the item is selected.
+     */
+    id: string;
+    /**
+     * The icon name for this menu item. On iOS, this is an SF Symbol name (e.g. `'hand.thumbsup.fill'`).
+     * On Android, dots in the name are replaced with underscores to resolve a PNG drawable from the
+     * app's resources (e.g. `'hand.thumbsup.fill'` resolves to `hand_thumbsup_fill.png`).
+     */
+    icon: string;
+    /**
+     * The title text displayed for this menu item.
+     */
+    title: string;
+};
+/**
+ * Data delivered with the `onCustomMenuItemPressed` event.
+ * @platform ios
+ * @platform tvos
+ */
+export type CustomMenuItemPressedEventPayload = NativeSyntheticEvent<{
+    /**
+     * The `id` of the menu item that was pressed.
+     */
+    id: string;
+}>;
 /**
  * Describes the orientation of the video in fullscreen mode. Available values are:
  * - `default`: The video is displayed in any of the available device rotations.

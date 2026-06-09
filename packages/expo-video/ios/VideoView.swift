@@ -17,6 +17,12 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
       adsManager.player = player
       player?.adsManager = adsManager
       player?.videoView = self
+
+      #if os(tvOS)
+      if contentProposalRecord != nil {
+        setupContentProposal()
+      }
+      #endif
     }
   }
 
@@ -24,6 +30,10 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   var wasPlaying: Bool = false
   let startPictureInPictureAutomatically = false
   var isFullscreen: Bool = false
+  var contentProposalRecord: ContentProposalRecord?
+  var upNextOverlayView: UpNextOverlayView?
+  weak var upNextTimeObserverPlayer: AVPlayer?
+  var upNextTimeObserver: Any?
   #else
   var startPictureInPictureAutomatically = false {
     didSet {
@@ -45,6 +55,7 @@ public final class VideoView: ExpoView, AVPlayerViewControllerDelegate {
   let onFullscreenEnter = EventDispatcher()
   let onFullscreenExit = EventDispatcher()
   let onFirstFrameRender = EventDispatcher()
+  let onCustomMenuItemPressed = EventDispatcher()
 
   var firstFrameObserver: NSKeyValueObservation?
 

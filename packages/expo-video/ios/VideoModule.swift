@@ -33,7 +33,8 @@ public final class VideoModule: Module {
         "onPictureInPictureStop",
         "onFullscreenEnter",
         "onFullscreenExit",
-        "onFirstFrameRender"
+        "onFirstFrameRender",
+        "onCustomMenuItemPressed"
       )
 
       Prop("player") { (view, player: VideoPlayer?) in
@@ -110,6 +111,24 @@ public final class VideoModule: Module {
         }
         #endif
       }
+
+      Prop("transportBarCustomMenuItems") { (view, items: [TransportBarCustomMenuItem]?) in
+        #if os(tvOS)
+        if #available(tvOS 15.0, *) {
+          view.updateTransportBarCustomMenuItems(items)
+        }
+        #endif
+      }
+      #if os(tvOS)
+      Prop("contentProposal") { (view, proposal: ContentProposalRecord?) in
+        view.contentProposalRecord = proposal
+        if proposal != nil {
+          view.setupContentProposal()
+        } else {
+          view.teardownContentProposal()
+        }
+      }
+      #endif
 
       AsyncFunction("enterFullscreen") { view in
         view.enterFullscreen()
