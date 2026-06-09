@@ -57,6 +57,7 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
   val onFullscreenEnter by EventDispatcher<Unit>()
   val onFullscreenExit by EventDispatcher<Unit>()
   val onFirstFrameRender by EventDispatcher<Unit>()
+  internal lateinit var contentProposalManager: ContentProposalManager
 
   // In some situations we can't detect if the view will enter PiP, in that case the playback will be paused
   // We can get an event after PiP has started, that's when we should resume playback
@@ -143,6 +144,7 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
         ?: false
       oldPlayer?.removeListener(this)
       newPlayer?.addListener(this)
+      contentProposalManager.onPlayerChanged(newPlayer)
       field = newPlayer
       shouldHideSurfaceView = !hasEmittedFirstFrame
       applySurfaceViewVisibility()
@@ -224,6 +226,7 @@ open class VideoView(context: Context, appContext: AppContext, useTextureView: B
       )
     )
 
+    contentProposalManager = ContentProposalManager(this)
     reactNativeEventDispatcher = UIManagerHelper.getEventDispatcher(appContext.reactContext as ReactContext, id)
   }
 

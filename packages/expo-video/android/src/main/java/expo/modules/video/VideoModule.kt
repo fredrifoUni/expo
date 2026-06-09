@@ -18,6 +18,7 @@ import expo.modules.video.player.VideoPlayer
 import expo.modules.video.records.BufferOptions
 import expo.modules.video.records.PlayerBuilderOptions
 import expo.modules.video.records.ButtonOptions
+import expo.modules.video.records.ContentProposalRecord
 import expo.modules.video.records.FullscreenOptions
 import expo.modules.video.records.SubtitleTrack
 import expo.modules.video.records.AudioTrack
@@ -423,6 +424,9 @@ private inline fun <reified T : VideoView> ViewDefinitionBuilder<T>.VideoViewCom
   }
   Prop("useExoShutter") { view: T, useExoShutter: Boolean? ->
     view.useExoShutter = useExoShutter
+  }
+  Prop("contentProposal") { view: T, proposal: ContentProposalRecord? ->
+    view.contentProposalManager.contentProposal = proposal
   }
   AsyncFunction("enterFullscreen") { view: T ->
     view.enterFullscreen()
