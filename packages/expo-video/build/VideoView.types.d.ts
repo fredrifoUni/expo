@@ -134,6 +134,13 @@ export interface VideoViewProps extends ViewProps {
      */
     onFirstFrameRender?: () => void;
     /**
+     * Configuration for the content proposal overlay shown before the video ends.
+     * The overlay appears `showAtRemainingTime` seconds before the end and displays the title and optional image.
+     * On tvOS, when the countdown expires the video auto-advances.
+     * @platform tvos android
+     */
+    contentProposal?: ContentProposal;
+    /**
      * Determines whether the player should use the default ExoPlayer shutter that covers the `VideoView` before the first video frame is rendered.
      * Setting this property to `false` makes the Android behavior the same as iOS.
      *
@@ -164,6 +171,19 @@ export interface VideoViewProps extends ViewProps {
      */
     useAudioNodePlayback?: boolean;
 }
+/**
+ * Configures the content proposal overlay shown before the video ends.
+ * The overlay appears `showAtRemainingTime` seconds before the end, displaying the title and optional image.
+ * @platform tvos android
+ */
+export type ContentProposal = {
+    /** Title displayed in the content proposal overlay. */
+    title: string;
+    /** Remote URL of the preview image shown in the overlay. */
+    imageUrl?: string;
+    /** Seconds before the end of the video when the overlay should appear. */
+    showAtRemainingTime: number;
+};
 /**
  * Configuration for controlling the visibility of player control buttons.
  *
