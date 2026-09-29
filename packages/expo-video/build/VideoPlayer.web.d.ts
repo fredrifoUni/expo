@@ -11,6 +11,7 @@ export default class VideoPlayerWeb extends globalThis.expo.SharedObject<VideoPl
     _mountedVideos: Set<HTMLVideoElement>;
     _audioNodes: Set<MediaElementAudioSourceNode>;
     playing: boolean;
+    playingAd: boolean;
     _muted: boolean;
     _volume: number;
     _loop: boolean;

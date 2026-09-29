@@ -64,6 +64,7 @@ export default class VideoPlayerWeb
   _mountedVideos: Set<HTMLVideoElement> = new Set();
   _audioNodes: Set<MediaElementAudioSourceNode> = new Set();
   playing: boolean = false;
+  playingAd: boolean = false;
   _muted: boolean = false;
   _volume: number = 1;
   _loop: boolean = false;

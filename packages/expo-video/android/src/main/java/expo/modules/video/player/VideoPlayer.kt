@@ -2,10 +2,10 @@ package expo.modules.video.player
 
 import android.content.Context
 import android.media.MediaMetadataRetriever
-import androidx.media3.common.C
-import android.webkit.URLUtil
 import androidx.annotation.OptIn
 import androidx.media3.common.Format
+import androidx.media3.common.C
+import android.webkit.URLUtil
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
@@ -27,6 +27,7 @@ import androidx.media3.ui.PlayerView
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.sharedobjects.SharedObject
+import expo.modules.video.AdManagerFactory
 import expo.modules.video.IntervalUpdateClock
 import expo.modules.video.IntervalUpdateEmitter
 import expo.modules.video.VideoView
@@ -60,6 +61,7 @@ import kotlin.time.DurationUnit
 @UnstableApi
 class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSource?, playerBuilderOptions: expo.modules.video.records.PlayerBuilderOptions? = null) : AutoCloseable, SharedObject(appContext), IntervalUpdateEmitter {
   // This improves the performance of playing DRM-protected content
+  private var isReadyToLoad = false
   private var renderersFactory = DefaultRenderersFactory(context)
     .forceEnableMediaCodecAsynchronousQueueing()
     .setEnableDecoderFallback(true)
@@ -71,7 +73,6 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   val loadControl: VideoPlayerLoadControl = VideoPlayerLoadControl()
   val subtitles: VideoPlayerSubtitles = VideoPlayerSubtitles(this)
   val audioTracks: VideoPlayerAudioTracks = VideoPlayerAudioTracks(this)
-  val trackSelector = DefaultTrackSelector(context)
 
   val player = ExoPlayer
     .Builder(context, renderersFactory)
@@ -85,6 +86,8 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
         setSeekForwardIncrementMs((it).toLong(DurationUnit.MILLISECONDS).coerceIn(1, 999_000))
       }
     }.build()
+
+  private var adManager = AdManagerFactory.create(context, appContext)
 
   internal val firstFrameEventGenerator: FirstFrameEventGenerator
   val serviceConnection = PlaybackServiceConnection(WeakReference(this), appContext)
@@ -174,7 +177,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
       if (window.windowStartTimeMs == C.TIME_UNSET) {
         return null
       }
-      return window.windowStartTimeMs + player.currentPosition
+      return window.windowStartTimeMs + player.contentPosition
     }
 
   var bufferOptions: BufferOptions = BufferOptions()
@@ -258,7 +261,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
         sendEvent(
           PlayerEvent.VideoSourceLoaded(
             commitedSource,
-            duration.toDouble(),
+            this@VideoPlayer.player.contentDuration / 1000.0,
             availableVideoTracks,
             newSubtitleTracks,
             newAudioTracks
@@ -361,6 +364,9 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
 
   @kotlin.OptIn(DelicateCoroutinesApi::class)
   override fun close() {
+    isReadyToLoad = false
+    adManager.dispose()
+
     // Releases the listeners from VideoPlayerKeepAwake
     keepScreenOnWhilePlaying = false
 
@@ -395,6 +401,23 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
     close()
   }
 
+  private fun prepareWithAds() {
+    // It has already been prepared
+    if (isReadyToLoad) {
+      return
+    }
+
+    // Ensure there is a playerView attached to the video player
+    if (currentVideoView?.playerView == null) {
+      return
+    }
+
+    // Initialize ad manager and prepare player
+    adManager.initializeAds(player)
+    isReadyToLoad = true
+    prepare()
+  }
+
   /**
    * Used to notify the player that is has been disconnected from the player view by another player.
    */
@@ -408,14 +431,31 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   fun changeVideoView(videoView: VideoView?) {
     PlayerView.switchTargetView(player, currentVideoView?.playerView, videoView?.playerView)
     currentVideoView = videoView
+
+    // Prepare videoPlayer
+    prepareWithAds()
   }
 
   fun prepare() {
+    if (!isReadyToLoad) {
+      return
+    }
+
+    // Ensure there is a playerView attached to the video player
+    val playerView = currentVideoView?.playerView
+    if (playerView === null) {
+      return
+    }
+
     availableVideoTracks = listOf()
     currentVideoTrack = null
-
     val newSource = uncommittedSource
-    val mediaSource = newSource?.toMediaSource(context)
+
+    val mediaItem = newSource?.toMediaItem(context)
+    val mediaSourceBuilder = newSource?.toMediaSource(context)
+    adManager.setLocalAdInsertionComponents(mediaSourceBuilder, playerView)
+
+    val mediaSource = mediaItem?.let { mediaSourceBuilder?.createMediaSource(it) }
 
     mediaSource?.let {
       player.setMediaSource(it)
@@ -472,7 +512,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   }
 
   private fun refreshPlaybackInfo() {
-    duration = player.duration / 1000f
+    duration = player.contentDuration / 1000f
     isLive = player.isCurrentMediaItemLive
   }
 
@@ -543,7 +583,7 @@ class VideoPlayer(val context: Context, appContext: AppContext, source: VideoSou
   // IntervalUpdateEmitter
   override fun emitTimeUpdate() {
     appContext?.mainQueue?.launch {
-      val updatePayload = TimeUpdate(player.currentPosition / 1000.0, currentOffsetFromLive, currentLiveTimestamp, bufferedPosition)
+      val updatePayload = TimeUpdate(player.contentPosition / 1000.0, currentOffsetFromLive, currentLiveTimestamp, bufferedPosition)
       sendEvent(PlayerEvent.TimeUpdated(updatePayload))
     }
   }

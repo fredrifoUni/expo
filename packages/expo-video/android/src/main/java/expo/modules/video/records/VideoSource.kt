@@ -11,19 +11,21 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.RawResourceDataSource
-import androidx.media3.exoplayer.source.MediaSource
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.video.UnsupportedDRMTypeException
 import expo.modules.video.buildExpoVideoMediaSource
 import expo.modules.video.enums.ContentType
 import java.io.Serializable
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import expo.modules.video.interfaces.AdManager
 import expo.modules.kotlin.types.OptimizedRecord
 
 @OptIn(UnstableApi::class)
 @OptimizedRecord
 class VideoSource(
   @Field var uri: Uri? = null,
+  @Field var advertisement: Advertisement? = null,
   @Field var drm: DRMOptions? = null,
   @Field var metadata: VideoMetadata? = null,
   @Field var headers: Map<String, String>? = null,
@@ -32,6 +34,7 @@ class VideoSource(
 ) : Record, Serializable {
   private fun toMediaId(): String {
     return "uri:${this.uri}" +
+      "Advertisement: ${this.advertisement}" +
       "Headers: ${this.headers}" +
       "DrmType:${this.drm?.type}" +
       "DrmLicenseServer:${this.drm?.licenseServer}" +
@@ -44,7 +47,7 @@ class VideoSource(
       "ContentType:${this.contentType.value}"
   }
 
-  fun toMediaSource(context: Context): MediaSource? {
+  fun toMediaSource(context: Context): DefaultMediaSourceFactory? {
     this.uri ?: return null
     return buildExpoVideoMediaSource(context, this)
   }
@@ -53,6 +56,11 @@ class VideoSource(
     .Builder()
     .apply {
       setUri(parseLocalAssetId(uri, context))
+      setMediaId(toMediaId())
+
+      // Ensure Advertisement is added to the new media item
+      AdManager.injectAdsToMediaItemBuilder(this, advertisement)
+
       contentType.toMimeTypeString()?.let {
         setMimeType(it)
       }
@@ -63,6 +71,7 @@ class VideoSource(
           throw UnsupportedDRMTypeException(it.type)
         }
       }
+
       setMediaMetadata(
         MediaMetadata.Builder().apply {
           metadata?.let { data ->
