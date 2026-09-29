@@ -60,13 +60,13 @@
 
     // This must be called before deinit due to adsManager exception - EXC_BAD_ACCESS
     func cleanup() {
-      // Prevent Ad from playing sound during deinit
-      adsManager?.volume = 0
-      adsManager?.pause()
-      player = nil
-
-      // NOTE: Needs to run on main thread to avoid crash on iOS 17 release builds
-      DispatchQueue.main.async {
+      // IMA and UIKit must be used from the main thread. `cleanup` can be called from
+      // `VideoPlayer.deinit` on an arbitrary thread (also avoids a crash on iOS 17 release builds).
+      runOnMainThread {
+        // Prevent Ad from playing sound during deinit
+        self.adsManager?.volume = 0
+        self.adsManager?.pause()
+        self.player = nil
         self.adsManager?.destroy()
       }
     }
