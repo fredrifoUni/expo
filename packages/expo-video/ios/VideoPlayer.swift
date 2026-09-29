@@ -4,7 +4,7 @@ import AVFoundation
 import MediaPlayer
 import ExpoModulesCore
 
-internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObserverDelegate {
+internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoAdsManagerDelegate, VideoPlayerObserverDelegate {
   let videoSourceLoader = VideoSourceLoader()
   lazy var contentKeyManager = ContentKeyManager()
   var observer: VideoPlayerObserver?
@@ -15,6 +15,24 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
   private var tracksLoadingTask: Task<(), Never>?
   private let didRelease = Mutex(false)
 
+      
+  var adsManager: VideoAdsManager? {
+    didSet {
+      adsManager?.player = self
+      adsManager?.delegate = self
+    }
+  }
+  
+  weak var videoView: VideoView? {
+    didSet {
+      // `VideoView.player` already assigns the player through the controller wrapper.
+      // Reassigning the same `AVPlayer` would needlessly recreate the controller's KVO observers.
+      if let controller = videoView?.playerViewController, controller.player !== ref {
+        controller.player = ref
+      }
+    }
+  }
+
   var loop = false
   var audioMixingMode: AudioMixingMode = .auto {
     didSet {
@@ -24,6 +42,7 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
     }
   }
   private(set) var isPlaying = false
+  var isPlayingAd: Bool { adsManager?.isPlayingAd == true }
   private(set) var status: PlayerStatus = .idle
 
   var playbackRate: Float = 1.0 {
@@ -341,6 +360,10 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
       return
     }
 
+    // Prepare the adsManager for release (needed for iOS 17 production builds)
+    adsManager?.cleanup()
+    adsManager = nil
+
     observer?.notifyPlayerDeinit(player: self)
     observer?.cleanup()
     observer = nil
@@ -394,6 +417,12 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
     isPlaying = newIsPlaying
 
     VideoManager.shared.setAppropriateAudioSessionOrWarn()
+      
+    // Prevent video from starting when ad is actively playing.
+    if newIsPlaying && isPlayingAd {
+      log.warn("VideoPlayer: Prevented video resume because an ad is currently playing.")
+      ref.pause()
+    }
   }
 
   func onRateChanged(player: AVPlayer, oldRate: Float?, newRate: Float) {
@@ -418,12 +447,25 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
   }
 
   func onPlayedToEnd(player: AVPlayer) {
-    safeEmit(event: "playToEnd")
-    if loop {
-      seeker.seek(to: .zero)
-      self.ref.play()
-    }
+    // Checking for queued Ads
+    let shouldShowPostRoll: Bool = adsManager?.hasMoreAds ?? false
+      
+    // Let the Ad manager know the video has finished
+    adsManager?.contentDidFinishPlaying()
+      
+    // Handle video end logic or wait for ads to complete
+    if !shouldShowPostRoll { onVideoAndAdsCompleted() }
   }
+
+  // Raised when video and Ads have completed
+  func onVideoAndAdsCompleted() {
+      safeEmit(event: "playToEnd")
+    
+      if loop {
+        seeker.seek(to: .zero)
+        self.ref.play()
+      }
+    }
 
   func onItemChanged(player: AVPlayer, oldVideoPlayerItem: VideoPlayerItem?, newVideoPlayerItem: VideoPlayerItem?) {
     let payload = SourceChangedEventPayload(
@@ -443,6 +485,14 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
     guard !hasBeenReleased else {
       return
     }
+
+    // Prepare Ads for the new content
+    let videoPlayerItem = playerItem as? VideoPlayerItem
+    let adTagUrl = videoPlayerItem?.videoSource.advertisement?.googleIMA?.adTagUrl
+    if let adTagUrl, let adsManager, let videoView {
+      adsManager.prepareAds(adTagUrl: adTagUrl, player: player, videoView: videoView)
+    }
+    
     // Loading tracks requires doing some long tasks, this callback can be called from the main thread
     // Which could cause hangs
     tracksLoadingTask?.cancel()
@@ -501,6 +551,11 @@ internal final class VideoPlayer: SharedRef<AVPlayer>, Hashable, VideoPlayerObse
     if self.appContext != nil {
       self.emit(event: event, payload: payload?.toDictionary(appContext: appContext))
     }
+  }
+    
+  // MARK: - VideoAdsManagerDelegate
+  func postrollAdFinished(_ manager: VideoAdsManager) {
+      onVideoAndAdsCompleted()
   }
 
   // MARK: - Hashable

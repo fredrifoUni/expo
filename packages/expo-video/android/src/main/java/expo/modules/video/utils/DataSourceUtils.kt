@@ -10,7 +10,6 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.source.MediaSource
 import expo.modules.video.cache.CachePolicy
 import expo.modules.video.cache.CacheVariantIndex
 import expo.modules.video.cache.ExpoVideoCacheKeyFactory
@@ -169,7 +168,7 @@ private fun evictCacheEntry(url: String, storageKey: String) {
   }
 }
 
-fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Factory): MediaSource.Factory {
+fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Factory): DefaultMediaSourceFactory {
   return DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)
 }
 
@@ -177,15 +176,15 @@ fun buildMediaSourceFactory(context: Context, dataSourceFactory: DataSource.Fact
 fun buildExpoVideoMediaSource(
   context: Context,
   videoSource: VideoSource
-): MediaSource {
+): DefaultMediaSourceFactory {
   val dataSourceFactory = if (videoSource.useCaching) {
     buildCacheDataSourceFactory(context, videoSource)
   } else {
     buildBaseDataSourceFactory(context, videoSource)
   }
+
   val mediaSourceFactory = buildMediaSourceFactory(context, dataSourceFactory)
-  val mediaItem = videoSource.toMediaItem(context)
-  return mediaSourceFactory.createMediaSource(mediaItem)
+  return mediaSourceFactory
 }
 
 private fun getApplicationName(context: Context): String {
